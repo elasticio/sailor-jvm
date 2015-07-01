@@ -1,0 +1,15 @@
+lib/*.jar.sha1
+.gradle
+.idea
+build
+out
+*.iml
+*.ipr
+*.iws
+*.DS_Store
+.classpath
+.project
+.settings/
+bin/
+lib/ivy*
+
