@@ -18,16 +18,14 @@ import java.security.SecureRandom;
 public final class CipherWrapper {
     private final String ENCRYPTION_KEY;
     private final String ALGORITHM = "AES/CBC/PKCS5Padding";
-    private final byte[] ENCRYPTION_IV;
+    private final byte[] ENCRYPTION_IV = new SecureRandom().generateSeed(16);
 
     public CipherWrapper() {
         this.ENCRYPTION_KEY = System.getenv("MESSAGE_CRYPTO_PASSWORD");
-        ENCRYPTION_IV = new SecureRandom().generateSeed(16);
     }
 
     public CipherWrapper(String PASSWORD) {
         this.ENCRYPTION_KEY = PASSWORD;
-        ENCRYPTION_IV = new SecureRandom().generateSeed(16);
     }
 
     public String encryptMessageContent(JsonObject message) throws IOException {
