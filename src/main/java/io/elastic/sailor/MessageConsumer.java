@@ -16,29 +16,28 @@ import java.util.Map;
 
 public class MessageConsumer extends DefaultConsumer {
 
-    private static final Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
-    private static final String HEADER_TASK_ID = "taskId";
-    private static final String HEADER_STEP_ID = "stepId";
+    private static Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
+    private static String HEADER_TASK_ID = "taskId";
+    private static String HEADER_STEP_ID = "stepId";
 
     /**
      * Constructs a new instance and records its association to the passed-in channel.
      *
      * @param channel the channel to which this consumer is attached
      */
-    public MessageConsumer(final Channel channel) {
+    public MessageConsumer(Channel channel) {
         super(channel);
     }
 
     @Override
-    public void handleDelivery(String consumerTag,
-                               Envelope envelope,
-                               AMQP.BasicProperties properties,
-                               byte[] body)
+    public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
 
-        final Map<String, Object> headers = properties.getHeaders();
-        final String taskId = headers.get(HEADER_TASK_ID).toString();
-        final String stepId = headers.get(HEADER_STEP_ID).toString();
+        Map<String, Object> headers = properties.getHeaders();
+        String bodyString = new String(body, "UTF-8");
+
+//        String taskId = headers.get(HEADER_TASK_ID).toString();
+//        String stepId = headers.get(HEADER_STEP_ID).toString();
 
         long deliveryTag = envelope.getDeliveryTag();
 
@@ -46,13 +45,18 @@ public class MessageConsumer extends DefaultConsumer {
 
         //getChannel().basicAck(deliveryTag, false);
 
-        final EventEmitter eventEmitter = new EventEmitter.Builder().build();
+        EventEmitter eventEmitter = new EventEmitter.Builder()
+                .onData(CallbackContainer.newDataCallback())
+                .onError(CallbackContainer.newErrorCallback())
+                .onRebound(CallbackContainer.newReboundCallback())
+                .onSnapshot(CallbackContainer.newSnapshotCallback())
+                .build();
 
-        final Executor executor = new Executor("componentClassName", eventEmitter);
+        Executor executor = new Executor("componentClassName", eventEmitter);
 
-        final Message message = createMessage();
+        Message message = createMessage();
 
-        final ExecutionParameters params = new ExecutionParameters.Builder(message).build();
+        ExecutionParameters params = new ExecutionParameters.Builder(message).build();
 
         executor.execute(params);
     }

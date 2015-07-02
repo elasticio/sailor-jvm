@@ -3,14 +3,10 @@ package io.elastic.sailor;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DefaultConsumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.URISyntaxException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 
 public class Sailor {
 
@@ -25,18 +21,13 @@ public class Sailor {
     public void start() throws IOException {
         logger.info("Starting up");
 
-        final Connection connection
-                = amqpConnect("amqp://guest:guest@localhost:5672");
+        final Connection connection = amqpConnect("amqp://guest:guest@localhost:5672");
 
         logger.info("Connected to AMQP successfully");
 
         final Channel channel = connection.createChannel();
 
-        channel.basicConsume(
-                queueName,
-                false,
-                "myConsumerTag",
-                new MessageConsumer(channel));
+        channel.basicConsume(queueName, false, new MessageConsumer(channel));
     }
 
     private static Connection amqpConnect(final String connectionUri) {
