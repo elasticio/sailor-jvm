@@ -5,17 +5,40 @@ apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'groovy'
 
+configurations { provided }
+
 repositories {
     maven {
         url "https://oss.sonatype.org/content/repositories/snapshots"
     }
     mavenLocal()
     mavenCentral()
+    flatDir {
+        name "fileRepo"
+        dirs "lib"
+    }
 }
+
+sourceSets {
+    main {
+        java {
+            srcDir 'src/main/java'
+        }
+    }
+    test {
+        compileClasspath += configurations.provided
+        runtimeClasspath += configurations.provided
+    }
+}
+
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
+
 dependencies {
     compile "com.google.code.gson:gson:2.2.4"
-    compile "io.elastic:java-api:0.0.6-SNAPSHOT"
+    compile "io.elastic:java-api:0.0.6"
     compile "com.rabbitmq:amqp-client:3.5.1"
+    compile "commons-codec:commons-codec:1.10"
 
 	testRuntime "org.codehaus.groovy:groovy-all:2.0.5"
 	testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
