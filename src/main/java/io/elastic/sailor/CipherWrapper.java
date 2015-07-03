@@ -1,6 +1,7 @@
 package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
@@ -36,12 +37,18 @@ public final class CipherWrapper {
         return encrypt(message);
     }
 
-    public String decryptMessageContent(JsonObject message) throws IOException {
-        return decrypt(message.toString());
-    }
-
     public String decryptMessageContent(String message) throws IOException {
-        return decrypt(message);
+        if (message == null || message.length() == 0) {
+            return null;
+        }
+        try {
+            message = decrypt(message);
+            if (Utils.isJsonObject(message))
+                message = new JsonParser().parse(message).toString();
+            return message;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to decrypt message: " + e);
+        }
     }
 
     private String encrypt(String message) throws IOException {

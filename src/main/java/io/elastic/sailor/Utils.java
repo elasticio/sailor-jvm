@@ -1,5 +1,7 @@
 package io.elastic.sailor;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +27,15 @@ public final class Utils {
         put("REBOUND_LIMIT", "20");
         put("COMPONENT_PATH", "");
     }};
+
+    public static boolean isJsonObject(String input) {
+        try {
+            new Gson().fromJson(input, Object.class);
+            return true;
+        } catch (JsonSyntaxException e) {
+            return false;
+        }
+    }
 
     public static Map<String, String> validateSettings(Map<String, String> settings) {
         Map<String, String> result = new HashMap<>();
