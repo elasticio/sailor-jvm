@@ -39,7 +39,7 @@ class AMPQSpec extends Specification {
 
     def "Should send message to outgoing channel when process data" () {
         given:
-            def amqp = new AMQPWrapper.ConnectionWrapper(settings)
+            def amqp = new AMQPWrapper(settings)
         when:
         println("when")
 

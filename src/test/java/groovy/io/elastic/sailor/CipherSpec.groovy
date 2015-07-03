@@ -1,6 +1,5 @@
 package groovy.io.elastic.sailor
-
-import com.google.gson.JsonParser
+import com.google.gson.JsonObject
 import io.elastic.sailor.CipherWrapper
 import spock.lang.Specification
 
@@ -18,7 +17,8 @@ class CipherSpec extends Specification {
 
     def "should encrypt & decrypt objects"() {
         given:
-            def content = new JsonParser().parse("{property1: 'Hello world'}".replaceAll("'", "\"")).getAsJsonObject()
+            def content = new JsonObject()
+            content.addProperty("property1", "Hello world")
             def cipher = new CipherWrapper()
         when:
             def result = cipher.encryptMessageContent(content)
