@@ -3,9 +3,9 @@ import com.google.gson.JsonParser
 import io.elastic.sailor.AMQPWrapper
 import io.elastic.sailor.CipherWrapper
 import io.elastic.sailor.Utils
-import spock.lang.Specification
 
-class AMPQSpec extends Specification {
+
+class AMPQSpec extends Specificatin {
     def envVars = Utils.validateSettings(new HashMap<String, String>() {{
         put("AMQP_URI", "amqp://test2/test2");
         put("TASK", "{'_id':'5559edd38968ec0736000003','data':{'step_1':{'account':'1234567890'}},'recipe':{'nodes':[{'id':'step_1','function':'list'}]}}");
