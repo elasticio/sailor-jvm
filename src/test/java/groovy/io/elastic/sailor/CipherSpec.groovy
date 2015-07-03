@@ -1,6 +1,7 @@
-package io.elastic.sailor
+package groovy.io.elastic.sailor
 
 import com.google.gson.JsonParser
+import io.elastic.sailor.CipherWrapper
 import spock.lang.Specification
 
 class CipherSpec extends Specification {

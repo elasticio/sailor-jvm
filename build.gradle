@@ -44,6 +44,23 @@ dependencies {
 	testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
 }
 
+uploadArchives {
+    repositories {
+        add project.repositories.fileRepo
+    }
+}
+
+task bundle(type: Copy, dependsOn: build) {
+    into "lib"
+    from configurations.compile
+}
+
+task elastic(dependsOn: ['clean', 'build', 'bundle', 'uploadArchives'])
+
 task wrapper(type: Wrapper) {
 	gradleVersion = '2.0'
 }
+
+build.mustRunAfter 'clean'
+uploadArchives.mustRunAfter 'build'
+bundle.mustRunAfter 'build'

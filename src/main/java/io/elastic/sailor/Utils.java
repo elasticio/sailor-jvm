@@ -1,6 +1,8 @@
 package io.elastic.sailor;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +37,10 @@ public final class Utils {
         } catch (JsonSyntaxException e) {
             return false;
         }
+    }
+
+    public static JsonObject parseToJson(String input) {
+        return new JsonParser().parse(input).getAsJsonObject();
     }
 
     public static Map<String, String> validateSettings(Map<String, String> settings) {

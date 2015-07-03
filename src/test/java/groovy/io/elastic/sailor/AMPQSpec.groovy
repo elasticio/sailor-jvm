@@ -1,6 +1,8 @@
-package io.elastic.sailor
-
+package groovy.io.elastic.sailor
 import com.google.gson.JsonParser
+import io.elastic.sailor.AMQPWrapper
+import io.elastic.sailor.CipherWrapper
+import io.elastic.sailor.Utils
 import spock.lang.Specification
 
 class AMPQSpec extends Specification {
@@ -32,12 +34,12 @@ class AMPQSpec extends Specification {
                 "'mandatory':true," +
                 "'clusterId':''" +
             "}," +
-            "'content':{'content':'Message content'}" +
+            "'content':" + new CipherWrapper().encryptMessageContent("{'content':'Message content'}".replaceAll("'", "\"")) +
         "}".replaceAll("'","\""));
 
-    def "create, serviceUrl is missing" () {
+    def "Should send message to outgoing channel when process data" () {
         given:
-
+            def amqp = new AMQPWrapper()
         when:
         println("when")
 
