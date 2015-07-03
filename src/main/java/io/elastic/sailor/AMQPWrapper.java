@@ -3,6 +3,7 @@ package io.elastic.sailor;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.Consumer;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -48,12 +49,22 @@ public class AMQPWrapper {
             logger.info("Successfully disconnected from AMQP");
         }
 
+        public String listenQueue(String queueName, Consumer consumer) {
+            try {
+                return subscribeChannel.basicConsume(queueName, consumer);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+
         private ConnectionWrapper openConnection(URI uri) {
             try {
-                ConnectionFactory factory = new ConnectionFactory();
-                factory.setUri(uri);
-                amqp = factory.newConnection();
-                logger.info("Connected to AMQP");
+                if (amqp == null) {
+                    ConnectionFactory factory = new ConnectionFactory();
+                    factory.setUri(uri);
+                    amqp = factory.newConnection();
+                    logger.info("Connected to AMQP");
+                }
                 return this;
             } catch (Exception e) {
                 throw new RuntimeException(e);
@@ -62,8 +73,10 @@ public class AMQPWrapper {
 
         private ConnectionWrapper openPublishChannel() {
             try {
-                publishChannel = amqp.createChannel();
-                logger.info("Opened publish channel");
+                if (publishChannel == null) {
+                    publishChannel = amqp.createChannel();
+                    logger.info("Opened publish channel");
+                }
                 return this;
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -72,12 +85,20 @@ public class AMQPWrapper {
 
         private ConnectionWrapper openSubscribeChannel() {
             try {
-                subscribeChannel = amqp.createChannel();
-                logger.info("Opened subscribe channel");
+                if (subscribeChannel == null) {
+                    subscribeChannel = amqp.createChannel();
+                    logger.info("Opened subscribe channel");
+                }
                 return this;
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
+        }
+
+        @Override
+        protected void finalize() throws Throwable {
+            disconnect();
+            super.finalize();
         }
     }
 }
