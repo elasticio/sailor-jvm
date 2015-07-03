@@ -39,7 +39,7 @@ public final class Utils {
         }
     }
 
-    public static JsonObject parseToJson(String input) {
+    public static JsonObject toJson(String input) {
         return new JsonParser().parse(input).getAsJsonObject();
     }
 
