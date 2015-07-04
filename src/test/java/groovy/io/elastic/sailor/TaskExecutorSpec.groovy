@@ -29,12 +29,12 @@ class TaskExecutorSpec extends Specification {
 
     def "should create TaskExecutor for valid component without errors"() {
         when:
-            new TaskExecutor("groovy.io.elastic.sailor.TestComponent");
+            new TaskExecutor("groovy.io.elastic.sailor.component.TestAction");
         then:
             notThrown(RuntimeException)
     }
 
-    def "should execute TestComponent and emit all necessary events"() {
+    def "should execute TestAction and emit all necessary events"() {
 
         def content = new JsonObject();
         content.addProperty("someProperty", "someValue");
@@ -47,17 +47,17 @@ class TaskExecutorSpec extends Specification {
         def reboundCallback = Mock(Callback)
 
         when:
-            def executor = new TaskExecutor("groovy.io.elastic.sailor.TestComponent");
+            def executor = new TaskExecutor("groovy.io.elastic.sailor.component.TestAction");
             executor.onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback);
             executor.execute(params);
         then:
             1 * dataCallback.receive({it.toString() == '{"body":{"someProperty":"someValue"},"attachments":{}}'})
             1 * snapshotCallback.receive({it.toString() == '{"lastUpdate":"2015-07-04"}'})
             1 * reboundCallback.receive({it.toString() == 'Please retry later'})
-            1 * errorCallback.receive({it.getMessage() == "Error happened in TestComponent!"})
+            1 * errorCallback.receive({it.getMessage() == "Error happened in TestAction!"})
     }
 
-    def "should execute some long-running component and stop on timeout"() {
+    def "should execute SleepAction and emit error on timeout"() {
 
         def content = new JsonObject();
         content.addProperty("someProperty", "someValue");
@@ -70,12 +70,12 @@ class TaskExecutorSpec extends Specification {
         def reboundCallback = Mock(Callback)
 
         when:
-            def executor = new TaskExecutor("groovy.io.elastic.sailor.SleepComponent");
+            def executor = new TaskExecutor("groovy.io.elastic.sailor.component.SleepAction");
             executor.onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback);
             executor.setTimeout(200);
             executor.execute(params);
         then:
-            1 * errorCallback.receive({it.getMessage() == "Processing time out - groovy.io.elastic.sailor.SleepComponent"})
+            1 * errorCallback.receive({it.getMessage() == "Processing time out - groovy.io.elastic.sailor.component.SleepAction"})
             0 * dataCallback.receive({})
     }
 }

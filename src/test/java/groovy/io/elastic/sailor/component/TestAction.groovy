@@ -1,13 +1,13 @@
-package groovy.io.elastic.sailor
+package groovy.io.elastic.sailor.component
 
 import com.google.gson.JsonObject
 import io.elastic.api.Component
 import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
 
-class TestComponent extends Component{
+class TestAction extends Component{
 
-    public TestComponent(EventEmitter eventEmitter){
+    public TestAction(EventEmitter eventEmitter){
         super(eventEmitter);
     }
 
@@ -20,6 +20,6 @@ class TestComponent extends Component{
         this.getEventEmitter().emitData(parameters.getMessage());
         this.getEventEmitter().emitSnapshot(snapshot);
         this.getEventEmitter().emitRebound("Please retry later");
-        throw new Exception("Error happened in TestComponent!");
+        throw new Exception("Error happened in TestAction!");
     }
 }
