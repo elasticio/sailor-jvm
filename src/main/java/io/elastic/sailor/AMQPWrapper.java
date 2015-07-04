@@ -12,12 +12,12 @@ import java.util.Map;
 public class AMQPWrapper {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AMQPWrapper.class);
 
-    private final Map<String, String> settings;
+    private final Settings settings;
     private Connection amqp;
     private Channel subscribeChannel;
     private Channel publishChannel;
 
-    public AMQPWrapper(Map<String, String> settings) {
+    public AMQPWrapper(Settings settings) {
         this.settings = settings;
     }
 
@@ -163,7 +163,7 @@ public class AMQPWrapper {
     }
 
     private double getExpiration(int reboundIteration) {
-        return Math.pow(2, reboundIteration - 1) * Integer.parseInt(settings.get("REBOUND_INITIAL_EXPIRATION"));
+        return Math.pow(2, reboundIteration - 1) * settings.getInt("REBOUND_INITIAL_EXPIRATION");
     }
 
     private AMQPWrapper openConnection(URI uri) {

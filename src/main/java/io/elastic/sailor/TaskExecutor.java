@@ -18,7 +18,7 @@ public class TaskExecutor {
     private Class EMITTER_CLASS = io.elastic.api.EventEmitter.class;
 
     private Class classToExecute;
-    private int timeout = Utils.getEnvVar("TIMEOUT", 20 * 60 * 1000);
+    private int timeout = 20 * 60 * 1000; // 20 min
     private Callback errorCallback;
     private Callback dataCallback;
     private Callback snapshotCallback;
