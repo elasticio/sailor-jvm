@@ -32,8 +32,13 @@ public final class Settings {
 
     private Map<String, String> sailorSettings;
 
+    private JsonObject task;
+    private String stepId;
+
     public Settings(Map<String, String> envVars) {
         sailorSettings = validateSettings(envVars);
+        task = new JsonParser().parse(this.get("TASK")).getAsJsonObject();
+        stepId = this.get("STEP_ID");
     }
 
     private Map<String, String> validateSettings(Map<String, String> settings) {
@@ -80,30 +85,44 @@ public final class Settings {
         throw new IllegalArgumentException(message);
     }
 
-    /*public static JsonObject getTask(){
-        String task = System.getenv("MESSAGE_CRYPTO_PASSWORD");
-        return new JsonParser().parse(task).getAsJsonObject();
+    public JsonObject getTask(){
+        return task;
     }
 
-    public static String getStepId(){
-        return System.getenv("STEP_ID");
+    public String getStepId(){
+        return stepId;
     }
 
-    public static JsonObject getStepCfg(JsonObject task, String stepId){
-        return task.get("data").getAsJsonObject().get(stepId).getAsJsonObject();
+    public JsonObject getCfg(){
+        if (task.get("data") != null && task.getAsJsonObject("data").get(stepId) != null) {
+            return task.getAsJsonObject("data").getAsJsonObject(stepId);
+        } else {
+            return null;
+        }
     }
 
-    public static JsonObject getStepSnapshot(JsonObject task, String stepId){
-        return task.get("data").getAsJsonObject().get(stepId).getAsJsonObject();
+    public JsonObject getSnapshot(){
+        if (task.get("snapshot") != null && task.getAsJsonObject("snapshot").get(stepId) != null) {
+            return task.getAsJsonObject("snapshot").getAsJsonObject(stepId);
+        } else {
+            return null;
+        }
     }
 
-    public static JsonObject getStepInfo(JsonObject task, String stepId){
-        JsonArray nodes = task.get("recipe").getAsJsonObject().get("nodes").getAsJsonArray();
+    public String getTriggerOrAction(){
+        JsonArray nodes = task.getAsJsonObject("recipe").getAsJsonArray("nodes");
+        JsonObject thisStepNode = null;
         for (JsonElement node : nodes) {
             if (node.getAsJsonObject().get("id").getAsString().equals(stepId)) {
-                return node.getAsJsonObject();
+                thisStepNode = node.getAsJsonObject();
             }
         }
-        return null;
-    }*/
+        if (thisStepNode == null) {
+            throw new RuntimeException("Step " + stepId + " is not found in task recipe");
+        }
+        if (thisStepNode.get("function") == null) {
+            throw new RuntimeException("Step " + stepId + " has no function specified");
+        }
+        return thisStepNode.get("function").getAsString();
+    }
 }

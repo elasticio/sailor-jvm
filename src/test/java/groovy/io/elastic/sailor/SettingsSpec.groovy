@@ -51,7 +51,14 @@ class SettingsSpec extends Specification{
             settings.get("AMQP_URI") == "amqp://guest:guest@localhost:5672"
             settings.get("REBOUND_ROUTING_KEY") == "5559edd38968ec0736000003.test_exec.step_1.rebound"
             settings.get("COMPONENT_PATH") == "/spec/component/"
+            // getInt
             settings.getInt("REBOUND_LIMIT") == 20
+            // additional functions to get task, cfg, snapshot, trigger name
+            settings.getTask().get("_id").getAsString() == "5559edd38968ec0736000003"
+            settings.getStepId() == "step_1"
+            settings.getCfg().toString() == "{\"uri\":\"546456456456456\"}"
+            settings.getSnapshot() == null
+            settings.getTriggerOrAction() == "datas_and_errors"
     }
 
     def "should throw error if some unknown property is accessed"() {
@@ -63,6 +70,19 @@ class SettingsSpec extends Specification{
         then:
             RuntimeException e = thrown()
             e.getMessage() == "SOME_UNKNOWN_PROPERTY is not specified in settings"
+    }
+
+    def "should throw error if trigger or action cannot be defined"() {
+        given:
+
+        when:
+            def envVars = getValidEnvVars();
+            envVars.put("STEP_ID", "step_3");
+            def settings = new Settings(envVars);
+            settings.getTriggerOrAction()
+        then:
+            RuntimeException e = thrown()
+            e.getMessage() == "Step step_3 is not found in task recipe"
     }
 
 }
