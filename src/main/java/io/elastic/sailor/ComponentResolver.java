@@ -1,20 +1,52 @@
 package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.File;
 
 public final class ComponentResolver {
 
-    private JsonObject componentJson = new JsonObject();
+    private static final String FILENAME = "component.json";
+    private static final String USERDIR = System.getProperty("user.dir");
+
+    private JsonObject componentJson;
 
     public ComponentResolver(String componentPath){
-        loadComponentJson(componentPath);
+        componentJson = loadComponentJson(componentPath);
     }
 
-    private void loadComponentJson(String componentPath){
-        // @TODO load component json
+    private JsonObject loadComponentJson(String componentPath){
+
+        String componentFolder = new File(USERDIR, componentPath).getAbsolutePath();
+        String componentJsonFile = new File(componentFolder, FILENAME).getAbsolutePath();
+
+        try {
+            BufferedReader br = new BufferedReader(new FileReader(componentJsonFile));
+            JsonParser parser = new JsonParser();
+            return parser.parse(br).getAsJsonObject();
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("component.json is not found");
+        }
     }
 
     public String findTriggerOrAction(String name){
-        return componentJson.get("triggers").getAsJsonObject().get(name).getAsJsonObject().get("main").getAsString();
+        JsonObject result = null;
+        if (componentJson.get("triggers") != null && componentJson.getAsJsonObject("triggers").get(name) != null) {
+            result = componentJson.getAsJsonObject("triggers").getAsJsonObject(name);
+        }
+        if (componentJson.get("actions") != null && componentJson.getAsJsonObject("actions").get(name) != null) {
+            result = componentJson.getAsJsonObject("actions").getAsJsonObject(name);
+        }
+
+        if (result == null) {
+            throw new RuntimeException(name + " is not found");
+        } else if (result.get("main") == null) {
+            throw new RuntimeException("Main class of " + name + " is not specified");
+        }
+
+        return result.get("main").getAsString();
     }
 }
