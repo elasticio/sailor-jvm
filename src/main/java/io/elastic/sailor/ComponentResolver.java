@@ -7,6 +7,11 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.File;
 
+/**
+ * Class to parse component.json
+ * and to find there triggers and actions
+ */
+
 public final class ComponentResolver {
 
     private static final String FILENAME = "component.json";
@@ -14,6 +19,9 @@ public final class ComponentResolver {
 
     private JsonObject componentJson;
 
+    /**
+     * @param componentPath - path to the component, relative to sailor position
+     */
     public ComponentResolver(String componentPath){
         componentJson = loadComponentJson(componentPath);
     }
@@ -32,6 +40,11 @@ public final class ComponentResolver {
         }
     }
 
+    /**
+     *
+     * @param name - trigger or action name
+     * @return name of Java class to execute for that trigger or action
+     */
     public String findTriggerOrAction(String name){
         JsonObject result = null;
         if (componentJson.get("triggers") != null && componentJson.getAsJsonObject("triggers").get(name) != null) {
