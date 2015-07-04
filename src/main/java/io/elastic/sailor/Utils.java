@@ -39,6 +39,11 @@ public final class Utils {
         }
     }
 
+    public static Integer getEnvVar(String name, Integer defaultValue){
+        String value = System.getenv(name);
+        return (value != null && Integer.parseInt(value) > 0) ? Integer.parseInt(value) : defaultValue;
+    }
+
     public static JsonObject toJson(String input) {
         return new JsonParser().parse(input).getAsJsonObject();
     }

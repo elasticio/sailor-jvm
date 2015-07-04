@@ -101,16 +101,12 @@ public class Sailor {
                 .snapshot(snapshot)
                 .build();
 
-        // @TODO pass headers and message to callbacks
-        EventEmitter eventEmitter = new EventEmitter.Builder()
-                .onData(getDataCallback())
-                .onError(getErrorCallback())
-                .onRebound(getReboundCallback())
-                .onSnapshot(getSnapshotCallback())
-                .build();
-
         TaskExecutor executor = new TaskExecutor(className);
-        executor.execute(params, eventEmitter);
+        executor.onData(getDataCallback());
+        executor.onError(getErrorCallback());
+        executor.onRebound(getReboundCallback());
+        executor.onSnapshot(getSnapshotCallback());
+        executor.execute(params);
     }
 
     private static Message createMessage(byte[] body) {

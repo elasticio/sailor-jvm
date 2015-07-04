@@ -3,118 +3,104 @@ package io.elastic.sailor;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Component;
-import io.elastic.api.Message;
+import io.elastic.api.EventEmitter.Callback;
 
-import java.lang.reflect.Constructor;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.TimeUnit;
 
 public class TaskExecutor {
 
-    private String className;
+    private Class COMPONENT_CLASS = io.elastic.api.Component.class;
+    private Class EMITTER_CLASS = io.elastic.api.EventEmitter.class;
 
-    private static final int TIMEOUT = System.getenv("TIMEOUT")!=null && Integer.parseInt(System.getenv("TIMEOUT"))>0 ?
-            Integer.parseInt(System.getenv("TIMEOUT")) : 20 * 60 * 1000;
+    private Class classToExecute;
+    private int timeout = Utils.getEnvVar("TIMEOUT", 20 * 60 * 1000);
+    private Callback errorCallback;
+    private Callback dataCallback;
+    private Callback snapshotCallback;
+    private Callback reboundCallback;
 
     public TaskExecutor(String className) {
-        this.className = className;
+        classToExecute = findClass(className);
     }
 
-    public void execute(ExecutionParameters params, EventEmitter eventEmitter){
+    public void setTimeout(int msec) {
+        timeout = msec;
+    }
 
-        // @TODO look for timeout
-        System.out.println(className);
+    public TaskExecutor onError(Callback callback) {
+        errorCallback = callback;
+        return this;
+    }
+
+    public TaskExecutor onData(Callback callback) {
+        dataCallback = callback;
+        return this;
+    }
+
+    public TaskExecutor onSnapshot(Callback callback) {
+        snapshotCallback = callback;
+        return this;
+    }
+
+    public TaskExecutor onRebound(Callback callback) {
+        reboundCallback = callback;
+        return this;
+    }
+
+    private Class findClass(String className){
         try {
-            Class<?> c = Class.forName(className);
-            Constructor<?> cons = c.getConstructor(EventEmitter.class);
-            Object object = cons.newInstance(eventEmitter);
-            System.out.println(className);
-            Component component = (Component)object;
-            component.execute(params);
+            return Class.forName(className).asSubclass(COMPONENT_CLASS);
         } catch (ClassNotFoundException e) {
-            System.out.println("Class " + className + " is not found!");
-            // @TODO emit error
-            // @TODO emit end
-        } catch (NoSuchMethodException e) {
-            System.out.println("Valid constructor in " + className + " is not found!");
-            // @TODO emit error
-            // @TODO emit end
-        } catch (Exception e) {
-            System.out.println("Failed to execute " + className);
-            // @TODO emit error
-            // @TODO emit end
+            throw new RuntimeException("Class " + className + " is not found");
+        } catch (ClassCastException e) {
+            throw new RuntimeException("Class " + className + " is not " + COMPONENT_CLASS.getCanonicalName());
         }
     }
 
-    // testing
-    public static void main(String[] args) {
+    public void execute(final ExecutionParameters params){
 
-        Message msg = new Message.Builder().build();
-        ExecutionParameters params = new ExecutionParameters.Builder(msg).build();
-
-        TaskExecutor ex = new TaskExecutor("io.elastic.demo.ErroneousComponent");
-        EventEmitter eventEmitter = new EventEmitter.Builder()
-                .onData(ex.getDataCallback())
-                .onError(ex.getErrorCallback())
-                .onRebound(ex.getReboundCallback())
-                .onSnapshot(ex.getSnapshotCallback())
+        final EventEmitter emitter = new EventEmitter.Builder()
+                .onData(dataCallback)
+                .onError(errorCallback)
+                .onRebound(reboundCallback)
+                .onSnapshot(snapshotCallback)
                 .build();
-        ex.execute(params, eventEmitter);
 
-        TaskExecutor ex2 = new TaskExecutor("io.elastic.demo.HelloWorldComponent");
-        ex2.execute(params, eventEmitter);
-
-        TaskExecutor ex3 = new TaskExecutor("io.elastic.api.Message");
-        ex3.execute(params, eventEmitter);
+        try {
+            final Object object = classToExecute.getConstructor(EMITTER_CLASS).newInstance(emitter);
+            final Component component = (Component)object;
+            final Thread thread = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        component.execute(params);
+                    } catch (Exception e) {
+                        errorCallback.receive(e);
+                    }
+                }
+            };
+            runWithTimeout(thread);
+        } catch (Exception e) {
+            this.errorCallback.receive(e);
+        }
     }
 
-    // data
-    private EventEmitter.Callback getDataCallback() {
-        return new EventEmitter.Callback() {
-            @Override
-            public void receive(Object data) {
-                System.out.println("newDataCallback" + data.toString());
-                // @TODO process data and send to channel
-            }
-        };
+    private void runWithTimeout(Runnable thread){
+        final ExecutorService executor = Executors.newSingleThreadExecutor();
+        final Future future = executor.submit(thread);
+        executor.shutdown();
+        try {
+            future.get(timeout, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException | ExecutionException ie) {
+            throw new RuntimeException(ie.getMessage());
+        }
+        catch (TimeoutException te) {
+            throw new RuntimeException("Processing time out - " + classToExecute.getCanonicalName());
+        }
     }
-
-    private EventEmitter.Callback getErrorCallback() {
-        return new EventEmitter.Callback() {
-            @Override
-            public void receive(Object err) {
-                System.out.println("newErrorCallback" + err.toString());
-                // @TODO process error and send to channel
-            }
-        };
-    }
-
-    private EventEmitter.Callback getReboundCallback() {
-        return new EventEmitter.Callback() {
-            @Override
-            public void receive(Object data) {
-                System.out.println("newReboundCallback" + data.toString());
-                // @TODO process rebound and send to channel
-            }
-        };
-    }
-
-    private EventEmitter.Callback getSnapshotCallback() {
-        return new EventEmitter.Callback() {
-            @Override
-            public void receive(Object data) {
-                System.out.println("newSnapshotCallback" + data.toString());
-                // @TODO process snapshot and send to channel
-            }
-        };
-    }
-
-    private EventEmitter.Callback getEndCallback() {
-        return new EventEmitter.Callback() {
-            @Override
-            public void receive(Object err) {
-                System.out.println("newEndCallback");
-                // @TODO process end and send to channel
-            }
-        };
-    }
-
 }
