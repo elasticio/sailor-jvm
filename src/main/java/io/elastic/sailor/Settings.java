@@ -4,8 +4,10 @@ import com.google.gson.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.net.URI;
 
 public final class Settings {
 
@@ -84,6 +86,14 @@ public final class Settings {
         return Integer.parseInt(sailorSettings.get(key));
     }
 
+    public URI getURI(String key) {
+        try {
+            return new URI(sailorSettings.get(key));
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Invalid URI in " + key);
+        }
+    }
+
     private static void throwError(String message) {
         throw new IllegalArgumentException(message);
     }
@@ -112,7 +122,7 @@ public final class Settings {
         }
     }
 
-    public String getTriggerOrAction(){
+    public JsonObject getTriggerOrAction(){
         JsonArray nodes = task.getAsJsonObject("recipe").getAsJsonArray("nodes");
         JsonObject thisStepNode = null;
         for (JsonElement node : nodes) {
@@ -126,6 +136,14 @@ public final class Settings {
         if (thisStepNode.get("function") == null) {
             throw new RuntimeException("Step " + stepId + " has no function specified");
         }
-        return thisStepNode.get("function").getAsString();
+        return thisStepNode;
+    }
+
+    public String getFunction(){
+        return getTriggerOrAction().get("function").getAsString();
+    }
+
+    public String getCompId(){
+        return getTriggerOrAction().get("compId").getAsString();
     }
 }

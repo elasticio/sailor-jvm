@@ -60,7 +60,7 @@ class SettingsSpec extends Specification{
             settings.getStepId() == "step_1"
             settings.getCfg().toString() == "{\"uri\":\"546456456456456\"}"
             settings.getSnapshot() == null
-            settings.getTriggerOrAction() == "datas_and_errors"
+            settings.getFunction() == "datas_and_errors"
     }
 
     def "should throw error if some unknown property is accessed"() {
@@ -74,14 +74,14 @@ class SettingsSpec extends Specification{
             e.getMessage() == "SOME_UNKNOWN_PROPERTY is not specified in settings"
     }
 
-    def "should throw error if trigger or action cannot be defined"() {
+    def "should throw error if function cannot be defined"() {
         given:
 
         when:
             def envVars = getValidEnvVars();
             envVars.put("STEP_ID", "step_3");
             def settings = new Settings(envVars);
-            settings.getTriggerOrAction()
+            settings.getFunction()
         then:
             RuntimeException e = thrown()
             e.getMessage() == "Step step_3 is not found in task recipe"
