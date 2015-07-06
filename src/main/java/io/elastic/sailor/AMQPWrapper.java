@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AMQPWrapper {
+public class AMQPWrapper implements AMQPWrapperInterface {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AMQPWrapper.class);
 
     private final Settings settings;
@@ -47,8 +47,9 @@ public class AMQPWrapper {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public String listenQueue(String queueName, Consumer consumer) {
+    public String listenQueue(String queueName, Sailor.Callback callback) {
         try {
+            MessageConsumer consumer = new MessageConsumer(subscribeChannel, callback);
             return subscribeChannel.basicConsume(queueName, consumer);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -105,7 +106,7 @@ public class AMQPWrapper {
         }
     }
 
-    public void sendError(Error err, final Map<String,Object> headers, String originalMessageContent) {
+    public void sendError(Error err, final Map<String,Object> headers, JsonObject originalMessage) {
         AMQP.BasicProperties options = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
@@ -121,9 +122,9 @@ public class AMQPWrapper {
         JsonObject payload = new JsonObject();
         payload.add("error", errorJson);
 
-        if (!originalMessageContent.isEmpty()) {
+        /*if (!originalMessageContent.isEmpty()) {
             payload.addProperty("errorInput", originalMessageContent);
-        }
+        }*/
         byte[] errorPayload = payload.toString().getBytes(); // TODO: was stringify() - check
         sendToExchange(
                 settings.get("PUBLISH_MESSAGES_TO"),
@@ -138,7 +139,7 @@ public class AMQPWrapper {
         int reboundIteration = getReboundIteration(originalMessage.get("properties").getAsJsonObject().get("headers").getAsJsonObject().get("reboundIteration").getAsInt());
 
         if (reboundIteration > Integer.parseInt(settings.get("REBOUND_LIMIT"))) {
-            sendError(new Error("error", "Rebound limit exceeded", "stacktrace"), headers, originalMessage.get("content").getAsString());
+            sendError(new Error("error", "Rebound limit exceeded", "stacktrace"), headers, originalMessage);
         } else {
             Map<String, Object> headersCopy = new HashMap<>();
             headersCopy.putAll(headers);
