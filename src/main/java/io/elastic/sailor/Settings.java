@@ -4,31 +4,34 @@ import com.google.gson.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 public final class Settings {
 
     private static final Logger logger = LoggerFactory.getLogger(Settings.class);
 
-    private static final List<String> REQUIRED_SETTINGS = new ArrayList<String>(){{
-        add("AMQP_URI");
-        add("LISTEN_MESSAGES_ON");
-        add("PUBLISH_MESSAGES_TO");
-        add("DATA_ROUTING_KEY");
-        add("ERROR_ROUTING_KEY");
-        add("REBOUND_ROUTING_KEY");
-        add("TASK");
-        add("STEP_ID");
-    }};
+    private enum Required {
+        AMQP_URI,
+        LISTEN_MESSAGES_ON,
+        PUBLISH_MESSAGES_TO,
+        DATA_ROUTING_KEY,
+        ERROR_ROUTING_KEY,
+        REBOUND_ROUTING_KEY,
+        TASK,
+        STEP_ID
+    }
 
-    private static final Map<String, String> OPTIONAL_SETTINGS = new HashMap<String, String>(){{
-        put("REBOUND_INITIAL_EXPIRATION", "15000");
-        put("REBOUND_LIMIT", "20");
-        put("COMPONENT_PATH", "");
-    }};
+    private enum Optional {
+        REBOUND_INITIAL_EXPIRATION("15000"),
+        REBOUND_LIMIT("20"),
+        COMPONENT_PATH("");
+
+        private final String defaultValue;
+        Optional(String value) {
+            this.defaultValue = value;
+        }
+    }
 
     private Map<String, String> sailorSettings;
 
@@ -45,22 +48,22 @@ public final class Settings {
         Map<String, String> result = new HashMap<>();
 
         logger.info("About to validate settings...");
-        for (String each : REQUIRED_SETTINGS) {
-            if (settings.containsKey(each)) {
-                result.put(each, settings.get(each));
-                logger.info("Validated setting: " + each + " => " + settings.get(each));
+        for (Required each : Required.values()) {
+            if (settings.containsKey(each.name())) {
+                result.put(each.name(), settings.get(each.name()));
+                logger.info("Validated setting: " + each + " => " + settings.get(each.name()));
             } else {
                 throwError(each + " is missing");
             }
         }
 
-        for (String each : OPTIONAL_SETTINGS.keySet()) {
-            if (settings.containsKey(each)) {
-                result.put(each, settings.get(each));
-                logger.info("Validated setting: " + each + " => " + settings.get(each));
+        for (Optional each : Optional.values()) {
+            if (settings.containsKey(each.name())) {
+                result.put(each.name(), settings.get(each.name()));
+                logger.info("Validated setting: " + each + " => " + settings.get(each.name()));
             } else {
-                result.put(each, OPTIONAL_SETTINGS.get(each));
-                logger.info("Validated setting: " + each + " => " + OPTIONAL_SETTINGS.get(each));
+                result.put(each.name(), each.defaultValue);
+                logger.info("Validated setting: " + each + " => " + each.defaultValue);
             }
         }
 

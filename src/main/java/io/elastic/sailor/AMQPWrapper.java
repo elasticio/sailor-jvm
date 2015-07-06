@@ -87,11 +87,11 @@ public class AMQPWrapper {
 
     public void sendData(JsonObject data, final Map<String,Object> headers) {
         AMQP.BasicProperties options = new AMQP.BasicProperties.Builder()
-            .contentType("application/json")
-            .contentEncoding("utf8")
-            .headers(headers)
-            //TODO: .mandatory(true)
-            .build();
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                        //TODO: .mandatory(true)
+                .build();
         try {
             byte[] encryptedData = new CipherWrapper().encryptMessageContent(data).getBytes();
             sendToExchange(
@@ -107,11 +107,11 @@ public class AMQPWrapper {
 
     public void sendError(Error err, final Map<String,Object> headers, String originalMessageContent) {
         AMQP.BasicProperties options = new AMQP.BasicProperties.Builder()
-            .contentType("application/json")
-            .contentEncoding("utf8")
-            .headers(headers)
-            //TODO: .mandatory(true)
-            .build();
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                        //TODO: .mandatory(true)
+                .build();
 
         JsonObject errorJson = new JsonObject();
         errorJson.addProperty("name", err.name);
@@ -143,12 +143,12 @@ public class AMQPWrapper {
             Map<String, Object> headersCopy = new HashMap<>();
             headersCopy.putAll(headers);
             AMQP.BasicProperties options = new AMQP.BasicProperties.Builder()
-                .contentType("application/json")
-                .contentEncoding("utf8")
-                .headers(headersCopy)
-                .expiration(String.valueOf(getExpiration(reboundIteration)))
-                //TODO: .mandatory(true)
-                .build();
+                    .contentType("application/json")
+                    .contentEncoding("utf8")
+                    .headers(headersCopy)
+                    .expiration(String.valueOf(getExpiration(reboundIteration)))
+                            //TODO: .mandatory(true)
+                    .build();
 
             options.getHeaders().put("reboundIteration", reboundIteration);
 

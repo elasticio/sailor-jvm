@@ -21,15 +21,17 @@ class SettingsSpec extends Specification{
         return envVars;
     }
 
+    @SuppressWarnings("GroovyResultOfObjectAllocationIgnored")
     def "should not build settings if all are missing"() {
         when:
             def envVars  = new HashMap<String, String>();
-            def settings = new Settings(envVars);
+            new Settings(envVars);
         then:
             IllegalArgumentException e = thrown()
             e.getMessage() == "AMQP_URI is missing"
     }
 
+    @SuppressWarnings("GroovyResultOfObjectAllocationIgnored")
     def "should not build settings if some is missing"() {
         when:
             def envVars  = new HashMap<String, String>();

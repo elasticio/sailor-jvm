@@ -3,6 +3,7 @@ import com.google.gson.JsonParser
 import io.elastic.sailor.AMQPWrapper
 import io.elastic.sailor.CipherWrapper
 import io.elastic.sailor.Settings
+import io.elastic.sailor.Utils
 import spock.lang.Specification
 
 class AMPQSpec extends Specification {
@@ -39,7 +40,7 @@ class AMPQSpec extends Specification {
 
     def "Should send message to outgoing channel when process data" () {
         given:
-            def amqp = new AMQPWrapper(settings)
+            new AMQPWrapper(settings)
         when:
         println("when")
 

@@ -62,6 +62,7 @@ public class TaskExecutor {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public void execute(final ExecutionParameters params){
 
         final EventEmitter emitter = new EventEmitter.Builder()
