@@ -10,7 +10,7 @@ class ComponentResolverSpec extends Specification {
             new ComponentResolver("src/test/java/groovy/io")
         then:
             RuntimeException e = thrown()
-            e.getMessage() == "component.json is not found"
+            e.getMessage() == "component.json is not found in /home/lena/elasticio/test/sailor-jvm/src/test/java/groovy/io"
     }
 
     def "should successfully load component.json"() {

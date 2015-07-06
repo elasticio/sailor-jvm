@@ -36,7 +36,7 @@ public final class ComponentResolver {
             JsonParser parser = new JsonParser();
             return parser.parse(br).getAsJsonObject();
         } catch (FileNotFoundException e) {
-            throw new RuntimeException("component.json is not found");
+            throw new RuntimeException("component.json is not found in " + componentFolder);
         }
     }
 
