@@ -45,16 +45,18 @@ class TaskExecutorSpec extends Specification {
         def snapshotCallback = Mock(Callback)
         def dataCallback = Mock(Callback)
         def reboundCallback = Mock(Callback)
+        def endCallback = Mock(Callback)
 
         when:
             def executor = new TaskExecutor("groovy.io.elastic.sailor.component.TestAction");
-            executor.onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback);
+            executor.onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback).onEnd(endCallback);
             executor.execute(params);
         then:
             1 * dataCallback.receive({it.toString() == '{"body":{"someProperty":"someValue"},"attachments":{}}'})
             1 * snapshotCallback.receive({it.toString() == '{"lastUpdate":"2015-07-04"}'})
             1 * reboundCallback.receive({it.toString() == 'Please retry later'})
             1 * errorCallback.receive({it.getMessage() == "Error happened in TestAction!"})
+            1 * endCallback.receive(_)
     }
 
     def "should execute SleepAction and emit error on timeout"() {
@@ -68,15 +70,17 @@ class TaskExecutorSpec extends Specification {
         def snapshotCallback = Mock(Callback)
         def dataCallback = Mock(Callback)
         def reboundCallback = Mock(Callback)
+        def endCallback = Mock(Callback)
 
         when:
             def executor = new TaskExecutor("groovy.io.elastic.sailor.component.SleepAction");
-            executor.onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback);
+            executor.onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback).onEnd(endCallback);
             executor.setTimeout(200);
             executor.execute(params);
         then:
             1 * errorCallback.receive({it.getMessage() == "Processing time out - groovy.io.elastic.sailor.component.SleepAction"})
             0 * dataCallback.receive({})
+            1 * endCallback.receive(_)
     }
 }
 
