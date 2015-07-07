@@ -28,16 +28,14 @@ public final class ComponentResolver {
     }
 
     private JsonObject loadComponentJson(String componentPath){
-
-        String componentFolder = new File(USERDIR, componentPath).getAbsolutePath();
-        String componentJsonFile = new File(componentFolder, FILENAME).getAbsolutePath();
-
         try {
+            String componentFolder = new File(USERDIR, componentPath).getAbsolutePath();
+            String componentJsonFile = new File(componentFolder, FILENAME).getAbsolutePath();
             BufferedReader br = new BufferedReader(new FileReader(componentJsonFile));
             JsonParser parser = new JsonParser();
             return parser.parse(br).getAsJsonObject();
         } catch (FileNotFoundException e) {
-            throw new RuntimeException("component.json is not found");
+            throw new RuntimeException("component.json is not found: " + e);
         }
     }
 
