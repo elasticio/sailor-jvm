@@ -20,27 +20,27 @@ class AMPQSpec extends Specification {
 
     def message = new JsonParser().parse("{" +
             "'fields':{" +
-                "'consumerTag':'abcde'," +
-                "'deliveryTag':12345," +
-                "'exchange':'test'," +
-                "'routingKey':'test.hello'" +
+            "'consumerTag':'abcde'," +
+            "'deliveryTag':12345," +
+            "'exchange':'test'," +
+            "'routingKey':'test.hello'" +
             "}," +
             "'properties':{" +
-                "'contentType':'application/json'," +
-                "'contentEncoding':'utf8'," +
-                "'headers':{" +
-                    "'taskId':'task1234567890'," +
-                    "'execId':'exec1234567890'" +
-                "}," +
-                "'mandatory':true," +
-                "'clusterId':''" +
+            "'contentType':'application/json'," +
+            "'contentEncoding':'utf8'," +
+            "'headers':{" +
+            "'taskId':'task1234567890'," +
+            "'execId':'exec1234567890'" +
+            "}," +
+            "'mandatory':true," +
+            "'clusterId':''" +
             "}," +
             "'content':" + new CipherWrapper().encryptMessageContent(Utils.toJson("{\"content\":\"Message content\"}")) +
-        "}".replaceAll("'","\""));
+            "}".replaceAll("'","\""));
 
     def "Should send message to outgoing channel when process data" () {
         given:
-            new AMQPWrapper(settings)
+        new AMQPWrapper(settings)
         when:
         println("when")
 

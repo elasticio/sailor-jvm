@@ -28,83 +28,83 @@ class SailorSpec extends Specification {
     def "should not init if settings are invalid"() {
 
         given:
-            def envVars  = new HashMap<String, String>();
+        def envVars  = new HashMap<String, String>();
         when:
-            def sailor  = new Sailor();
-            sailor.init(envVars);
+        def sailor  = new Sailor();
+        sailor.init(envVars);
         then:
-            RuntimeException e = thrown()
-            e.getMessage() == "AMQP_URI is missing"
+        RuntimeException e = thrown()
+        e.getMessage() == "AMQP_URI is missing"
     }
 
     def "should init successfully if settings are invalid"() {
         given:
-            def envVars  = getValidEnvVars();
+        def envVars  = getValidEnvVars();
         when:
-            def sailor  = new Sailor();
-            sailor.init(envVars);
+        def sailor  = new Sailor();
+        sailor.init(envVars);
         then:
-            notThrown(RuntimeException)
+        notThrown(RuntimeException)
     }
 
     def "should throw exception if failed to connect to AMQP"() {
         given:
-            def envVars  = getValidEnvVars();
+        def envVars  = getValidEnvVars();
         when:
-            def sailor  = new Sailor();
-            sailor.init(envVars);
-            sailor.start();
+        def sailor  = new Sailor();
+        sailor.init(envVars);
+        sailor.start();
         then:
-            RuntimeException e = thrown()
-            e.getMessage() == "java.net.UnknownHostException: some-rabbit-server.com"
+        RuntimeException e = thrown()
+        e.getMessage() == "java.net.UnknownHostException: some-rabbit-server.com"
     }
 
     def "should throw exception if component is not found"() {
         given:
-            def envVars = getValidEnvVars();
-            envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
+        def envVars = getValidEnvVars();
+        envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
         when:
-            def sailor = new Sailor();
-            sailor.init(envVars);
-            sailor.start();
+        def sailor = new Sailor();
+        sailor.init(envVars);
+        sailor.start();
         then:
-            RuntimeException e = thrown()
-            e.getMessage() == "component.json is not found"
+        RuntimeException e = thrown()
+        e.getMessage() == "component.json is not found"
     }
 
     def "should not throw exception if component is found"() {
         given:
-            def envVars = getValidEnvVars();
-            envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
-            envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
+        def envVars = getValidEnvVars();
+        envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
+        envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
         when:
-            def sailor = new Sailor();
-            sailor.init(envVars);
-            sailor.start();
+        def sailor = new Sailor();
+        sailor.init(envVars);
+        sailor.start();
         then:
-            notThrown(RuntimeException)
+        notThrown(RuntimeException)
     }
 
     def "should process message and send responses to AMQP"() {
         given:
-            def envVars = getValidEnvVars();
-            envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
-            envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
-            def amqp = Mock(AMQPWrapperInterface)
+        def envVars = getValidEnvVars();
+        envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
+        envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
+        def amqp = Mock(AMQPWrapperInterface)
 
-            def body = new JsonObject();
-            body.addProperty("someProperty", "someValue");
-            def attachments = new JsonObject();
-            attachments.addProperty("attachment1", "attachmentContent");
-            def message = new Message(body, attachments);
+        def body = new JsonObject();
+        body.addProperty("someProperty", "someValue");
+        def attachments = new JsonObject();
+        attachments.addProperty("attachment1", "attachmentContent");
+        def message = new Message(body, attachments);
         when:
-            def sailor = new Sailor();
-            sailor.init(envVars);
-            sailor.setAMQP(amqp);
-            sailor.processMessage(message);
+        def sailor = new Sailor();
+        sailor.init(envVars);
+        sailor.setAMQP(amqp);
+        sailor.processMessage(message);
         then:
-            1 * amqp.sendData(_)
-            1 * amqp.sendError(_)
-            1 * amqp.sendRebound(_)
+        1 * amqp.sendData(_)
+        1 * amqp.sendError(_)
+        1 * amqp.sendRebound(_)
     }
 }

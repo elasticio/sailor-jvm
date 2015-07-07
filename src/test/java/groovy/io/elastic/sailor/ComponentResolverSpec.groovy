@@ -60,8 +60,4 @@ class ComponentResolverSpec extends Specification {
             RuntimeException e = thrown()
             e.getMessage() == "missing_action is not found"
     }
-
-
-
-
 }
