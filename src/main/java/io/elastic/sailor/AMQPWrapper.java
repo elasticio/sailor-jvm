@@ -47,9 +47,9 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public String listenQueue(String queueName, Sailor.Callback callback) {
+    public String listenQueue(String queueName, String cipherKey, Sailor.Callback callback) {
         try {
-            MessageConsumer consumer = new MessageConsumer(subscribeChannel, callback);
+            MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipherKey, callback);
             return subscribeChannel.basicConsume(queueName, consumer);
         } catch (IOException e) {
             throw new RuntimeException(e);

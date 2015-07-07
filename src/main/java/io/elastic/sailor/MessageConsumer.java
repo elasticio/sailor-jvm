@@ -1,11 +1,10 @@
 package io.elastic.sailor;
 
+import com.google.gson.JsonObject;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -15,9 +14,11 @@ import io.elastic.api.Message;
 public class MessageConsumer extends DefaultConsumer {
 
     Sailor.Callback callback;
+    CipherWrapper cipher;
 
-    public MessageConsumer(Channel channel, Sailor.Callback callback) {
+    public MessageConsumer(Channel channel, String cipherKey, Sailor.Callback callback) {
         super(channel);
+        this.cipher = new CipherWrapper(cipherKey);
         this.callback = callback;
     }
 
@@ -25,15 +26,13 @@ public class MessageConsumer extends DefaultConsumer {
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
 
-        Message message;
-        Map<String,Object> headers;
+        // decrypt body
+        String bodyString = new String(body, "UTF-8");
+        JsonObject payload = cipher.decryptMessageContent(bodyString);
+        Message message = new Message.Builder().body(payload).build();
 
-        // @TODO decrypt body
-        // @TODO build message with body and attachments
-        // @TODO extract headers
-        // @TODO pass everything to callback
-
-       this.callback.receive(message, headers);
+        System.out.println(message.toString());
+        this.callback.receive(message, properties.getHeaders(), consumerTag);
     }
 
 }

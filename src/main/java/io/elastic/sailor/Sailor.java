@@ -38,17 +38,19 @@ public class Sailor {
         logger.info("Starting up");
         amqp = new AMQPWrapper(settings);
         amqp.connect(settings.getURI("AMQP_URI"));
-        amqp.listenQueue(settings.get("LISTEN_MESSAGES_ON"), new Sailor.Callback());
+        amqp.listenQueue(settings.get("LISTEN_MESSAGES_ON"), settings.get("MESSAGE_CRYPTO_PASSWORD"), new Sailor.Callback(){
+            public void receive(Message message, Map<String,Object> headers, String consumerTag) {
+                processMessage(message, headers, consumerTag);
+            }
+        });
         logger.info("Connected to AMQP successfully");
     }
 
-    public class Callback{
-        public void receive(Message message, Map<String,Object> headers) {
-            processMessage(message, headers);
-        }
+    public interface Callback{
+        void receive(Message message, Map<String,Object> headers, String consumerTag);
     }
 
-    public void processMessage(final Message incomingMessage, final Map<String,Object> incomingHeaders){
+    public void processMessage(final Message incomingMessage, final Map<String,Object> incomingHeaders, String consumerTag){
 
         final Map<String,Object> headers = new HashMap<>();
         headers.put("execId", incomingHeaders.get("execId"));
