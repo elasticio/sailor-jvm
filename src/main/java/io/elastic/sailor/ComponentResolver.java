@@ -5,7 +5,6 @@ import com.google.gson.JsonParser;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 
 /**
@@ -34,7 +33,7 @@ public final class ComponentResolver {
             BufferedReader br = new BufferedReader(new FileReader(componentJsonFile));
             JsonParser parser = new JsonParser();
             return parser.parse(br).getAsJsonObject();
-        } catch (FileNotFoundException e) {
+        } catch (Exception e) {
             throw new RuntimeException("component.json is not found: " + e);
         }
     }
