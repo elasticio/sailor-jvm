@@ -1,37 +1,38 @@
 package io.elastic.sailor;
 
+import com.google.gson.JsonObject;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import io.elastic.api.Message;
 
 public class MessageConsumer extends DefaultConsumer {
 
-    private static Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
-    private Sailor sailor;
+    Sailor.Callback callback;
+    CipherWrapper cipher;
 
-    /**
-     * Constructs a new instance and records its association to the passed-in channel.
-     *
-     * @param channel the channel to which this consumer is attached
-     */
-    public MessageConsumer(Channel channel, Sailor sailor) {
+    public MessageConsumer(Channel channel, String cipherKey, Sailor.Callback callback) {
         super(channel);
-        this.sailor = sailor;
+        this.cipher = new CipherWrapper(cipherKey);
+        this.callback = callback;
     }
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
 
-        // @TODO decrypt message here
+        // decrypt body
+        String bodyString = new String(body, "UTF-8");
+        JsonObject payload = cipher.decryptMessageContent(bodyString);
+        Message message = new Message.Builder().body(payload).build();
 
-        // @TODO pass decrypted message and headers to sailor for processing
-        sailor.processMessage(consumerTag, envelope, properties, body);
+        System.out.println(message.toString());
+        this.callback.receive(message, properties.getHeaders(), envelope.getDeliveryTag());
     }
 
 }

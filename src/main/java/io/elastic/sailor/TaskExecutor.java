@@ -23,6 +23,7 @@ public class TaskExecutor {
     private Callback dataCallback;
     private Callback snapshotCallback;
     private Callback reboundCallback;
+    private Callback endCallback;
 
     public TaskExecutor(String className) {
         classToExecute = findClass(className);
@@ -49,6 +50,11 @@ public class TaskExecutor {
 
     public TaskExecutor onRebound(Callback callback) {
         reboundCallback = callback;
+        return this;
+    }
+
+    public TaskExecutor onEnd(Callback callback) {
+        endCallback = callback;
         return this;
     }
 
@@ -82,12 +88,15 @@ public class TaskExecutor {
                         component.execute(params);
                     } catch (Exception e) {
                         errorCallback.receive(e);
+                    } finally {
+                        endCallback.receive(null);
                     }
                 }
             };
             runWithTimeout(thread);
         } catch (Exception e) {
-            this.errorCallback.receive(e);
+            errorCallback.receive(e);
+            endCallback.receive(null);
         }
     }
 
@@ -97,11 +106,12 @@ public class TaskExecutor {
         executor.shutdown();
         try {
             future.get(timeout, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException ie) {
+        } catch (InterruptedException ie) {
             throw new RuntimeException(ie.getMessage());
-        }
-        catch (TimeoutException te) {
+        } catch (TimeoutException te) {
             throw new RuntimeException("Processing time out - " + classToExecute.getCanonicalName());
+        } catch (ExecutionException e) {
+            throw new RuntimeException(e.getMessage());
         }
     }
 }

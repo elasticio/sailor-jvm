@@ -29,26 +29,25 @@ public final class CipherWrapper {
         this.ENCRYPTION_KEY = PASSWORD;
     }
 
+    // converts JSON to string and encrypts
     public String encryptMessageContent(JsonObject message) throws IOException {
         return encrypt(message.toString());
     }
 
-    public String encryptMessageContent(String message) throws IOException {
-        return encrypt(message);
-    }
-
-    public String decryptMessageContent(String message) throws IOException {
+    // decrypts string and returns JSON object
+    public JsonObject decryptMessageContent(String message) throws IOException {
         if (message == null || message.length() == 0) {
             return null;
         }
         try {
             message = decrypt(message);
-            if (Utils.isJsonObject(message))
-                message = new JsonParser().parse(message).toString();
-            return message;
+            if (Utils.isJsonObject(message)){
+                return new JsonParser().parse(message).getAsJsonObject();
+            }
         } catch (Exception e) {
             throw new RuntimeException("Failed to decrypt message: " + e);
         }
+        return null;
     }
 
     private String encrypt(String message) throws IOException {

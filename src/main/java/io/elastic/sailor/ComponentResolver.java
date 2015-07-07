@@ -2,10 +2,10 @@ package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-
 import java.io.BufferedReader;
-import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.File;
 
 /**
  * Class to parse component.json
@@ -27,14 +27,16 @@ public final class ComponentResolver {
     }
 
     private JsonObject loadComponentJson(String componentPath){
+
+        String componentFolder = new File(USERDIR, componentPath).getAbsolutePath();
+        String componentJsonFile = new File(componentFolder, FILENAME).getAbsolutePath();
+
         try {
-            String componentFolder = new File(USERDIR, componentPath).getAbsolutePath();
-            String componentJsonFile = new File(componentFolder, FILENAME).getAbsolutePath();
             BufferedReader br = new BufferedReader(new FileReader(componentJsonFile));
             JsonParser parser = new JsonParser();
             return parser.parse(br).getAsJsonObject();
-        } catch (Exception e) {
-            throw new RuntimeException("component.json is not found: " + e);
+        } catch (FileNotFoundException e) {
+            throw new RuntimeException("component.json is not found in " + componentFolder);
         }
     }
 
@@ -62,11 +64,10 @@ public final class ComponentResolver {
     }
 
     public String loadVerifyCredentials() {
-        return "";
+        return null;
     }
 
-    public String loadTriggerOrAction(String name) {
-        findTriggerOrAction(name);
-        return "";
+    public void loadTriggerOrAction(String triggerOrActionName) {
+
     }
 }

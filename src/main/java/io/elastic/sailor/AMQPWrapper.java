@@ -9,7 +9,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AMQPWrapper {
+public class AMQPWrapper implements AMQPWrapperInterface {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AMQPWrapper.class);
 
     private final Settings settings;
@@ -21,10 +21,10 @@ public class AMQPWrapper {
         this.settings = settings;
     }
 
-    public AMQPWrapper connect(URI uri) {
-        return openConnection(uri)
-                .openPublishChannel()
-                .openSubscribeChannel();
+    public void connect(String link) {
+        openConnection(link);
+        openPublishChannel();
+        openSubscribeChannel();
     }
 
     public void disconnect() {
@@ -47,17 +47,17 @@ public class AMQPWrapper {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public String listenQueue(String queueName, Consumer consumer) {
+    public void listenQueue(String queueName, String cipherKey, Sailor.Callback callback) {
         try {
-            return subscribeChannel.basicConsume(queueName, consumer);
+            MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipherKey, callback);
+            subscribeChannel.basicConsume(queueName, consumer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void ack(JsonObject message) {
+    public void ack(Long deliveryTag) {
         try {
-            long deliveryTag = message.get("fields").getAsJsonObject().get("deliveryTag").getAsLong();
             logger.info(String.format("Message #%s ack", deliveryTag));
             subscribeChannel.basicAck(deliveryTag, false);
         } catch (Exception e) {
@@ -65,9 +65,8 @@ public class AMQPWrapper {
         }
     }
 
-    public void reject(JsonObject message) {
+    public void reject(Long deliveryTag) {
         try {
-            long deliveryTag = message.get("fields").getAsJsonObject().get("deliveryTag").getAsLong();
             logger.info(String.format("Message #%s reject", deliveryTag));
             subscribeChannel.basicReject(deliveryTag, false);
         } catch (Exception e) {
@@ -75,7 +74,7 @@ public class AMQPWrapper {
         }
     }
 
-    public void sendToExchange(String exchangeName, String routingKey, byte[] payload, AMQP.BasicProperties options) {
+    private void sendToExchange(String exchangeName, String routingKey, byte[] payload, AMQP.BasicProperties options) {
         logger.info(String.format("Pushing to exchange=%s, routingKey=%s, data=%s, options=%s",
                 exchangeName, routingKey, new String(payload), options));
         try {
@@ -105,7 +104,7 @@ public class AMQPWrapper {
         }
     }
 
-    public void sendError(Error err, final Map<String,Object> headers, String originalMessageContent) {
+    public void sendError(Error err, final Map<String,Object> headers, JsonObject originalMessage) {
         AMQP.BasicProperties options = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
@@ -121,9 +120,9 @@ public class AMQPWrapper {
         JsonObject payload = new JsonObject();
         payload.add("error", errorJson);
 
-        if (!originalMessageContent.isEmpty()) {
+        /*if (!originalMessageContent.isEmpty()) {
             payload.addProperty("errorInput", originalMessageContent);
-        }
+        }*/
         byte[] errorPayload = payload.toString().getBytes(); // TODO: was stringify() - check
         sendToExchange(
                 settings.get("PUBLISH_MESSAGES_TO"),
@@ -133,14 +132,14 @@ public class AMQPWrapper {
         );
     }
 
-    public void sendRebound(JsonObject originalMessage, Map<String,Object> headers) {
+    public void sendRebound(JsonObject originalMessage, Map<String, Object> headers) {
         logger.info("Rebound message: %s", originalMessage.toString());
         int reboundIteration = getReboundIteration(originalMessage.get("properties").getAsJsonObject().get("headers").getAsJsonObject().get("reboundIteration").getAsInt());
 
         if (reboundIteration > Integer.parseInt(settings.get("REBOUND_LIMIT"))) {
-            sendError(new Error("error", "Rebound limit exceeded", "stacktrace"), headers, originalMessage.get("content").getAsString());
+            sendError(new Error("error", "Rebound limit exceeded", "stacktrace"), headers, originalMessage);
         } else {
-            Map<String, Object> headersCopy = new HashMap<>();
+            Map<String, Object> headersCopy = new HashMap<String, Object>();
             headersCopy.putAll(headers);
             AMQP.BasicProperties options = new AMQP.BasicProperties.Builder()
                     .contentType("application/json")
@@ -166,11 +165,11 @@ public class AMQPWrapper {
         return Math.pow(2, reboundIteration - 1) * settings.getInt("REBOUND_INITIAL_EXPIRATION");
     }
 
-    private AMQPWrapper openConnection(URI uri) {
+    private AMQPWrapper openConnection(String uri) {
         try {
             if (amqp == null) {
                 ConnectionFactory factory = new ConnectionFactory();
-                factory.setUri(uri);
+                factory.setUri(new URI(uri));
                 amqp = factory.newConnection();
                 logger.info("Connected to AMQP");
             }
