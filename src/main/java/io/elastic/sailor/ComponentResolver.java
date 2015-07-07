@@ -2,10 +2,11 @@ package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.File;
 
 /**
  * Class to parse component.json
@@ -61,5 +62,14 @@ public final class ComponentResolver {
         }
 
         return result.get("main").getAsString();
+    }
+
+    public String loadVerifyCredentials() {
+        return "";
+    }
+
+    public String loadTriggerOrAction(String name) {
+        findTriggerOrAction(name);
+        return "";
     }
 }
