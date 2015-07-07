@@ -32,7 +32,7 @@ public class MessageConsumer extends DefaultConsumer {
         Message message = new Message.Builder().body(payload).build();
 
         System.out.println(message.toString());
-        this.callback.receive(message, properties.getHeaders(), consumerTag);
+        this.callback.receive(message, properties.getHeaders(), envelope.getDeliveryTag());
     }
 
 }

@@ -16,7 +16,7 @@ public class Sailor {
     private static final Logger logger = LoggerFactory.getLogger(Sailor.class);
 
     private Settings settings;
-    private AMQPWrapper amqp;
+    private AMQPWrapperInterface amqp;
     private ComponentResolver componentResolver;
 
     public static void main(String[] args) throws IOException {
@@ -30,27 +30,27 @@ public class Sailor {
         componentResolver = new ComponentResolver(settings.get("COMPONENT_PATH"));
     }
 
-    public void setAMQP(AMQPWrapper amqp) {
+    public void setAMQP(AMQPWrapperInterface amqp) {
         this.amqp = amqp;
     }
 
     public void start() throws IOException {
         logger.info("Starting up");
         amqp = new AMQPWrapper(settings);
-        amqp.connect(settings.getURI("AMQP_URI"));
+        amqp.connect(settings.get("AMQP_URI"));
         amqp.listenQueue(settings.get("LISTEN_MESSAGES_ON"), settings.get("MESSAGE_CRYPTO_PASSWORD"), new Sailor.Callback(){
-            public void receive(Message message, Map<String,Object> headers, String consumerTag) {
-                processMessage(message, headers, consumerTag);
+            public void receive(Message message, Map<String,Object> headers, Long deliveryTag) {
+                processMessage(message, headers, deliveryTag);
             }
         });
         logger.info("Connected to AMQP successfully");
     }
 
     public interface Callback{
-        void receive(Message message, Map<String,Object> headers, String consumerTag);
+        void receive(Message message, Map<String,Object> headers, Long deliveryTag);
     }
 
-    public void processMessage(final Message incomingMessage, final Map<String,Object> incomingHeaders, String consumerTag){
+    public void processMessage(final Message incomingMessage, final Map<String,Object> incomingHeaders, Long deliveryTag){
 
         final Map<String,Object> headers = new HashMap<>();
         headers.put("execId", incomingHeaders.get("execId"));
@@ -119,7 +119,6 @@ public class Sailor {
 
             }
         };
-
 
         executor.onData(dataCallback)
                 .onError(errorCallback)

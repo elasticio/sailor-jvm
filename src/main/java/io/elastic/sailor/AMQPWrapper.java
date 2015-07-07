@@ -21,10 +21,10 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         this.settings = settings;
     }
 
-    public AMQPWrapper connect(URI uri) {
-        return openConnection(uri)
-                .openPublishChannel()
-                .openSubscribeChannel();
+    public void connect(String link) {
+        openConnection(link);
+        openPublishChannel();
+        openSubscribeChannel();
     }
 
     public void disconnect() {
@@ -47,18 +47,17 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public String listenQueue(String queueName, String cipherKey, Sailor.Callback callback) {
+    public void listenQueue(String queueName, String cipherKey, Sailor.Callback callback) {
         try {
             MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipherKey, callback);
-            return subscribeChannel.basicConsume(queueName, consumer);
+            subscribeChannel.basicConsume(queueName, consumer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void ack(JsonObject message) {
+    public void ack(Long deliveryTag) {
         try {
-            long deliveryTag = message.get("fields").getAsJsonObject().get("deliveryTag").getAsLong();
             logger.info(String.format("Message #%s ack", deliveryTag));
             subscribeChannel.basicAck(deliveryTag, false);
         } catch (Exception e) {
@@ -66,9 +65,8 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         }
     }
 
-    public void reject(JsonObject message) {
+    public void reject(Long deliveryTag) {
         try {
-            long deliveryTag = message.get("fields").getAsJsonObject().get("deliveryTag").getAsLong();
             logger.info(String.format("Message #%s reject", deliveryTag));
             subscribeChannel.basicReject(deliveryTag, false);
         } catch (Exception e) {
@@ -76,7 +74,7 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         }
     }
 
-    public void sendToExchange(String exchangeName, String routingKey, byte[] payload, AMQP.BasicProperties options) {
+    private void sendToExchange(String exchangeName, String routingKey, byte[] payload, AMQP.BasicProperties options) {
         logger.info(String.format("Pushing to exchange=%s, routingKey=%s, data=%s, options=%s",
                 exchangeName, routingKey, new String(payload), options));
         try {
@@ -167,11 +165,11 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         return Math.pow(2, reboundIteration - 1) * settings.getInt("REBOUND_INITIAL_EXPIRATION");
     }
 
-    private AMQPWrapper openConnection(URI uri) {
+    private AMQPWrapper openConnection(String uri) {
         try {
             if (amqp == null) {
                 ConnectionFactory factory = new ConnectionFactory();
-                factory.setUri(uri);
+                factory.setUri(new URI(uri));
                 amqp = factory.newConnection();
                 logger.info("Connected to AMQP");
             }

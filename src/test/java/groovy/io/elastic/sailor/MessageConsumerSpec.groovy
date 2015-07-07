@@ -35,13 +35,12 @@ class MessageConsumerSpec extends Specification {
     def "should decrypt encrypted message and pass parameters to callback"() {
         setup:
             def callback = Mock(Sailor.Callback)
-            def cipherKey = "test123456456456546"
-            def consumer = new MessageConsumer(null, cipherKey, callback);
+            def consumer = new MessageConsumer(null, "testCryptoPassword", callback);
             def consumerTag = "tag12345";
 
             def headers = new HashMap();
             headers.put("execId", "exec1");
-            headers.put("taskId", "task2");
+            headers.put("taskId", "task2")
             headers.put("userId", "user3");
 
             def options = new AMQP.BasicProperties.Builder()
@@ -49,17 +48,12 @@ class MessageConsumerSpec extends Specification {
                     .contentEncoding("utf8")
                     .headers(headers)
                     .build();
-
-            def cipher = new CipherWrapper(cipherKey);
-            JsonObject body = new JsonObject();
-            body.addProperty("key", "value");
-            System.out.println(cipher.encryptMessageContent(body));
         when:
 
-            byte[] messageContent = new String("{\"content\":\"Hello world!\"}").getBytes();
+            byte[] messageContent = new String("MhcbHNshDRy6RNubmFJ+u4tcKKTKT6H50uYMyBXhws1xjvVKRtEC0hEg0/R2Zecy").getBytes();
             consumer.handleDelivery(consumerTag, null, options, messageContent);
         then:
-            1 * callback.receive({it.toString() == "{\"body\":{\"content\":\"Hello world!\"},\"attachments\":{}}"}, headers, consumerTag)
+            1 * callback.receive({it.toString() == "{\"someKey\":\"someValue\"}"}, headers, consumerTag)
     }
 
 
