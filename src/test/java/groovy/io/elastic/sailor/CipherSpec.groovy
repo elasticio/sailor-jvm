@@ -1,6 +1,5 @@
 package groovy.io.elastic.sailor
 import com.google.gson.JsonObject
-import com.google.gson.JsonParser
 import io.elastic.sailor.CipherWrapper
 import spock.lang.Specification
 
@@ -16,7 +15,7 @@ class CipherSpec extends Specification {
             def result = cipher.encryptMessageContent(content)
             def decryptedResult = cipher.decryptMessageContent(result)
         then:
-            decryptedResult.equals(content.toString())
+            decryptedResult.equals(content)
     }
 
     def "should throw error if failed to decrypt"() {
@@ -25,12 +24,13 @@ class CipherSpec extends Specification {
         when:
         cipher.decryptMessageContent("dsdasdsad");
         then: // TODO: should throw RuntimeException if input string is not JsonElement
-        notThrown(RuntimeException)
+        thrown(RuntimeException)
     }
 
     def "should encrypt and decrypt message with password"() {
         given:
-            def content = new JsonParser().parse("{\"Hello world\":}").getAsJsonObject()
+            def content = new JsonObject()
+        content.addProperty("property1", "Hello world")
             def cipher = new CipherWrapper(key)
         when:
             def result = cipher.encryptMessageContent(content)

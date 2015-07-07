@@ -17,16 +17,20 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 public final class CipherWrapper {
+    private final static String ALGORITHM = "AES/CBC/PKCS5Padding";
+
     private final String ENCRYPTION_KEY;
-    private final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private final byte[] ENCRYPTION_IV = new SecureRandom().generateSeed(16);
+    private Cipher cipher;
 
     public CipherWrapper() {
         this.ENCRYPTION_KEY = System.getenv("MESSAGE_CRYPTO_PASSWORD");
+        init();
     }
 
     public CipherWrapper(String PASSWORD) {
         this.ENCRYPTION_KEY = PASSWORD;
+        init();
     }
 
     // converts JSON to string and encrypts
@@ -50,17 +54,24 @@ public final class CipherWrapper {
         return null;
     }
 
+    private void init() {
+        try {
+            cipher = Cipher.getInstance(ALGORITHM);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     private String encrypt(String message) throws IOException {
         try {
             if (ENCRYPTION_KEY == null) return URLEncoder.encode(message, "UTF-8");
 
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, generateKey(), new IvParameterSpec(ENCRYPTION_IV));
             byte[] a = cipher.doFinal(message.getBytes());
 
             return new String(Base64.encodeBase64(a));
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to encrypt message: " + e);
         }
     }
 
@@ -68,7 +79,6 @@ public final class CipherWrapper {
         try {
             if (ENCRYPTION_KEY == null) return URLDecoder.decode(message, "UTF-8");
 
-            Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, generateKey(), new IvParameterSpec(ENCRYPTION_IV));
             byte[] a = cipher.doFinal(Base64.decodeBase64(message));
 
