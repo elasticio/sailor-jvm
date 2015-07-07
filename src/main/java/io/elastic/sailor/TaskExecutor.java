@@ -85,17 +85,22 @@ public class TaskExecutor {
                 @Override
                 public void run() {
                     try {
+                        System.out.println("Execute this");
                         component.execute(params);
                     } catch (Exception e) {
+                        System.out.println(e.getMessage());
                         errorCallback.receive(e);
                     } finally {
+                        System.out.println("end finally!");
                         endCallback.receive(null);
                     }
                 }
             };
             runWithTimeout(thread);
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             errorCallback.receive(e);
+            System.out.println("end exception!");
             endCallback.receive(null);
         }
     }

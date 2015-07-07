@@ -37,19 +37,19 @@ class ComponentResolverSpec extends Specification {
     def "should find trigger"() {
         when:
             def resolver = new ComponentResolver("src/test/java/groovy/io/elastic/sailor/component")
-            def result = resolver.findTriggerOrAction("query_price_lists")
+            def result = resolver.findTriggerOrAction("sleep")
         then:
             notThrown(RuntimeException)
-            result == "io.elastic.sap.bydesign.triggers.pricelist.QueryPriceLists"
+            result == "groovy.io.elastic.sailor.component.SleepAction"
     }
 
     def "should find action"() {
         when:
             def resolver = new ComponentResolver("src/test/java/groovy/io/elastic/sailor/component")
-            def result = resolver.findTriggerOrAction("create_customer")
+            def result = resolver.findTriggerOrAction("test")
         then:
             notThrown(RuntimeException)
-            result == "io.elastic.sap.bydesign.actions.customer.CreateCustomer"
+            result == "groovy.io.elastic.sailor.component.TestAction"
     }
 
     def "should throw exception if trigger or action is not found"() {

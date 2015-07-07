@@ -50,7 +50,7 @@ public class Sailor {
         void receive(Message message, Map<String,Object> headers, Long deliveryTag);
     }
 
-    public void processMessage(final Message incomingMessage, final Map<String,Object> incomingHeaders, Long deliveryTag){
+    public void processMessage(final Message incomingMessage, final Map<String,Object> incomingHeaders, final Long deliveryTag){
 
         final Map<String,Object> headers = new HashMap<>();
         headers.put("execId", incomingHeaders.get("execId"));
@@ -58,13 +58,15 @@ public class Sailor {
         headers.put("userId", incomingHeaders.get("userId"));
         headers.put("stepId", settings.getStepId());
         headers.put("compId", settings.getCompId());
-        headers.put("function", settings.getTriggerOrAction());
+        headers.put("function", settings.getFunction());
         headers.put("start", System.currentTimeMillis());
 
         String triggerOrAction = settings.getFunction();
         String className = componentResolver.findTriggerOrAction(triggerOrAction);
         JsonObject cfg = settings.getCfg();
         JsonObject snapshot = settings.getSnapshot();
+
+        System.out.println("Class to execute is " + className);
 
         ExecutionParameters params = new ExecutionParameters.Builder(incomingMessage)
                 .configuration(cfg)
@@ -77,6 +79,7 @@ public class Sailor {
         EventEmitter.Callback dataCallback = new EventEmitter.Callback() {
             @Override
             public void receive(Object obj) {
+                System.out.println("Data received");
                 Message message = (Message)obj;
                 headers.put("end", System.currentTimeMillis());
                 amqp.sendData(message.getBody(), headers);
@@ -87,9 +90,9 @@ public class Sailor {
         EventEmitter.Callback errorCallback = new EventEmitter.Callback() {
             @Override
             public void receive(Object obj) {
-                Error err = (Error)obj;
                 headers.put("end", System.currentTimeMillis());
-                amqp.sendError(err, headers, incomingMessage.getBody());
+                Error err = new Error((RuntimeException)obj);
+                amqp.sendError(err, headers, incomingMessage);
             }
         };
 
@@ -97,10 +100,15 @@ public class Sailor {
         EventEmitter.Callback reboundCallback = new EventEmitter.Callback() {
             @Override
             public void receive(Object obj) {
-                Error err = (Error)obj;
+                Error err = null;
+                if (obj instanceof Exception) {
+                    //err = new Error((Throwable)obj);
+                } else {
+                    //err = new Error(obj.toString(), obj.toString(), null);
+                }
                 headers.put("end", System.currentTimeMillis());
-                headers.put("reboundReason", err.message);
-                amqp.sendRebound(incomingMessage.getBody(), headers);
+                //headers.put("reboundReason", err.message);
+                amqp.sendRebound(err, headers, incomingMessage);
             }
         };
 
@@ -116,7 +124,8 @@ public class Sailor {
         EventEmitter.Callback endCallback = new EventEmitter.Callback() {
             @Override
             public void receive(Object obj) {
-
+                System.out.println("End received");
+                amqp.ack(deliveryTag);
             }
         };
 

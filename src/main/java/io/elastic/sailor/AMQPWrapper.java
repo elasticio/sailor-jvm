@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
+import io.elastic.api.Message;
 
 public class AMQPWrapper implements AMQPWrapperInterface {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AMQPWrapper.class);
@@ -104,7 +105,7 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         }
     }
 
-    public void sendError(Error err, final Map<String,Object> headers, JsonObject originalMessage) {
+    public void sendError(Error err, final Map<String,Object> headers, Message originalMessage) {
         AMQP.BasicProperties options = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
@@ -119,10 +120,8 @@ public class AMQPWrapper implements AMQPWrapperInterface {
 
         JsonObject payload = new JsonObject();
         payload.add("error", errorJson);
+        payload.add("errorInput", originalMessage.getBody());
 
-        /*if (!originalMessageContent.isEmpty()) {
-            payload.addProperty("errorInput", originalMessageContent);
-        }*/
         byte[] errorPayload = payload.toString().getBytes(); // TODO: was stringify() - check
         sendToExchange(
                 settings.get("PUBLISH_MESSAGES_TO"),
@@ -132,15 +131,17 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         );
     }
 
-    public void sendRebound(JsonObject originalMessage, Map<String,Object> headers) {
-        logger.info("Rebound message: %s", originalMessage.toString());
-        int reboundIteration = getReboundIteration(originalMessage.get("properties").getAsJsonObject().get("headers").getAsJsonObject().get("reboundIteration").getAsInt());
+    public void sendRebound(Error err, final Map<String,Object> headers, Message originalMessage) {
+
+        logger.info("Rebound message: %s", originalMessage.getBody().toString());
+        int reboundIteration = Integer.parseInt(headers.get("reboundIteration").toString());
 
         if (reboundIteration > Integer.parseInt(settings.get("REBOUND_LIMIT"))) {
-            sendError(new Error("error", "Rebound limit exceeded", "stacktrace"), headers, originalMessage);
+            sendError(new Error("error", "Rebound limit exceeded", null), headers, originalMessage);
         } else {
             Map<String, Object> headersCopy = new HashMap<>();
             headersCopy.putAll(headers);
+
             AMQP.BasicProperties options = new AMQP.BasicProperties.Builder()
                     .contentType("application/json")
                     .contentEncoding("utf8")
@@ -151,10 +152,14 @@ public class AMQPWrapper implements AMQPWrapperInterface {
 
             options.getHeaders().put("reboundIteration", reboundIteration);
 
+            JsonObject payload = new JsonObject();
+            payload.add("body", originalMessage.getBody());
+            payload.add("attachments", originalMessage.getAttachments());
+
             sendToExchange(
                     settings.get("PUBLISH_MESSAGES_TO"),
                     settings.get("REBOUND_ROUTING_KEY"),
-                    originalMessage.get("content").toString().getBytes(),
+                    payload.toString().getBytes(),
                     options
             );
 

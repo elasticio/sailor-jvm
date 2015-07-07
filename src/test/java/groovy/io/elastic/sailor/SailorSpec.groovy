@@ -11,7 +11,7 @@ class SailorSpec extends Specification {
 
     def getValidEnvVars(){
         def envVars  = new HashMap<String, String>();
-        envVars.put("TASK", "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"function\":\"datas_and_errors\"}]}}");
+        envVars.put("TASK", "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}");
         envVars.put("STEP_ID", "step_1");
         envVars.put("AMQP_URI", "amqp://guest:guest@some-rabbit-server.com:5672");
         envVars.put("LISTEN_MESSAGES_ON", "5559edd38968ec0736000003:test_exec:step_1:messages");
@@ -85,26 +85,77 @@ class SailorSpec extends Specification {
             notThrown(RuntimeException)
     }
 
-    def "should process message and send responses to AMQP"() {
+    def checkOutgoingHeaders(HashMap headers, String function){
+        return headers.get("execId") == "exec1" &&
+                headers.get("taskId") == "task2" &&
+                headers.get("userId") == "user3" &&
+                headers.get("stepId") == "step_1" &&
+                headers.get("compId") == "testcomponent" &&
+                headers.get("function") == function;
+    }
+
+    def "should process message with SleepAction and send responses to AMQP"() {
         given:
             def envVars = getValidEnvVars();
             envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
             envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
+            envVars.put("TASK", "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"sleep\"}]}}");
+
             def amqp = Mock(AMQPWrapperInterface)
 
+            // message
             def body = new JsonObject();
             body.addProperty("someProperty", "someValue");
             def attachments = new JsonObject();
             attachments.addProperty("attachment1", "attachmentContent");
             def message = new Message(body, attachments);
+
+            // headers
+            def headers = new HashMap();
+            headers.put("execId", "exec1");
+            headers.put("taskId", "task2")
+            headers.put("userId", "user3");
         when:
             def sailor = new Sailor();
             sailor.init(envVars);
             sailor.setAMQP(amqp);
-            sailor.processMessage(message);
+            sailor.processMessage(message, headers, 12345);
         then:
-            1 * amqp.sendData(_)
-            1 * amqp.sendError(_)
-            1 * amqp.sendRebound(_)
+            1 * amqp.sendData({it.toString() == "{\"someProperty\":\"someValue\"}"}, {checkOutgoingHeaders(it, "sleep")})
+            1 * amqp.sendError({it.message = 'Error happened in SleepAction!'}, {checkOutgoingHeaders(it, "sleep")}, message)
+            1 * amqp.ack(12345)
+    }
+
+    def "should process message with TestAction and send responses to AMQP"() {
+        given:
+            def envVars = getValidEnvVars();
+            envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
+            envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
+            envVars.put("TASK", "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}");
+
+            def amqp = Mock(AMQPWrapperInterface)
+
+            // message
+            def body = new JsonObject();
+            body.addProperty("someProperty", "someValue");
+            def attachments = new JsonObject();
+            attachments.addProperty("attachment1", "attachmentContent");
+            def message = new Message(body, attachments);
+
+            // headers
+            def headers = new HashMap();
+            headers.put("execId", "exec1");
+            headers.put("taskId", "task2")
+            headers.put("userId", "user3");
+        when:
+            def sailor = new Sailor();
+            sailor.init(envVars);
+            sailor.setAMQP(amqp);
+            sailor.processMessage(message, headers, 12345);
+        then:
+            1 * amqp.sendData({it.toString() == "{\"someProperty\":\"someValue\"}"}, {checkOutgoingHeaders(it, "test")})
+            1 * amqp.sendRebound({it.message = 'Please retry later'}, {checkOutgoingHeaders(it, "test")}, message)
+            1 * amqp.sendError({it.message = 'Error happened in TestAction!'}, {checkOutgoingHeaders(it, "test")}, message)
+            1 * amqp.ack(12345)
     }
 }

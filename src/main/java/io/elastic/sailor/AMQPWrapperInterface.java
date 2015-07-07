@@ -3,6 +3,7 @@ package io.elastic.sailor;
 import com.google.gson.JsonObject;
 
 import java.util.Map;
+import io.elastic.api.Message;
 
 public interface AMQPWrapperInterface {
 
@@ -10,8 +11,8 @@ public interface AMQPWrapperInterface {
     void listenQueue(String queueName, String cipherKey, Sailor.Callback callback);
 
     void sendData(JsonObject data, Map<String,Object> headers);
-    void sendError(Error err, final Map<String,Object> headers, JsonObject originalMessage);
-    void sendRebound(JsonObject originalMessage, Map<String,Object> headers);
+    void sendError(Error err, final Map<String,Object> headers, Message originalMessage);
+    void sendRebound(Error err, final Map<String,Object> headers, Message originalMessage);
     void ack(Long deliveryTag);
     void reject(Long deliveryTag);
 }

@@ -110,7 +110,7 @@ public final class Settings {
         if (task.get("data") != null && task.getAsJsonObject("data").get(stepId) != null) {
             return task.getAsJsonObject("data").getAsJsonObject(stepId);
         } else {
-            return null;
+            return new JsonObject();
         }
     }
 
@@ -118,7 +118,7 @@ public final class Settings {
         if (task.get("snapshot") != null && task.getAsJsonObject("snapshot").get(stepId) != null) {
             return task.getAsJsonObject("snapshot").getAsJsonObject(stepId);
         } else {
-            return null;
+            return new JsonObject();
         }
     }
 
