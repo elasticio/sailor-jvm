@@ -66,7 +66,7 @@ public class Sailor {
                 incomingMessage,
                 incomingHeaders,
                 deliveryTag,
-                amqp, settings, new CipherWrapper()
+                amqp, settings, new CipherWrapper("iv=any16_symbols".getBytes())
         );
 
         // make data callback

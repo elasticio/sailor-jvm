@@ -23,7 +23,7 @@ public class MessageConsumer extends DefaultConsumer {
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
 
-        CipherWrapper cipher = new CipherWrapper();
+        CipherWrapper cipher = new CipherWrapper("iv=any16_symbols".getBytes());
 
         // decrypt body
         String bodyString = new String(body, "UTF-8");
