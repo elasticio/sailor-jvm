@@ -87,7 +87,7 @@ class MessageProcessorSpec  extends Specification {
         given:
             def amqp = Mock(AMQPWrapperInterface)
             def processor = makeProcessor(amqp);
-            def exception = new RuntimeException("Something happened");
+            def exception = new Exception("Something happened");
         when:
             processor.processError(exception);
         then:

@@ -72,7 +72,7 @@ public class MessageProcessor {
 
     // should send error to RabbitMQ
     public void processError(Object obj){
-        Error err = new Error((RuntimeException)obj);
+        Error err = new Error((Throwable)obj);
         sendError(err);
     }
 

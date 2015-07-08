@@ -59,7 +59,7 @@ class SettingsSpec extends Specification{
             settings.getTask().get("_id").getAsString() == "5559edd38968ec0736000003"
             settings.getStepId() == "step_1"
             settings.getCfg().toString() == "{\"uri\":\"546456456456456\"}"
-            settings.getSnapshot() == null
+            settings.getSnapshot().toString() == "{}"
             settings.getFunction() == "datas_and_errors"
     }
 

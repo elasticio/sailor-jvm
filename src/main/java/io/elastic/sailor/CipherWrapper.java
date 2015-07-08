@@ -7,7 +7,6 @@ import org.apache.commons.codec.binary.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -18,6 +17,7 @@ import java.security.SecureRandom;
 import io.elastic.api.Message;
 
 public final class CipherWrapper {
+
     private final String ENCRYPTION_KEY;
     private final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private final byte[] ENCRYPTION_IV = new SecureRandom().generateSeed(16);
@@ -35,6 +35,19 @@ public final class CipherWrapper {
         payload.add("body", message.getBody());
         payload.add("attachments", message.getAttachments());
         return encryptMessageContent(payload);
+    }
+
+    public Message decryptMessage(String encrypted) {
+        JsonObject payload = decryptMessageContent(encrypted);
+        JsonObject body = payload.getAsJsonObject("body");
+        JsonObject attachments = payload.getAsJsonObject("attachments");
+        if (body == null) {
+            body = new JsonObject();
+        }
+        if (attachments == null) {
+            attachments = new JsonObject();
+        }
+        return new Message.Builder().body(body).attachments(attachments).build();
     }
 
     // converts JSON to string and encrypts

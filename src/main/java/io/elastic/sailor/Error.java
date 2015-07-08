@@ -1,6 +1,7 @@
 package io.elastic.sailor;
 
-public class Error { // TODO: rewrite using Exception inheritance
+public class Error {
+
     public String name;
     public String message;
     public String stack;

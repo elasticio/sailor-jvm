@@ -4,7 +4,7 @@ import io.elastic.sailor.CipherWrapper
 import spock.lang.Specification
 import io.elastic.api.Message
 
-class CipherSpec extends Specification {
+class CipherWrapperSpec extends Specification {
 
     def key = "testCryptoPassword";
 
@@ -72,12 +72,14 @@ class CipherSpec extends Specification {
         return new Message(body, attachments);
     }
 
-    def "should encrypt message"() {
+    def "should encrypt & decrypt message"() {
         given:
-            def cipher = new CipherWrapper(key)
+            def cipher = new CipherWrapper()
         when:
-            def result = cipher.encryptMessage(getMessage());
+            def encrypted = cipher.encryptMessage(getMessage());
+            def decrypted = cipher.decryptMessage(encrypted);
         then:
-            result == "" // @TODO put here a string
+            decrypted.getBody().toString() == "{\"incomingProperty1\":\"incomingValue1\",\"incomingProperty2\":\"incomingValue2\"}"
+            decrypted.getAttachments().toString() == "{\"incomingAttachment1\":\"incomingAttachment1Content\",\"incomingAttachment2\":\"incomingAttachment2Content\"}"
     }
 }

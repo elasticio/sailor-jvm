@@ -20,8 +20,8 @@ class SailorSpec extends Specification {
         envVars.put("ERROR_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.error");
         envVars.put("SNAPSHOT_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.snapshot");
         envVars.put("REBOUND_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.rebound");
-        envVars.put("MESSAGE_CRYPTO_PASSWORD", "crypt123456");
-        envVars.put("COMPONENT_PATH", "/spec/component/");
+        envVars.put("SHAPSHOT_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.rebound");
+        envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
         return envVars;
     }
 
@@ -37,7 +37,7 @@ class SailorSpec extends Specification {
             e.getMessage() == "AMQP_URI is missing"
     }
 
-    def "should init successfully if settings are invalid"() {
+    def "should init successfully if settings are valid"() {
         given:
             def envVars  = getValidEnvVars();
         when:
@@ -62,14 +62,13 @@ class SailorSpec extends Specification {
     def "should throw exception if component is not found"() {
         given:
             def envVars = getValidEnvVars();
-            envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
+            envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic");
         when:
             def sailor = new Sailor();
             sailor.init(envVars);
-            sailor.start();
         then:
             RuntimeException e = thrown()
-            e.getMessage() == "component.json is not found"
+            e.getMessage().contains("component.json is not found in")
     }
 
     def "should not throw exception if component is found"() {
@@ -80,7 +79,6 @@ class SailorSpec extends Specification {
         when:
             def sailor = new Sailor();
             sailor.init(envVars);
-            sailor.start();
         then:
             notThrown(RuntimeException)
     }
@@ -122,7 +120,7 @@ class SailorSpec extends Specification {
             sailor.processMessage(message, headers, 12345);
         then:
             1 * amqp.sendData({it.toString() == "{\"someProperty\":\"someValue\"}"}, {checkOutgoingHeaders(it, "sleep")})
-            1 * amqp.sendError({it.message = 'Error happened in SleepAction!'}, {checkOutgoingHeaders(it, "sleep")}, message)
+            1 * amqp.sendError({it.toString() == 'Error happened in SleepAction!'}, {checkOutgoingHeaders(it, "sleep")}, message)
             1 * amqp.ack(12345)
     }
 

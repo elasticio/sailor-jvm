@@ -1,16 +1,12 @@
 package groovy.io.elastic.sailor
 
-import com.google.gson.JsonObject
 import com.rabbitmq.client.AMQP
-import io.elastic.api.Message
 import io.elastic.sailor.AMQPWrapper
 import io.elastic.sailor.Settings
-import io.elastic.sailor.Utils
 import spock.lang.Specification
 import com.rabbitmq.client.Channel;
-import io.elastic.sailor.Error;
 
-class AMPQSpec extends Specification {
+class AMPQWrapperSpec extends Specification {
 
     def getValidEnvVars(){
         def envVars  = new HashMap<String, String>();

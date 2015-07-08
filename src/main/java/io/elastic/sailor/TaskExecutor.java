@@ -95,6 +95,7 @@ public class TaskExecutor {
             };
             runWithTimeout(thread);
         } catch (Exception e) {
+            System.out.println(e.getMessage());
             errorCallback.receive(e);
             endCallback.receive(null);
         }

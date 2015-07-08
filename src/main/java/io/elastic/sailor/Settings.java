@@ -4,10 +4,8 @@ import com.google.gson.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
-import java.net.URI;
 
 public final class Settings {
 
@@ -28,7 +26,8 @@ public final class Settings {
     private enum Optional {
         REBOUND_INITIAL_EXPIRATION("15000"),
         REBOUND_LIMIT("20"),
-        COMPONENT_PATH("");
+        COMPONENT_PATH(""),
+        MESSAGE_CRYPTO_PASSWORD(null);
 
         private final String defaultValue;
         Optional(String value) {
@@ -73,8 +72,17 @@ public final class Settings {
         return result;
     }
 
+    private boolean isRequired(String key) {
+        try {
+            String value = Required.valueOf(key).name();
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+
     public String get(String key) {
-        if (sailorSettings.get(key) == null) {
+        if (sailorSettings.get(key) == null && isRequired(key)) {
             throw new RuntimeException(key + " is not specified in settings");
         }
         return sailorSettings.get(key);
@@ -85,14 +93,6 @@ public final class Settings {
             throw new RuntimeException(key + " is not specified in settings");
         }
         return Integer.parseInt(sailorSettings.get(key));
-    }
-
-    public URI getURI(String key) {
-        try {
-            return new URI(sailorSettings.get(key));
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("Invalid URI in " + key);
-        }
     }
 
     private static void throwError(String message) {

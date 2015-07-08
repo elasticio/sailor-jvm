@@ -13,26 +13,23 @@ import io.elastic.api.Message;
 
 public class MessageConsumer extends DefaultConsumer {
 
-    Sailor.Callback callback;
-    CipherWrapper cipher;
+    private Sailor.Callback callback;
+    private CipherWrapper cipher;
 
-    public MessageConsumer(Channel channel, Sailor.Callback callback) {
+    public MessageConsumer(Channel channel, CipherWrapper cipher, Sailor.Callback callback) {
         super(channel);
+        this.cipher = cipher;
         this.callback = callback;
     }
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
-
-        CipherWrapper cipher = new CipherWrapper();
-
-        // decrypt body
+        // decrypt message
         String bodyString = new String(body, "UTF-8");
-        JsonObject payload = cipher.decryptMessageContent(bodyString);
-        Message message = new Message.Builder().body(payload).build();
-
-        System.out.println(message.toString());
+        Message message = cipher.decryptMessage(bodyString);
+        System.out.println(message.getBody().toString());
+        System.out.println(message.getAttachments().toString());
         this.callback.receive(message, properties.getHeaders(), envelope.getDeliveryTag());
     }
 

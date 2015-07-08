@@ -5,7 +5,7 @@ import com.rabbitmq.client.AMQP;
 public interface AMQPWrapperInterface {
 
     void connect(String uri);
-    void listenQueue(String queueName, Sailor.Callback callback);
+    void listenQueue(String queueName, CipherWrapper cipher, Sailor.Callback callback);
 
     void sendData(byte[] payload, AMQP.BasicProperties options);
     void sendError(byte[] payload, AMQP.BasicProperties options);

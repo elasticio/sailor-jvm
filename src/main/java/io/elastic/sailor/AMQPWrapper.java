@@ -3,6 +3,7 @@ package io.elastic.sailor;
 import com.rabbitmq.client.*;
 import org.slf4j.LoggerFactory;
 
+import javax.crypto.Cipher;
 import java.io.IOException;
 import java.net.URI;
 
@@ -50,9 +51,9 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public void listenQueue(String queueName, Sailor.Callback callback) {
+    public void listenQueue(String queueName, CipherWrapper cipher, Sailor.Callback callback) {
         try {
-            MessageConsumer consumer = new MessageConsumer(subscribeChannel, callback);
+            MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, callback);
             subscribeChannel.basicConsume(queueName, consumer);
         } catch (IOException e) {
             throw new RuntimeException(e);
