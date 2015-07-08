@@ -105,6 +105,29 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         }
     }
 
+    public void sendSnapshot(JsonObject snapshot, final Map<String,Object> headers) {
+        AMQP.BasicProperties options = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                        //TODO: .mandatory(true)
+                .build();
+        try {
+            byte[] payload = new CipherWrapper()
+                    .encryptMessageContent(snapshot)
+                    .getBytes();
+
+            sendToExchange(
+                    settings.get("PUBLISH_MESSAGES_TO"),
+                    settings.get("DATA_ROUTING_KEY"),
+                    payload,
+                    options
+            );
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public void sendError(Error err, final Map<String,Object> headers, Message originalMessage) {
         AMQP.BasicProperties options = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")

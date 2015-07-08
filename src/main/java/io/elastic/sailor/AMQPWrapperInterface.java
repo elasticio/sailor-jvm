@@ -13,6 +13,7 @@ public interface AMQPWrapperInterface {
     void sendData(JsonObject data, Map<String,Object> headers);
     void sendError(Error err, final Map<String,Object> headers, Message originalMessage);
     void sendRebound(Error err, final Map<String,Object> headers, Message originalMessage);
+    void sendSnapshot(JsonObject data, Map<String,Object> headers);
     void ack(Long deliveryTag);
     void reject(Long deliveryTag);
 }

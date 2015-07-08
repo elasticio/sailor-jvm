@@ -101,11 +101,7 @@ public class Sailor {
             @Override
             public void receive(Object obj) {
                 Error err = null;
-                if (obj instanceof Exception) {
-                    //err = new Error((Throwable)obj);
-                } else {
-                    //err = new Error(obj.toString(), obj.toString(), null);
-                }
+                err = new Error(obj.toString(), obj.toString(), null);
                 headers.put("end", System.currentTimeMillis());
                 //headers.put("reboundReason", err.message);
                 amqp.sendRebound(err, headers, incomingMessage);
@@ -116,7 +112,8 @@ public class Sailor {
         EventEmitter.Callback snapshotCallback = new EventEmitter.Callback() {
             @Override
             public void receive(Object obj) {
-
+                headers.put("end", System.currentTimeMillis());
+                amqp.sendSnapshot((JsonObject)obj, headers);
             }
         };
 

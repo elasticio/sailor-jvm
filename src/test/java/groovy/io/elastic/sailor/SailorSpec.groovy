@@ -154,6 +154,7 @@ class SailorSpec extends Specification {
             sailor.processMessage(message, headers, 12345);
         then:
             1 * amqp.sendData({it.toString() == "{\"someProperty\":\"someValue\"}"}, {checkOutgoingHeaders(it, "test")})
+            1 * amqp.sendSnapshot({it.toString() == "{\"lastUpdate\":\"2015-07-04\"}"}, {checkOutgoingHeaders(it, "test")})
             1 * amqp.sendRebound({it.message = 'Please retry later'}, {checkOutgoingHeaders(it, "test")}, message)
             1 * amqp.sendError({it.message = 'Error happened in TestAction!'}, {checkOutgoingHeaders(it, "test")}, message)
             1 * amqp.ack(12345)
