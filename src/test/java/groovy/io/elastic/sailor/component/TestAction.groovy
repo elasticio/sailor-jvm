@@ -20,6 +20,6 @@ class TestAction extends Component{
         this.getEventEmitter().emitData(parameters.getMessage());
         this.getEventEmitter().emitSnapshot(snapshot);
         this.getEventEmitter().emitRebound("Please retry later");
-        throw new Exception("Error happened in TestAction!");
+        throw new RuntimeException("Error happened in TestAction!");
     }
 }

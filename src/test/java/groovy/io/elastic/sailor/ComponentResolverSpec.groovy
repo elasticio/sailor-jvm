@@ -10,7 +10,7 @@ class ComponentResolverSpec extends Specification {
             new ComponentResolver("src/test/java/groovy/io")
         then:
             RuntimeException e = thrown()
-            e.getMessage() == "component.json is not found"
+            e.getMessage() == "component.json is not found in /home/lena/elasticio/test/sailor-jvm/src/test/java/groovy/io"
     }
 
     def "should successfully load component.json"() {
@@ -37,19 +37,19 @@ class ComponentResolverSpec extends Specification {
     def "should find trigger"() {
         when:
             def resolver = new ComponentResolver("src/test/java/groovy/io/elastic/sailor/component")
-            def result = resolver.findTriggerOrAction("query_price_lists")
+            def result = resolver.findTriggerOrAction("sleep")
         then:
             notThrown(RuntimeException)
-            result == "io.elastic.sap.bydesign.triggers.pricelist.QueryPriceLists"
+            result == "groovy.io.elastic.sailor.component.SleepAction"
     }
 
     def "should find action"() {
         when:
             def resolver = new ComponentResolver("src/test/java/groovy/io/elastic/sailor/component")
-            def result = resolver.findTriggerOrAction("create_customer")
+            def result = resolver.findTriggerOrAction("test")
         then:
             notThrown(RuntimeException)
-            result == "io.elastic.sap.bydesign.actions.customer.CreateCustomer"
+            result == "groovy.io.elastic.sailor.component.TestAction"
     }
 
     def "should throw exception if trigger or action is not found"() {
@@ -60,4 +60,8 @@ class ComponentResolverSpec extends Specification {
             RuntimeException e = thrown()
             e.getMessage() == "missing_action is not found"
     }
+
+
+
+
 }

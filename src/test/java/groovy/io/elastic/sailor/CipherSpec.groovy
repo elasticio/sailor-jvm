@@ -2,44 +2,45 @@ package groovy.io.elastic.sailor
 import com.google.gson.JsonObject
 import io.elastic.sailor.CipherWrapper
 import spock.lang.Specification
+import io.elastic.api.Message
 
 class CipherSpec extends Specification {
-    def key = "testCryptoPassword"
+
+    def key = "testCryptoPassword";
+
+    def "should encrypt & decrypt strings"() {
+        given:
+            def content = "Hello world"
+            def cipher = new CipherWrapper(key)
+        when:
+            def result = cipher.encrypt(content)
+            def decryptedResult = cipher.decrypt(result)
+        then:
+            decryptedResult.toString() == content.toString()
+    }
 
     def "should encrypt & decrypt objects"() {
         given:
             def content = new JsonObject()
             content.addProperty("property1", "Hello world")
-            def cipher = new CipherWrapper()
-        when:
-            def result = cipher.encryptMessageContent(content)
-            def decryptedResult = cipher.decryptMessageContent(result)
-        then:
-            decryptedResult.equals(content)
-    }
-
-    def "should throw error if failed to decrypt"() {
-        given:
-        def cipher = new CipherWrapper()
-        when:
-        cipher.decryptMessageContent("dsdasdsad");
-        then: // TODO: should throw RuntimeException if input string is not JsonElement
-        thrown(RuntimeException)
-    }
-
-    def "should encrypt and decrypt message with password"() {
-        given:
-            def content = new JsonObject()
-        content.addProperty("property1", "Hello world")
             def cipher = new CipherWrapper(key)
         when:
-            def result = cipher.encryptMessageContent(content)
-            def decryptedResult = cipher.decryptMessageContent(result)
+            def result = cipher.encrypt(content)
+            def decryptedResult = cipher.decrypt(result)
         then:
             decryptedResult.toString() == content.toString()
     }
 
-    def "should decrypt messages encrypted in Node.js"() {
+    def "should throw error if failed to decrypt"() {
+        given:
+            def cipher = new CipherWrapper(key)
+        when:
+            cipher.decrypt("dsdasdsad");
+        then: // TODO: should throw RuntimeException if input string is not JsonElement
+            notThrown(RuntimeException)
+    }
+
+    def "should decrypt JSON objects encrypted in Node.js"() {
         given:
             def cipher = new CipherWrapper(key)
         when:
@@ -48,7 +49,7 @@ class CipherSpec extends Specification {
             result.get("someKey").getAsString() == "someValue"
     }
 
-    def "should encrypt messages so that Node.js understands"() {
+    def "should encrypt JSON objects so that Node.js understands"() {
         given:
             def cipher = new CipherWrapper(key)
             def body = new JsonObject()
@@ -57,5 +58,26 @@ class CipherSpec extends Specification {
             def result = cipher.encryptMessageContent(body);
         then:
             result == "MhcbHNshDRy6RNubmFJ+u4tcKKTKT6H50uYMyBXhws1xjvVKRtEC0hEg0/R2Zecy"
+    }
+
+    def getMessage(){
+        def body = new JsonObject()
+        body.addProperty("incomingProperty1", "incomingValue1")
+        body.addProperty("incomingProperty2", "incomingValue2")
+
+        def attachments = new JsonObject()
+        attachments.addProperty("incomingAttachment1", "incomingAttachment1Content")
+        attachments.addProperty("incomingAttachment2", "incomingAttachment2Content")
+
+        return new Message(body, attachments);
+    }
+
+    def "should encrypt message"() {
+        given:
+            def cipher = new CipherWrapper(key)
+        when:
+            def result = cipher.encryptMessage(getMessage());
+        then:
+            result == "" // @TODO put here a string
     }
 }
