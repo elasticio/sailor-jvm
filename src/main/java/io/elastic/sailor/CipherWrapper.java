@@ -15,6 +15,7 @@ import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
+import io.elastic.api.Message;
 
 public final class CipherWrapper {
     private final String ENCRYPTION_KEY;
@@ -29,13 +30,20 @@ public final class CipherWrapper {
         this.ENCRYPTION_KEY = PASSWORD;
     }
 
+    public String encryptMessage(Message message) {
+        JsonObject payload = new JsonObject();
+        payload.add("body", message.getBody());
+        payload.add("attachments", message.getAttachments());
+        return encryptMessageContent(payload);
+    }
+
     // converts JSON to string and encrypts
-    public String encryptMessageContent(JsonObject message) throws IOException {
+    public String encryptMessageContent(JsonObject message) {
         return encrypt(message.toString());
     }
 
     // decrypts string and returns JSON object
-    public JsonObject decryptMessageContent(String message) throws IOException {
+    public JsonObject decryptMessageContent(String message) {
         if (message == null || message.length() == 0) {
             return null;
         }
@@ -50,7 +58,7 @@ public final class CipherWrapper {
         return null;
     }
 
-    private String encrypt(String message) throws IOException {
+    private String encrypt(String message){
         try {
             if (ENCRYPTION_KEY == null) return URLEncoder.encode(message, "UTF-8");
 
