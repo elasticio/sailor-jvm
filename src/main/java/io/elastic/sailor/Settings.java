@@ -20,6 +20,7 @@ public final class Settings {
         DATA_ROUTING_KEY,
         ERROR_ROUTING_KEY,
         REBOUND_ROUTING_KEY,
+        SNAPSHOT_ROUTING_KEY,
         TASK,
         STEP_ID
     }
