@@ -108,10 +108,10 @@ public class TaskExecutor {
             future.get(timeout, TimeUnit.MILLISECONDS);
         } catch (InterruptedException ie) {
             throw new RuntimeException(ie.getMessage());
+        } catch (ExecutionException ee) {
+            throw new RuntimeException(ee.getMessage());
         } catch (TimeoutException te) {
             throw new RuntimeException("Processing time out - " + classToExecute.getCanonicalName());
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e.getMessage());
         }
     }
 }

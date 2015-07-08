@@ -1,15 +1,20 @@
 package io.elastic.sailor;
 
-import java.util.Map;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 
 public final class Parameters {
-    private Map<String, String> params;
+    private JsonObject params;
 
-    public Parameters(Map<String, String> params) {
+    public Parameters(JsonObject params) {
         this.params = params;
     }
 
-    public String get(String key) {
+    public JsonElement get(String key) {
         return params.get(key);
+    }
+
+    public String getAsString(String key) {
+        return get(key).getAsString();
     }
 }

@@ -2,12 +2,12 @@ package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import io.elastic.api.Message;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -17,29 +17,32 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 
 public final class CipherWrapper {
-    private final static String ALGORITHM = "AES/CBC/PKCS5Padding";
-
     private final String ENCRYPTION_KEY;
+    private final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private final byte[] ENCRYPTION_IV = new SecureRandom().generateSeed(16);
-    private Cipher cipher;
 
     public CipherWrapper() {
         this.ENCRYPTION_KEY = System.getenv("MESSAGE_CRYPTO_PASSWORD");
-        init();
     }
 
     public CipherWrapper(String PASSWORD) {
         this.ENCRYPTION_KEY = PASSWORD;
-        init();
+    }
+
+    public String encryptMessage(Message message) {
+        JsonObject payload = new JsonObject();
+        payload.add("body", message.getBody());
+        payload.add("attachments", message.getAttachments());
+        return encryptMessageContent(payload);
     }
 
     // converts JSON to string and encrypts
-    public String encryptMessageContent(JsonObject message) throws IOException {
+    public String encryptMessageContent(JsonObject message) {
         return encrypt(message.toString());
     }
 
     // decrypts string and returns JSON object
-    public JsonObject decryptMessageContent(String message) throws IOException {
+    public JsonObject decryptMessageContent(String message) {
         if (message == null || message.length() == 0) {
             return null;
         }
@@ -54,24 +57,17 @@ public final class CipherWrapper {
         return null;
     }
 
-    private void init() {
-        try {
-            cipher = Cipher.getInstance(ALGORITHM);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private String encrypt(String message) throws IOException {
+    private String encrypt(String message){
         try {
             if (ENCRYPTION_KEY == null) return URLEncoder.encode(message, "UTF-8");
 
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, generateKey(), new IvParameterSpec(ENCRYPTION_IV));
             byte[] a = cipher.doFinal(message.getBytes());
 
             return new String(Base64.encodeBase64(a));
         } catch (Exception e) {
-            throw new RuntimeException("Failed to encrypt message: " + e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -79,6 +75,7 @@ public final class CipherWrapper {
         try {
             if (ENCRYPTION_KEY == null) return URLDecoder.decode(message, "UTF-8");
 
+            Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, generateKey(), new IvParameterSpec(ENCRYPTION_IV));
             byte[] a = cipher.doFinal(Base64.decodeBase64(message));
 

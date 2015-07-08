@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 public class Sailor {
@@ -38,7 +37,7 @@ public class Sailor {
         logger.info("Starting up");
         amqp = new AMQPWrapper(settings);
         amqp.connect(settings.get("AMQP_URI"));
-        amqp.listenQueue(settings.get("LISTEN_MESSAGES_ON"), settings.get("MESSAGE_CRYPTO_PASSWORD"), new Sailor.Callback(){
+        amqp.listenQueue(settings.get("LISTEN_MESSAGES_ON"), new Sailor.Callback(){
             public void receive(Message message, Map<String,Object> headers, Long deliveryTag) {
                 processMessage(message, headers, deliveryTag);
             }
@@ -50,16 +49,7 @@ public class Sailor {
         void receive(Message message, Map<String,Object> headers, Long deliveryTag);
     }
 
-    public void processMessage(final Message incomingMessage, final Map<String,Object> incomingHeaders, Long deliveryTag){
-
-        final Map<String,Object> headers = new HashMap<String, Object>();
-        headers.put("execId", incomingHeaders.get("execId"));
-        headers.put("taskId", incomingHeaders.get("taskId"));
-        headers.put("userId", incomingHeaders.get("userId"));
-        headers.put("stepId", settings.getStepId());
-        headers.put("compId", settings.getCompId());
-        headers.put("function", settings.getTriggerOrAction());
-        headers.put("start", System.currentTimeMillis());
+    public void processMessage(final Message incomingMessage, final Map<String,Object> incomingHeaders, final Long deliveryTag){
 
         String triggerOrAction = settings.getFunction();
         String className = componentResolver.findTriggerOrAction(triggerOrAction);
@@ -72,14 +62,18 @@ public class Sailor {
                 .build();
 
         TaskExecutor executor = new TaskExecutor(className);
+        final MessageProcessor processor = new MessageProcessor(
+                incomingMessage,
+                incomingHeaders,
+                deliveryTag,
+                amqp, settings, new CipherWrapper()
+        );
 
         // make data callback
         EventEmitter.Callback dataCallback = new EventEmitter.Callback() {
             @Override
             public void receive(Object obj) {
-                Message message = (Message)obj;
-                headers.put("end", System.currentTimeMillis());
-                amqp.sendData(message.getBody(), headers);
+                processor.processData(obj);
             }
         };
 
@@ -87,9 +81,7 @@ public class Sailor {
         EventEmitter.Callback errorCallback = new EventEmitter.Callback() {
             @Override
             public void receive(Object obj) {
-                Error err = (Error)obj;
-                headers.put("end", System.currentTimeMillis());
-                amqp.sendError(err, headers, incomingMessage.getBody());
+                processor.processError(obj);
             }
         };
 
@@ -97,10 +89,7 @@ public class Sailor {
         EventEmitter.Callback reboundCallback = new EventEmitter.Callback() {
             @Override
             public void receive(Object obj) {
-                Error err = (Error)obj;
-                headers.put("end", System.currentTimeMillis());
-                headers.put("reboundReason", err.message);
-                amqp.sendRebound(incomingMessage.getBody(), headers);
+                processor.processRebound(obj);
             }
         };
 
@@ -108,7 +97,7 @@ public class Sailor {
         EventEmitter.Callback snapshotCallback = new EventEmitter.Callback() {
             @Override
             public void receive(Object obj) {
-
+                processor.processSnapshot(obj);
             }
         };
 
@@ -116,7 +105,7 @@ public class Sailor {
         EventEmitter.Callback endCallback = new EventEmitter.Callback() {
             @Override
             public void receive(Object obj) {
-
+                processor.processEnd(obj);
             }
         };
 
