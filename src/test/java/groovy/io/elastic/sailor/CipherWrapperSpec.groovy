@@ -7,7 +7,7 @@ import io.elastic.api.Message
 class CipherWrapperSpec extends Specification {
 
     def key = "testCryptoPassword";
-    def iv ="iv=any16_symbols".getBytes();
+    def iv ="iv=any16_symbols";
 
     def "should encrypt & decrypt strings"() {
         given:
@@ -45,9 +45,9 @@ class CipherWrapperSpec extends Specification {
         given:
             def cipher = new CipherWrapper(key, iv)
         when:
-            def result = cipher.decryptMessageContent("MhcbHNshDRy6RNubmFJ+u4tcKKTKT6H50uYMyBXhws1xjvVKRtEC0hEg0/R2Zecy");
+            def result = cipher.decryptMessageContent("vSx5ntK2UdYh2Wjcdy8rgM7Yz5a/H8koXKtwNI0FL/Y9QiQFcUrtT4HJUkYXACNL");
         then:
-            result.get("someKey").getAsString() == "someValue"
+            result.get("body").toString() == "{\"someKey\":\"someValue\"}"
     }
 
     def "should encrypt JSON objects so that Node.js understands"() {
@@ -55,10 +55,12 @@ class CipherWrapperSpec extends Specification {
             def cipher = new CipherWrapper(key, iv)
             def body = new JsonObject()
             body.addProperty("someKey", "someValue")
+            def message = new JsonObject()
+            message.add("body", body)
         when:
-            def result = cipher.encryptMessageContent(body);
+            def result = cipher.encryptMessageContent(message);
         then:
-            result == "MhcbHNshDRy6RNubmFJ+u4tcKKTKT6H50uYMyBXhws1xjvVKRtEC0hEg0/R2Zecy"
+            result == "vSx5ntK2UdYh2Wjcdy8rgM7Yz5a/H8koXKtwNI0FL/Y9QiQFcUrtT4HJUkYXACNL"
     }
 
     def getMessage(){

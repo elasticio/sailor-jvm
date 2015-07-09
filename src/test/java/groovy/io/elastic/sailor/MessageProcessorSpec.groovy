@@ -58,7 +58,7 @@ class MessageProcessorSpec  extends Specification {
             getDeliveryTag(),
             amqp,
             getSettings(),
-            new CipherWrapper()
+            new CipherWrapper(null, null)
         );
     }
 

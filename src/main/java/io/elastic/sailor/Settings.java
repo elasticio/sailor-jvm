@@ -73,9 +73,9 @@ public final class Settings {
         return result;
     }
 
-    private boolean isRequired(String key) {
+    private boolean isOptional(String key) {
         try {
-            String value = Required.valueOf(key).name();
+            Optional.valueOf(key).name();
             return true;
         } catch (IllegalArgumentException e) {
             return false;
@@ -83,17 +83,14 @@ public final class Settings {
     }
 
     public String get(String key) {
-        if (sailorSettings.get(key) == null && isRequired(key)) {
+        if (sailorSettings.get(key) == null && !isOptional(key)) {
             throw new RuntimeException(key + " is not specified in settings");
         }
         return sailorSettings.get(key);
     }
 
     public int getInt(String key) {
-        if (sailorSettings.get(key) == null) {
-            throw new RuntimeException(key + " is not specified in settings");
-        }
-        return Integer.parseInt(sailorSettings.get(key));
+        return Integer.parseInt(get(key));
     }
 
     private static void throwError(String message) {

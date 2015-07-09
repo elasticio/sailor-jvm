@@ -20,15 +20,9 @@ public final class CipherWrapper {
     private String ENCRYPTION_KEY;
     private byte[] ENCRYPTION_IV;
 
-    public CipherWrapper(byte[] IV) {
-        ENCRYPTION_KEY = System.getenv("MESSAGE_CRYPTO_PASSWORD");
-        ENCRYPTION_IV = IV;
-    }
-
-    public CipherWrapper(String PASSWORD, byte[] IV) {
-        System.out.println(IV.length);
+    public CipherWrapper(String PASSWORD, String IV) {
         ENCRYPTION_KEY = PASSWORD;
-        ENCRYPTION_IV = IV;
+        ENCRYPTION_IV = (IV != null) ? IV.getBytes() : null;
     }
 
     public String encryptMessage(Message message) {
@@ -40,15 +34,19 @@ public final class CipherWrapper {
 
     public Message decryptMessage(String encrypted) {
         JsonObject payload = decryptMessageContent(encrypted);
-        JsonObject body = payload.getAsJsonObject("body");
-        JsonObject attachments = payload.getAsJsonObject("attachments");
-        if (body == null) {
-            body = new JsonObject();
+        try {
+            JsonObject body = payload.getAsJsonObject("body");
+            JsonObject attachments = payload.getAsJsonObject("attachments");
+            if (body == null) {
+                body = new JsonObject();
+            }
+            if (attachments == null) {
+                attachments = new JsonObject();
+            }
+            return new Message.Builder().body(body).attachments(attachments).build();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to decrypt message");
         }
-        if (attachments == null) {
-            attachments = new JsonObject();
-        }
-        return new Message.Builder().body(body).attachments(attachments).build();
     }
 
     // converts JSON to string and encrypts

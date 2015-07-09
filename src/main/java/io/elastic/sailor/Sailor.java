@@ -40,7 +40,7 @@ public class Sailor {
     public void init(Map<String, String> envVars) {
         settings = new Settings(envVars);
         componentResolver = new ComponentResolver(settings.get("COMPONENT_PATH"));
-        cipher = new CipherWrapper(settings.get("MESSAGE_CRYPTO_PASSWORD"), settings.get("MESSAGE_CRYPTO_IV").getBytes());
+        cipher = new CipherWrapper(settings.get("MESSAGE_CRYPTO_PASSWORD"), settings.get("MESSAGE_CRYPTO_IV"));
     }
 
     public void start() throws IOException {

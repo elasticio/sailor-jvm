@@ -13,7 +13,7 @@ class MessageConsumerSpec extends Specification {
     def "should decrypt message and pass parameters to callback"() {
         setup:
             def callback = Mock(Sailor.Callback)
-            def cipher = new CipherWrapper();
+            def cipher = new CipherWrapper(null, null);
             def consumer = new MessageConsumer(null, cipher, callback);
             def consumerTag = "tag12345";
 
@@ -34,13 +34,13 @@ class MessageConsumerSpec extends Specification {
             message = URLEncoder.encode(message, "UTF-8");
             consumer.handleDelivery(consumerTag, envelope, options, message.getBytes());
         then:
-            1 * callback.receive(_, headers, 123456)
+            1 * callback.receive({it.getBody().toString() == "{\"content\":\"Hello world!\"}"}, headers, 123456)
     }
 
     def "should decrypt encrypted message and pass parameters to callback"() {
         setup:
             def callback = Mock(Sailor.Callback)
-            def cipher = new CipherWrapper();
+            def cipher = new CipherWrapper("testCryptoPassword", "iv=any16_symbols");
             def consumer = new MessageConsumer(null, cipher, callback);
             def consumerTag = "tag12345";
 
@@ -57,10 +57,10 @@ class MessageConsumerSpec extends Specification {
             def envelope = new Envelope(654321, false, "test", "test2");
         when:
 
-            byte[] messageContent = new String("MhcbHNshDRy6RNubmFJ+u4tcKKTKT6H50uYMyBXhws1xjvVKRtEC0hEg0/R2Zecy").getBytes();
+            byte[] messageContent = new String("vSx5ntK2UdYh2Wjcdy8rgM7Yz5a/H8koXKtwNI0FL/Y9QiQFcUrtT4HJUkYXACNL").getBytes();
             consumer.handleDelivery(consumerTag, envelope, options, messageContent);
         then:
-            1 * callback.receive({it.toString() == "{\"someKey\":\"someValue\"}"}, headers, consumerTag)
+            1 * callback.receive({it.getBody().toString() == "{\"someKey\":\"someValue\"}"}, headers, 654321)
     }
 
 
