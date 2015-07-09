@@ -7,11 +7,12 @@ import io.elastic.api.Message
 class CipherWrapperSpec extends Specification {
 
     def key = "testCryptoPassword";
+    def iv ="iv=any16_symbols".getBytes();
 
     def "should encrypt & decrypt strings"() {
         given:
             def content = "Hello world"
-            def cipher = new CipherWrapper(key)
+            def cipher = new CipherWrapper(key, iv)
         when:
             def result = cipher.encrypt(content)
             def decryptedResult = cipher.decrypt(result)
@@ -23,26 +24,26 @@ class CipherWrapperSpec extends Specification {
         given:
             def content = new JsonObject()
             content.addProperty("property1", "Hello world")
-            def cipher = new CipherWrapper(key)
+            def cipher = new CipherWrapper(key, iv)
         when:
-            def result = cipher.encrypt(content)
-            def decryptedResult = cipher.decrypt(result)
+            def result = cipher.encryptMessageContent(content)
+            def decryptedResult = cipher.decryptMessageContent(result)
         then:
             decryptedResult.toString() == content.toString()
     }
 
     def "should throw error if failed to decrypt"() {
         given:
-            def cipher = new CipherWrapper(key)
+            def cipher = new CipherWrapper(key, iv)
         when:
             cipher.decrypt("dsdasdsad");
         then: // TODO: should throw RuntimeException if input string is not JsonElement
-            notThrown(RuntimeException)
+            thrown(RuntimeException)
     }
 
     def "should decrypt JSON objects encrypted in Node.js"() {
         given:
-            def cipher = new CipherWrapper(key)
+            def cipher = new CipherWrapper(key, iv)
         when:
             def result = cipher.decryptMessageContent("MhcbHNshDRy6RNubmFJ+u4tcKKTKT6H50uYMyBXhws1xjvVKRtEC0hEg0/R2Zecy");
         then:
@@ -51,7 +52,7 @@ class CipherWrapperSpec extends Specification {
 
     def "should encrypt JSON objects so that Node.js understands"() {
         given:
-            def cipher = new CipherWrapper(key)
+            def cipher = new CipherWrapper(key, iv)
             def body = new JsonObject()
             body.addProperty("someKey", "someValue")
         when:
@@ -72,14 +73,24 @@ class CipherWrapperSpec extends Specification {
         return new Message(body, attachments);
     }
 
-    def "should encrypt & decrypt message"() {
+    def "should encrypt message"() {
         given:
-            def cipher = new CipherWrapper()
+            def cipher = new CipherWrapper(key, iv)
         when:
-            def encrypted = cipher.encryptMessage(getMessage());
-            def decrypted = cipher.decryptMessage(encrypted);
+            def result = cipher.encryptMessage(getMessage());
         then:
-            decrypted.getBody().toString() == "{\"incomingProperty1\":\"incomingValue1\",\"incomingProperty2\":\"incomingValue2\"}"
-            decrypted.getAttachments().toString() == "{\"incomingAttachment1\":\"incomingAttachment1Content\",\"incomingAttachment2\":\"incomingAttachment2Content\"}"
+            result == "TOxRVfC2S4QDUzw6tzpoVNzi5ldNj+qGGrx2bMJLTn+0mgv3+xZNxMPHI5HdsTq+pBF3oXzgNmaFkXWGou0rPkyhSdpk/" +
+                    "ZjI6YciJrFhtOk9Bgh5ScAO/cZYChDertRLGjGNtm4/XTVdYCw5LBdyYDSoGfYt2K+09NtzoOGrK4KGAKhZm4BaEfCFTeGU" +
+                    "vXpSCaiUxaHxro7OpxvO1Y5EA/ZBJIXWjhTMyc8E0WF12+wCq1eByfl5WXvEOqksfk1FGOIjqxCn9UEo995Y2f0YMA=="
+    }
+
+    def "IV-powered cipher should encrypt & decrypt objects"() {
+        given:
+            def cipher = new CipherWrapper(key, iv)
+        when:
+            def encrypt = cipher.encrypt(getMessage().toString());
+            def decrypt = cipher.decrypt(encrypt);
+        then:
+            getMessage().toString() == decrypt
     }
 }

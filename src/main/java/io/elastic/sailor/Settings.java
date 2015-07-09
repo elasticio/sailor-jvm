@@ -27,7 +27,8 @@ public final class Settings {
         REBOUND_INITIAL_EXPIRATION("15000"),
         REBOUND_LIMIT("20"),
         COMPONENT_PATH(""),
-        MESSAGE_CRYPTO_PASSWORD(null);
+        MESSAGE_CRYPTO_PASSWORD(null),
+        MESSAGE_CRYPTO_IV(null);
 
         private final String defaultValue;
         Optional(String value) {

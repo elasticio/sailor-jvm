@@ -13,21 +13,22 @@ import java.net.URLEncoder;
 import java.security.Key;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.SecureRandom;
 import io.elastic.api.Message;
 
 public final class CipherWrapper {
-
-    private final String ENCRYPTION_KEY;
     private final String ALGORITHM = "AES/CBC/PKCS5Padding";
-    private final byte[] ENCRYPTION_IV = new SecureRandom().generateSeed(16);
+    private String ENCRYPTION_KEY;
+    private byte[] ENCRYPTION_IV;
 
-    public CipherWrapper() {
-        this.ENCRYPTION_KEY = System.getenv("MESSAGE_CRYPTO_PASSWORD");
+    public CipherWrapper(byte[] IV) {
+        ENCRYPTION_KEY = System.getenv("MESSAGE_CRYPTO_PASSWORD");
+        ENCRYPTION_IV = IV;
     }
 
-    public CipherWrapper(String PASSWORD) {
-        this.ENCRYPTION_KEY = PASSWORD;
+    public CipherWrapper(String PASSWORD, byte[] IV) {
+        System.out.println(IV.length);
+        ENCRYPTION_KEY = PASSWORD;
+        ENCRYPTION_IV = IV;
     }
 
     public String encryptMessage(Message message) {
@@ -77,6 +78,7 @@ public final class CipherWrapper {
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, generateKey(), new IvParameterSpec(ENCRYPTION_IV));
+
             byte[] a = cipher.doFinal(message.getBytes());
 
             return new String(Base64.encodeBase64(a));
@@ -91,7 +93,8 @@ public final class CipherWrapper {
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, generateKey(), new IvParameterSpec(ENCRYPTION_IV));
-            byte[] a = cipher.doFinal(Base64.decodeBase64(message));
+
+            byte[] a = cipher.doFinal(Base64.decodeBase64(message.getBytes()));
 
             return new String(a);
         } catch (Exception e) {
