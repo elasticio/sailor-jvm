@@ -107,10 +107,11 @@ public class TaskExecutor {
         executor.shutdown();
         try {
             future.get(timeout, TimeUnit.MILLISECONDS);
-        } catch (InterruptedException | ExecutionException ie) {
+        } catch (InterruptedException ie) {
             throw new RuntimeException(ie.getMessage());
-        }
-        catch (TimeoutException te) {
+        } catch (ExecutionException ee) {
+            throw new RuntimeException(ee.getMessage());
+        } catch (TimeoutException te) {
             throw new RuntimeException("Processing time out - " + classToExecute.getCanonicalName());
         }
     }

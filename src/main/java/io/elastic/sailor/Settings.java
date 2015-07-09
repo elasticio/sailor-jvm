@@ -47,7 +47,7 @@ public final class Settings {
     }
 
     private Map<String, String> validateSettings(Map<String, String> settings) {
-        Map<String, String> result = new HashMap<>();
+        Map<String, String> result = new HashMap<String, String>();
 
         logger.info("About to validate settings...");
         for (Required each : Required.values()) {

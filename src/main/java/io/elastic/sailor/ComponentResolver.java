@@ -62,4 +62,12 @@ public final class ComponentResolver {
 
         return result.get("main").getAsString();
     }
+
+    public String loadVerifyCredentials() {
+        return null;
+    }
+
+    public void loadTriggerOrAction(String triggerOrActionName) {
+
+    }
 }
