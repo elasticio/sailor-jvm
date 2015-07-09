@@ -10,8 +10,11 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import io.elastic.api.Message;
+import org.slf4j.LoggerFactory;
 
 public class MessageConsumer extends DefaultConsumer {
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
 
     private Sailor.Callback callback;
     private CipherWrapper cipher;
@@ -25,12 +28,20 @@ public class MessageConsumer extends DefaultConsumer {
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
-        // decrypt message
-        String bodyString = new String(body, "UTF-8");
-        Message message = cipher.decryptMessage(bodyString);
-        System.out.println(message.getBody().toString());
-        System.out.println(message.getAttachments().toString());
-        this.callback.receive(message, properties.getHeaders(), envelope.getDeliveryTag());
+
+        logger.info(String.format("Message %s arrived", envelope.getDeliveryTag()));
+
+        try {
+            // decrypt message
+            String bodyString = new String(body, "UTF-8");
+            Message message = cipher.decryptMessage(bodyString);
+            this.callback.receive(message, properties.getHeaders(), envelope.getDeliveryTag());
+        } catch (Exception e) {
+            logger.info(String.format("Failed to process message %s: %s", envelope.getDeliveryTag(), e.getMessage()));
+            this.getChannel().basicReject(envelope.getDeliveryTag(), false);
+        }
+
+
     }
 
 }
