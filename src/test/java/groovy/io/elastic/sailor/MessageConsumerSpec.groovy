@@ -13,7 +13,7 @@ class MessageConsumerSpec extends Specification {
     def "should decrypt message and pass parameters to callback"() {
         setup:
             def callback = Mock(Sailor.Callback)
-            def cipher = new CipherWrapper(null, null);
+            def cipher = new CipherWrapper();
             def consumer = new MessageConsumer(null, cipher, callback);
             def consumerTag = "tag12345";
 

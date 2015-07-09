@@ -7,22 +7,29 @@ import org.apache.commons.codec.binary.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.Key;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import io.elastic.api.Message;
 
 public final class CipherWrapper {
     private final String ALGORITHM = "AES/CBC/PKCS5Padding";
-    private String ENCRYPTION_KEY;
-    private byte[] ENCRYPTION_IV;
+    private Key ENCRYPTION_KEY;
+    private IvParameterSpec ENCRYPTION_IV;
 
-    public CipherWrapper(String PASSWORD, String IV) {
-        ENCRYPTION_KEY = PASSWORD;
-        ENCRYPTION_IV = (IV != null) ? IV.getBytes() : null;
+    public CipherWrapper() {
+        ENCRYPTION_KEY = null;
+        ENCRYPTION_IV = null;
+    }
+
+    public CipherWrapper(String password, String initializationVector) {
+        if (password != null) {
+            ENCRYPTION_KEY = generateKey(password);
+        }
+        if (password != null) {
+            ENCRYPTION_IV = new IvParameterSpec(initializationVector.getBytes());
+        }
     }
 
     public String encryptMessage(Message message) {
@@ -75,7 +82,7 @@ public final class CipherWrapper {
             if (ENCRYPTION_KEY == null) return URLEncoder.encode(message, "UTF-8");
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, generateKey(), new IvParameterSpec(ENCRYPTION_IV));
+            cipher.init(Cipher.ENCRYPT_MODE, ENCRYPTION_KEY,ENCRYPTION_IV);
 
             byte[] a = cipher.doFinal(message.getBytes());
 
@@ -90,7 +97,7 @@ public final class CipherWrapper {
             if (ENCRYPTION_KEY == null) return URLDecoder.decode(message, "UTF-8");
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, generateKey(), new IvParameterSpec(ENCRYPTION_IV));
+            cipher.init(Cipher.DECRYPT_MODE, ENCRYPTION_KEY, ENCRYPTION_IV);
 
             byte[] a = cipher.doFinal(Base64.decodeBase64(message.getBytes()));
 
@@ -100,9 +107,13 @@ public final class CipherWrapper {
         }
     }
 
-    private Key generateKey() throws NoSuchAlgorithmException, UnsupportedEncodingException {
-        MessageDigest md = MessageDigest.getInstance("SHA-256");
-        byte[] key = md.digest(ENCRYPTION_KEY.getBytes("UTF-8"));
-        return new SecretKeySpec(key, "AES");
+    private Key generateKey(String encryptionKey) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            byte[] key = md.digest(encryptionKey.getBytes("UTF-8"));
+            return new SecretKeySpec(key, "AES");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
