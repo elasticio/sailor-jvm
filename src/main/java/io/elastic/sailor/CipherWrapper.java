@@ -52,7 +52,7 @@ public final class CipherWrapper {
             }
             return new Message.Builder().body(body).attachments(attachments).build();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to decrypt message");
+            throw new RuntimeException("Failed to decrypt message: "  + e.getMessage());
         }
     }
 

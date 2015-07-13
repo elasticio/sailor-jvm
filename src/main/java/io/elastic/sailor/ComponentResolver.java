@@ -55,9 +55,9 @@ public final class ComponentResolver {
         }
 
         if (result == null) {
-            throw new RuntimeException(name + " is not found");
+            throw new RuntimeException("'" + name + "' trigger or action is not found");
         } else if (result.get("main") == null) {
-            throw new RuntimeException("Main class of " + name + " is not specified");
+            throw new RuntimeException("Main class of '" + name + "' trigger or action is not specified");
         }
 
         return result.get("main").getAsString();

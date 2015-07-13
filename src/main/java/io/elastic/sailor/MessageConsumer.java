@@ -29,19 +29,26 @@ public class MessageConsumer extends DefaultConsumer {
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
 
+        Message message = null;
+
         logger.info(String.format("Message %s arrived", envelope.getDeliveryTag()));
 
         try {
             // decrypt message
             String bodyString = new String(body, "UTF-8");
-            Message message = cipher.decryptMessage(bodyString);
+            message = cipher.decryptMessage(bodyString);
+        } catch (Exception e) {
+            logger.info(String.format("Failed to decrypt message %s: %s", envelope.getDeliveryTag(), e.getMessage()));
+            this.getChannel().basicReject(envelope.getDeliveryTag(), false);
+            return;
+        }
+
+        try {
             this.callback.receive(message, properties.getHeaders(), envelope.getDeliveryTag());
         } catch (Exception e) {
             logger.info(String.format("Failed to process message %s: %s", envelope.getDeliveryTag(), e.getMessage()));
             this.getChannel().basicReject(envelope.getDeliveryTag(), false);
         }
-
-
     }
 
 }

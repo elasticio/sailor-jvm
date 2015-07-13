@@ -21,22 +21,8 @@ public class Sailor {
     private CipherWrapper cipher;
 
     public static void main(String[] args) throws IOException {
-
-        Map<String, String> envVars  = new HashMap<String, String>();
-        envVars.put("TASK", "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}");
-        envVars.put("STEP_ID", "step_1");
-        envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
-        envVars.put("LISTEN_MESSAGES_ON", "javasailor:test_exec:step_1:messages");
-        envVars.put("PUBLISH_MESSAGES_TO", "javasailor_exchange");
-        envVars.put("DATA_ROUTING_KEY", "javasailor.test_exec.step_1.message");
-        envVars.put("ERROR_ROUTING_KEY", "javasailor.test_exec.step_1.error");
-        envVars.put("SNAPSHOT_ROUTING_KEY", "javasailor.test_exec.step_1.snapshot");
-        envVars.put("REBOUND_ROUTING_KEY", "javasailor.test_exec.step_1.rebound");
-        envVars.put("SHAPSHOT_ROUTING_KEY", "javasailor.test_exec.step_1.rebound");
-        envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
-
         Sailor sailor = new Sailor();
-        sailor.init(envVars);
+        sailor.init(System.getenv());
         sailor.start();
     }
 

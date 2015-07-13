@@ -1,0 +1,1 @@
+java -cp ./build/classes/main:./lib/*:../component1/build/classes/main/:../component1/lib/* io.elastic.sailor.Sailor
