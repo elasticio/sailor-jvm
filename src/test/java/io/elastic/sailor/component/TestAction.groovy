@@ -22,4 +22,12 @@ class TestAction extends Component{
         this.getEventEmitter().emitRebound("Please retry later");
         throw new RuntimeException("Error happened in TestAction!");
     }
+
+    public static getModel(JsonObject cfg) {
+        return cfg;
+    }
+
+    public static getMetaModel(JsonObject cfg) {
+        return cfg;
+    }
 }

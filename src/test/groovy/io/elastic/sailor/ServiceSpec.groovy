@@ -6,7 +6,7 @@ class ServiceSpec extends SetupServerHelper {
 
     def settings = new HashMap<String, String>(){{
         put("POST_RESULT_URL", "http://localhost:10000");
-        put("ACTION_OR_TRIGGER", "action");
+        put("ACTION_OR_TRIGGER", "test");
         put("CFG", "{\"key\":0}");
         put("GET_MODEL_METHOD", "getModel");
         put("COMPONENT_PATH", "src/test/java/io/elastic/sailor/component");
@@ -18,15 +18,41 @@ class ServiceSpec extends SetupServerHelper {
 
     def "it should verify credentials"() {
         given:
-            Service.AvailableMethod method = Service.AvailableMethod.verifyCredentials;
-            ServiceSettings serviceSettings = new ServiceSettings(settings);
-            Service service = new Service(serviceSettings);
-            def success = new JsonObject();
-            success.addProperty("verified", true)
+        Service.AvailableMethod method = Service.AvailableMethod.verifyCredentials;
+        ServiceSettings serviceSettings = new ServiceSettings(settings);
+        Service service = new Service(serviceSettings);
+        def success = new JsonObject();
+        success.addProperty("verified", true)
         when:
-            Utils.postJson(serviceSettings.postResultUrl, service.execService(method));
+        Utils.postJson(serviceSettings.postResultUrl, service.execService(method));
         then:
-            SimpleRequestHandler.lastMessage.contains(success.toString())
+        SimpleRequestHandler.lastMessage.contains(success.toString())
+    }
+
+    def "it should get meta model"() {
+        given:
+        Service.AvailableMethod method = Service.AvailableMethod.getMetaModel;
+        ServiceSettings serviceSettings = new ServiceSettings(settings);
+        Service service = new Service(serviceSettings);
+        def success = new JsonObject();
+        success.addProperty("key", 0)
+        when:
+        Utils.postJson(serviceSettings.postResultUrl, service.execService(method));
+        then:
+        SimpleRequestHandler.lastMessage.contains(success.toString())
+    }
+
+    def "it should get select model"() {
+        given:
+        Service.AvailableMethod method = Service.AvailableMethod.selectModel;
+        ServiceSettings serviceSettings = new ServiceSettings(settings);
+        Service service = new Service(serviceSettings);
+        def success = new JsonObject();
+        success.addProperty("key", 0)
+        when:
+        Utils.postJson(serviceSettings.postResultUrl, service.execService(method));
+        then:
+        SimpleRequestHandler.lastMessage.contains(success.toString())
     }
 
     def "ServiceSettings should throw an error when there are parameters missing or malformed"() {

@@ -71,7 +71,8 @@ public class Service {
         try {
             Class triggerOrActionClass = component.loadTriggerOrAction(triggerOrActionName);
             Method methodToCall = triggerOrActionClass.getDeclaredMethod(calledMethod, JsonObject.class);
-            return (JsonObject)methodToCall.invoke(triggerOrActionClass.newInstance(), settings.credentials);
+            methodToCall.setAccessible(true);
+            return (JsonObject)methodToCall.invoke(null, settings.credentials);
         } catch (Exception e) {
             throw new RuntimeException("Error processing trigger or action method " + calledMethod + " : " + e);
         }
