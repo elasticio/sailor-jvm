@@ -1,6 +1,5 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonObject;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;

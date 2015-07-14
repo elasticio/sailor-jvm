@@ -4,8 +4,10 @@ import com.google.gson.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
+import java.net.URI;
 
 public final class Settings {
 
@@ -91,6 +93,14 @@ public final class Settings {
 
     public int getInt(String key) {
         return Integer.parseInt(get(key));
+    }
+
+    public URI getURI(String key) {
+        try {
+            return new URI(sailorSettings.get(key));
+        } catch (URISyntaxException e) {
+            throw new RuntimeException("Invalid URI in " + key);
+        }
     }
 
     private static void throwError(String message) {

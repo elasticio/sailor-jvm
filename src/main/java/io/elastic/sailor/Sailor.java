@@ -26,14 +26,14 @@ public class Sailor {
         sailor.start();
     }
 
-    public void setAMQP(AMQPWrapperInterface amqp) {
-        this.amqp = amqp;
-    }
-
     public void init(Map<String, String> envVars) {
         settings = new Settings(envVars);
         componentResolver = new ComponentResolver(settings.get("COMPONENT_PATH"));
         cipher = new CipherWrapper(settings.get("MESSAGE_CRYPTO_PASSWORD"), settings.get("MESSAGE_CRYPTO_IV"));
+    }
+
+    public void setAMQP(AMQPWrapperInterface amqp) {
+        this.amqp = amqp;
     }
 
     public void start() throws IOException {

@@ -1,7 +1,6 @@
 package io.elastic.sailor;
 
 public class Error {
-
     public final String name;
     public final String message;
     public final String stack;
