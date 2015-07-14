@@ -56,5 +56,5 @@ build.mustRunAfter 'clean'
 uploadArchives.mustRunAfter 'build'
 bundle.mustRunAfter 'build'
 
-//sourceSets.test.groovy.srcDirs = ["src/test/groovy", "src/test/java"]
-//sourceSets.main.java.srcDirs = ["src/main/java"]
+sourceSets.test.groovy.srcDirs = ["src/test/groovy", "src/test/java"]
+sourceSets.main.java.srcDirs = ["src/main/java"]
