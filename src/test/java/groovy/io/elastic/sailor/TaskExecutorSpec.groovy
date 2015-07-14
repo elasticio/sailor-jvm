@@ -1,12 +1,8 @@
-package groovy.io.elastic.sailor
-
+package io.elastic.sailor
 import com.google.gson.JsonObject
-import io.elastic.api.EventEmitter
+import io.elastic.api.EventEmitter.Callback
 import io.elastic.api.ExecutionParameters
 import io.elastic.api.Message
-import io.elastic.api.EventEmitter.Callback
-
-import io.elastic.sailor.TaskExecutor
 import spock.lang.Specification
 
 class TaskExecutorSpec extends Specification {
@@ -29,7 +25,7 @@ class TaskExecutorSpec extends Specification {
 
     def "should create TaskExecutor for valid component without errors"() {
         when:
-            new TaskExecutor("groovy.io.elastic.sailor.component.TestAction");
+            new TaskExecutor("io.elastic.sailor.component.TestAction");
         then:
             notThrown(RuntimeException)
     }
@@ -48,7 +44,7 @@ class TaskExecutorSpec extends Specification {
         def endCallback = Mock(Callback)
 
         when:
-            def executor = new TaskExecutor("groovy.io.elastic.sailor.component.TestAction");
+            def executor = new TaskExecutor("io.elastic.sailor.component.TestAction");
             executor.onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback).onEnd(endCallback);
             executor.execute(params);
         then:
@@ -73,12 +69,12 @@ class TaskExecutorSpec extends Specification {
         def endCallback = Mock(Callback)
 
         when:
-            def executor = new TaskExecutor("groovy.io.elastic.sailor.component.SleepAction");
+            def executor = new TaskExecutor("io.elastic.sailor.component.SleepAction");
             executor.onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback).onEnd(endCallback);
             executor.setTimeout(200);
             executor.execute(params);
         then:
-            1 * errorCallback.receive({it.getMessage() == "Processing time out - groovy.io.elastic.sailor.component.SleepAction"})
+            1 * errorCallback.receive({it.getMessage() == "Processing time out - io.elastic.sailor.component.SleepAction"})
             0 * dataCallback.receive({})
             1 * endCallback.receive(_)
     }

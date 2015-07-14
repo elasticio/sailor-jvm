@@ -14,10 +14,10 @@ import java.util.concurrent.TimeUnit;
 
 public class TaskExecutor {
 
-    private Class COMPONENT_CLASS = io.elastic.api.Component.class;
-    private Class EMITTER_CLASS = io.elastic.api.EventEmitter.class;
+    private static final Class COMPONENT_CLASS = io.elastic.api.Component.class;
+    private static final Class EMITTER_CLASS = io.elastic.api.EventEmitter.class;
 
-    private Class classToExecute;
+    private final Class classToExecute;
     private int timeout = 20 * 60 * 1000; // 20 min
     private Callback errorCallback;
     private Callback dataCallback;
@@ -95,7 +95,6 @@ public class TaskExecutor {
             };
             runWithTimeout(thread);
         } catch (Exception e) {
-            System.out.println(e.getMessage());
             errorCallback.receive(e);
             endCallback.receive(null);
         }

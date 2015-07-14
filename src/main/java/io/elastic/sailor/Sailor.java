@@ -26,16 +26,8 @@ public class Sailor {
         sailor.start();
     }
 
-    public void setSettings(Settings settings){
-        this.settings = settings;
-    }
-
     public void setAMQP(AMQPWrapperInterface amqp) {
         this.amqp = amqp;
-    }
-
-    public void setCipher(CipherWrapper cipher) {
-        this.cipher = cipher;
     }
 
     public void init(Map<String, String> envVars) {
@@ -135,6 +127,7 @@ public class Sailor {
                 .onRebound(reboundCallback)
                 .onSnapshot(snapshotCallback)
                 .onEnd(endCallback);
+
         executor.execute(params);
     }
 }

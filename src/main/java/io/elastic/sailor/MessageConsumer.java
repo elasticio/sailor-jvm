@@ -7,17 +7,14 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import io.elastic.api.Message;
 import org.slf4j.LoggerFactory;
 
 public class MessageConsumer extends DefaultConsumer {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
-
-    private Sailor.Callback callback;
-    private CipherWrapper cipher;
+    private final Sailor.Callback callback;
+    private final CipherWrapper cipher;
 
     public MessageConsumer(Channel channel, CipherWrapper cipher, Sailor.Callback callback) {
         super(channel);

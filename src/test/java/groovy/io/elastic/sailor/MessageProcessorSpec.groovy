@@ -23,6 +23,7 @@ class MessageProcessorSpec  extends Specification {
         envVars.put("SNAPSHOT_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.snapshot");
         envVars.put("REBOUND_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.rebound");
         envVars.put("MESSAGE_CRYPTO_PASSWORD", "crypt123456");
+        envVars.put("MESSAGE_CRYPTO_IV", "0000000000000000");
         envVars.put("COMPONENT_PATH", "/spec/component/");
         return new Settings(envVars);
     }
@@ -47,11 +48,11 @@ class MessageProcessorSpec  extends Specification {
         return headers;
     }
 
-    def getDeliveryTag(){
+    long getDeliveryTag(){
         12345
     }
 
-    def makeProcessor(amqp){
+    def makeProcessor(AMQPWrapperInterface amqp){
         return new MessageProcessor(
             getIncomingMessage(),
             getIncomingMessageHeaders(),

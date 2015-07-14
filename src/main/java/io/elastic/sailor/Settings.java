@@ -36,10 +36,10 @@ public final class Settings {
         }
     }
 
-    private Map<String, String> sailorSettings;
+    private final Map<String, String> sailorSettings;
 
-    private JsonObject task;
-    private String stepId;
+    private final JsonObject task;
+    private final String stepId;
 
     public Settings(Map<String, String> envVars) {
         sailorSettings = validateSettings(envVars);

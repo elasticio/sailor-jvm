@@ -1,6 +1,5 @@
 package io.elastic.sailor;
 
-
 import com.google.gson.JsonObject;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
@@ -11,19 +10,19 @@ import java.util.Map;
 public class MessageProcessor {
 
     // incoming data
-    private Message incomingMessage;
-    private Map<String,Object> incomingHeaders;
-    private Long deliveryTag;
+    private final Message incomingMessage;
+    private final Map<String,Object> incomingHeaders;
+    private final long deliveryTag;
 
     // amqp, cipher, settings
-    private AMQPWrapperInterface amqp;
-    private CipherWrapper cipher;
-    private Settings settings;
+    private final AMQPWrapperInterface amqp;
+    private final CipherWrapper cipher;
+    private final Settings settings;
 
     public MessageProcessor(
             final Message incomingMessage,
             final Map<String,Object> incomingHeaders,
-            final Long deliveryTag,
+            final long deliveryTag,
             AMQPWrapperInterface amqp,
             Settings settings,
             CipherWrapper cipher
@@ -36,8 +35,8 @@ public class MessageProcessor {
         this.cipher = cipher;
     }
 
-    private Map<String,Object> makeDefaultHeaders(){
-        HashMap headers = new HashMap<>();
+    private Map<String, Object> makeDefaultHeaders(){
+        HashMap<String, Object> headers = new HashMap<String, Object>();
         headers.put("execId", incomingHeaders.get("execId"));
         headers.put("taskId", incomingHeaders.get("taskId"));
         headers.put("userId", incomingHeaders.get("userId"));
@@ -50,11 +49,12 @@ public class MessageProcessor {
 
     private AMQP.BasicProperties makeDefaultOptions(){
         return new AMQP.BasicProperties.Builder()
-            .contentType("application/json")
-            .contentEncoding("utf8")
-            .headers(makeDefaultHeaders())
-            //TODO: .mandatory(true)
-            .build();
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(makeDefaultHeaders())
+                .priority(1)// this should equal to mandatory true
+                .deliveryMode(2)//TODO: check if flag .mandatory(true) was set
+                .build();
     }
 
     // should send encrypted data to RabbitMQ
@@ -105,7 +105,7 @@ public class MessageProcessor {
         int reboundIteration = getReboundIteration();
 
         if (reboundIteration > settings.getInt("REBOUND_LIMIT")) {
-            Error err = new Error("Error", "Rebound limit exceeded", null);
+            Error err = new Error("Error", "Rebound limit exceeded", Error.getStack(new RuntimeException()));
             sendError(err);
         } else {
             byte[] payload = cipher.encryptMessage(incomingMessage).getBytes();

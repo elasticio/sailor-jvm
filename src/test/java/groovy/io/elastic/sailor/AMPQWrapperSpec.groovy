@@ -1,12 +1,9 @@
-package groovy.io.elastic.sailor
-
+package io.elastic.sailor
 import com.rabbitmq.client.AMQP
-import io.elastic.sailor.AMQPWrapper
-import io.elastic.sailor.Settings
+import com.rabbitmq.client.Channel
 import spock.lang.Specification
-import com.rabbitmq.client.Channel;
 
-class AMPQWrapperSpec extends Specification {
+class AMPQSpec extends Specification {
 
     def getValidEnvVars(){
         def envVars  = new HashMap<String, String>();
@@ -20,6 +17,7 @@ class AMPQWrapperSpec extends Specification {
         envVars.put("SNAPSHOT_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.snapshot");
         envVars.put("REBOUND_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.rebound");
         envVars.put("MESSAGE_CRYPTO_PASSWORD", "crypt123456");
+        envVars.put("MESSAGE_CRYPTO_IV", "crypt123456");
         envVars.put("COMPONENT_PATH", "/spec/component/");
         return envVars;
     }

@@ -1,4 +1,4 @@
-package groovy.io.elastic.sailor.component
+package io.elastic.sailor.component
 
 import com.google.gson.JsonObject
 import io.elastic.api.Component

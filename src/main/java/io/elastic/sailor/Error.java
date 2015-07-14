@@ -2,9 +2,9 @@ package io.elastic.sailor;
 
 public class Error {
 
-    public String name;
-    public String message;
-    public String stack;
+    public final String name;
+    public final String message;
+    public final String stack;
 
     public Error(String name, String message, String stack) {
         this.name = name;

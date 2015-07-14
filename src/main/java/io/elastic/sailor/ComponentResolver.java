@@ -17,7 +17,7 @@ public final class ComponentResolver {
     private static final String FILENAME = "component.json";
     private static final String USERDIR = System.getProperty("user.dir");
 
-    private JsonObject componentJson;
+    private final JsonObject componentJson;
 
     /**
      * @param componentPath - path to the component, relative to sailor position
@@ -63,11 +63,21 @@ public final class ComponentResolver {
         return result.get("main").getAsString();
     }
 
-    public String loadVerifyCredentials() {
-        return null;
+    public Class loadTriggerOrAction(String triggerOrActionName) {
+        try {
+            String className = findTriggerOrAction(triggerOrActionName);
+            return Class.forName(className);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    public void loadTriggerOrAction(String triggerOrActionName) {
-
+    public Class loadVerifyCredentials() {
+        try {
+            String className = componentJson.getAsJsonObject("credentials").get("main").getAsString();
+            return Class.forName(className);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

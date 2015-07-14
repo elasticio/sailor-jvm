@@ -1,7 +1,8 @@
-package groovy.io.elastic.sailor
+package io.elastic.sailor
 
 import com.google.gson.JsonObject
-import io.elastic.sailor.AMQPWrapperInterface
+import io.elastic.api.Message
+import spock.lang.Ignore
 import spock.lang.Specification
 
 import io.elastic.sailor.Sailor
@@ -20,8 +21,9 @@ class SailorSpec extends Specification {
         envVars.put("ERROR_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.error");
         envVars.put("SNAPSHOT_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.snapshot");
         envVars.put("REBOUND_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.rebound");
-        envVars.put("SHAPSHOT_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.rebound");
-        envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
+        envVars.put("MESSAGE_CRYPTO_PASSWORD", "crypt123456");
+        envVars.put("MESSAGE_CRYPTO_IV", "0000000000000000");
+        envVars.put("COMPONENT_PATH", "src/test/java/io/elastic/sailor/component/");
         return envVars;
     }
 
@@ -75,7 +77,7 @@ class SailorSpec extends Specification {
         given:
             def envVars = getValidEnvVars();
             envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
-            envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
+            envVars.put("COMPONENT_PATH", "src/test/java/io/elastic/sailor/component");
         when:
             def sailor = new Sailor();
             sailor.init(envVars);
@@ -96,7 +98,7 @@ class SailorSpec extends Specification {
         given:
             def envVars = getValidEnvVars();
             envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
-            envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
+            envVars.put("COMPONENT_PATH", "src/test/java/io/elastic/sailor/component");
             envVars.put("TASK", "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"sleep\"}]}}");
 
             def amqp = Mock(AMQPWrapperInterface)
@@ -128,7 +130,7 @@ class SailorSpec extends Specification {
         given:
             def envVars = getValidEnvVars();
             envVars.put("AMQP_URI", "amqp://guest:guest@127.0.0.1:5672");
-            envVars.put("COMPONENT_PATH", "src/test/java/groovy/io/elastic/sailor/component");
+            envVars.put("COMPONENT_PATH", "src/test/java/io/elastic/sailor/component");
             envVars.put("TASK", "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}");
 
             def amqp = Mock(AMQPWrapperInterface)

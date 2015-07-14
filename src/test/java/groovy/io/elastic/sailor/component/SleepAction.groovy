@@ -1,4 +1,4 @@
-package groovy.io.elastic.sailor.component
+package io.elastic.sailor.component
 
 import io.elastic.api.Component
 import io.elastic.api.EventEmitter

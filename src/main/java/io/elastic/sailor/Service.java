@@ -1,46 +1,104 @@
 package io.elastic.sailor;
 
+import com.google.gson.JsonObject;
+import io.elastic.api.CredentialsVerifier;
+import io.elastic.api.InvalidCredentialsException;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class Service {
+    private static final Logger logger = Logger.getLogger(Service.class.getName());
+
     private final ComponentResolver component;
+    private final ServiceSettings settings;
 
-    public Service() {
-        component = new ComponentResolver(System.getenv("COMPONENT_PATH"));
+    public Service(ServiceSettings serviceSettings) {
+        settings = serviceSettings;
+        component = new ComponentResolver(settings.getEnvVar("COMPONENT_PATH"));
     }
 
-    public void execService(Method method, Settings cfg, Parameters params) {
+    public Service(Map<String, String> envVars) {
+        settings = new ServiceSettings(envVars);
+        component = new ComponentResolver(settings.getEnvVar("COMPONENT_PATH"));
+    }
+
+    public JsonObject execService(AvailableMethod method) {
         try {
-            getClass().getDeclaredMethod(method.name(), Settings.class, Parameters.class).invoke(this, cfg, params);
+            return (JsonObject)getClass().getDeclaredMethod(method.name()).invoke(this);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private void verifyCredentials(Settings cfg, Parameters params) {
+    @SuppressWarnings("ThrowFromFinallyBlock")
+    private JsonObject verifyCredentials() {
+        JsonObject result = new JsonObject();
+        result.addProperty("verified", false);
         try {
-            Class.forName(component.loadVerifyCredentials())
-                    .getDeclaredMethod("verifyCredentials")
-                    .invoke(this, null);
-        } catch (Exception e) {
+            CredentialsVerifier credentialsVerifier =
+                (CredentialsVerifier)component.loadVerifyCredentials().newInstance();
+            credentialsVerifier.verify(settings.credentials);
+            result.addProperty("verified", true);
+        } catch (InvalidCredentialsException e) {
+            result.addProperty("reason", e.getMessage());
+        } catch (ReflectiveOperationException e) {
+            result.addProperty("reason", e.getMessage());
             throw new RuntimeException(e);
+        }
+        return result;
+    }
+
+    private JsonObject getMetaModel() {
+        return callModuleMethod(
+                settings.actionOrTrigger,
+                AvailableMethod.getMetaModel.name()
+        );
+    }
+
+    private JsonObject selectModel() {
+        return callModuleMethod(
+                settings.actionOrTrigger,
+                settings.selectModelMethod
+        );
+    }
+
+    @SuppressWarnings("unchecked")
+    private JsonObject callModuleMethod(String triggerOrActionName, String calledMethod) {
+        try {
+            Class triggerOrActionClass = component.loadTriggerOrAction(triggerOrActionName);
+            Method methodToCall = triggerOrActionClass.getDeclaredMethod(calledMethod, JsonObject.class);
+            return (JsonObject)methodToCall.invoke(triggerOrActionClass.newInstance(), settings.credentials);
+        } catch (Exception e) {
+            throw new RuntimeException("Error processing trigger or action method " + calledMethod + " : " + e);
         }
     }
 
-    private void getMetaModel(Settings cfg, Parameters params) {
-        callModuleMethod(params.getAsString("ACTION_OR_TRIGGER"), "getMetaModel", cfg);
-    }
-
-    private void selectModel(Settings cfg, Parameters params) {
-        callModuleMethod(params.getAsString("ACTION_OR_TRIGGER"), params.getAsString("GET_MODEL_METHOD"), cfg);
-    }
-
-    private void callModuleMethod(String triggerOrActionName, String method, Settings cfg) {
-        component.loadTriggerOrAction(triggerOrActionName);
-
-    }
-
-    public enum Method {
+    public enum AvailableMethod {
         verifyCredentials,
         getMetaModel,
         selectModel
+    }
+
+    public static void main(String[] args) throws IOException {
+        AvailableMethod method;
+        try {
+            method = AvailableMethod.valueOf(args[2]);
+        } catch (IllegalArgumentException e) {
+            throw new RuntimeException("No such method: " + args[2]);
+        } catch (ArrayIndexOutOfBoundsException e) {
+            throw new RuntimeException("Command line third argument should be present");
+        } catch (NullPointerException e) {
+            throw new RuntimeException("Command line third argument should be present");
+        }
+        ServiceSettings settings = new ServiceSettings(System.getenv());
+        Service service = new Service(settings);
+        //TODO: try to resend in case of failure <- other side is blocked without it
+        logger.log(Level.INFO, "About to send resulting json");
+        String response = Utils.postJson(settings.postResultUrl, service.execService(method));
+        logger.log(Level.INFO, "Received response from server: " + response);
     }
 }

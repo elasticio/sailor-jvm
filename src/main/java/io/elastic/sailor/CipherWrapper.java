@@ -68,13 +68,14 @@ public final class CipherWrapper {
         }
         try {
             message = decrypt(message);
-            if (Utils.isJsonObject(message)){
+            if (Utils.isJsonObject(message)) {
                 return new JsonParser().parse(message).getAsJsonObject();
+            } else {
+                throw new RuntimeException("Message '" + message + "' is not Json");
             }
         } catch (Exception e) {
             throw new RuntimeException("Failed to decrypt message: " + e);
         }
-        return null;
     }
 
     private String encrypt(String message){

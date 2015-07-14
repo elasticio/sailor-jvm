@@ -1,10 +1,10 @@
-package groovy.io.elastic.sailor
+package io.elastic.sailor
 import com.google.gson.JsonObject
-import io.elastic.sailor.CipherWrapper
+import io.elastic.api.Message
 import spock.lang.Specification
 import io.elastic.api.Message
 
-class CipherWrapperSpec extends Specification {
+class CipherSpec extends Specification {
 
     def key = "testCryptoPassword";
     def iv ="iv=any16_symbols";
