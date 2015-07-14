@@ -18,7 +18,7 @@ public class Error {
         this.stack = getStack(e);
     }
 
-    private String getStack(Throwable e){
+    public static String getStack(Throwable e){
         StringBuilder sb = new StringBuilder();
         for (StackTraceElement element : e.getStackTrace()) {
             sb.append(element.toString());

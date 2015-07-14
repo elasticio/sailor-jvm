@@ -3,7 +3,6 @@ package io.elastic.sailor;
 import com.rabbitmq.client.*;
 import org.slf4j.LoggerFactory;
 
-import javax.crypto.Cipher;
 import java.io.IOException;
 import java.net.URI;
 

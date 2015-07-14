@@ -1,4 +1,4 @@
-package groovy.io.elastic.sailor
+package io.elastic.sailor
 
 import com.google.gson.JsonObject
 import com.rabbitmq.client.AMQP

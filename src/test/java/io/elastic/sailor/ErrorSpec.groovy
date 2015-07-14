@@ -1,4 +1,4 @@
-package groovy.io.elastic.sailor
+package io.elastic.sailor
 
 import spock.lang.Specification
 import io.elastic.sailor.Error

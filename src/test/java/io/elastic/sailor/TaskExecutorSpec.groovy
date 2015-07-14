@@ -25,7 +25,7 @@ class TaskExecutorSpec extends Specification {
 
     def "should create TaskExecutor for valid component without errors"() {
         when:
-            new TaskExecutor("io.elastic.sailor.component.TestAction");
+            new TaskExecutor("TestAction");
         then:
             notThrown(RuntimeException)
     }
@@ -44,7 +44,7 @@ class TaskExecutorSpec extends Specification {
         def endCallback = Mock(Callback)
 
         when:
-            def executor = new TaskExecutor("io.elastic.sailor.component.TestAction");
+            def executor = new TaskExecutor("TestAction");
             executor.onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback).onEnd(endCallback);
             executor.execute(params);
         then:
@@ -69,12 +69,12 @@ class TaskExecutorSpec extends Specification {
         def endCallback = Mock(Callback)
 
         when:
-            def executor = new TaskExecutor("io.elastic.sailor.component.SleepAction");
+            def executor = new TaskExecutor("SleepAction");
             executor.onData(dataCallback).onSnapshot(snapshotCallback).onError(errorCallback).onRebound(reboundCallback).onEnd(endCallback);
             executor.setTimeout(200);
             executor.execute(params);
         then:
-            1 * errorCallback.receive({it.getMessage() == "Processing time out - io.elastic.sailor.component.SleepAction"})
+            1 * errorCallback.receive({it.getMessage() == "Processing time out - SleepAction"})
             0 * dataCallback.receive({})
             1 * endCallback.receive(_)
     }

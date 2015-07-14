@@ -2,6 +2,7 @@ package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import io.elastic.api.Message;
 import org.apache.commons.codec.binary.Base64;
 
 import javax.crypto.Cipher;
@@ -11,7 +12,6 @@ import java.net.URLDecoder;
 import java.net.URLEncoder;
 import java.security.Key;
 import java.security.MessageDigest;
-import io.elastic.api.Message;
 
 public final class CipherWrapper {
     private final String ALGORITHM = "AES/CBC/PKCS5Padding";
