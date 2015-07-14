@@ -18,15 +18,15 @@ class ServiceSpec extends SetupServerHelper {
 
     def "it should verify credentials"() {
         given:
-        Service.AvailableMethod method = Service.AvailableMethod.verifyCredentials;
-        ServiceSettings serviceSettings = new ServiceSettings(settings);
-        Service service = new Service(serviceSettings);
-        def success = new JsonObject();
-        success.addProperty("verified", true)
+            Service.AvailableMethod method = Service.AvailableMethod.verifyCredentials;
+            ServiceSettings serviceSettings = new ServiceSettings(settings);
+            Service service = new Service(serviceSettings);
+            def success = new JsonObject();
+            success.addProperty("verified", true)
         when:
-        Utils.postJson(serviceSettings.postResultUrl, service.execService(method));
+            Utils.postJson(serviceSettings.postResultUrl, service.execService(method));
         then:
-        SimpleRequestHandler.lastMessage.contains(success.toString())
+            SimpleRequestHandler.lastMessage.contains(success.toString())
     }
 
     def "ServiceSettings should throw an error when there are parameters missing or malformed"() {

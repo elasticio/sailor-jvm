@@ -2,7 +2,6 @@ package io.elastic.sailor
 import com.google.gson.JsonObject
 import io.elastic.api.Message
 import spock.lang.Specification
-import io.elastic.api.Message
 
 class CipherSpec extends Specification {
 

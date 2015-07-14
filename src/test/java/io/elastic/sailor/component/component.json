@@ -2,6 +2,20 @@
   "title": "Test component",
   "description": "Test component for sailor-jvm",
   "language": "java",
+  "credentials" : {
+    "main": "io.elastic.sailor.component.CredentialsVerifierImpl",
+    "fields":{
+      "oauth":{
+        "label":"Authentication",
+        "viewClass":"OAuthFieldView",
+        "required":true
+      }
+    },
+    "oauth2":{
+      "client_id":"{{GOOGLE_APP_ID}}",
+      "client_secret":"{{GOOGLE_APP_SECRET}}"
+    }
+  },
   "triggers": {
     "sleep": {
       "main": "io.elastic.sailor.component.SleepAction",
