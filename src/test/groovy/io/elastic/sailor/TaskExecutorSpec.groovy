@@ -74,7 +74,7 @@ class TaskExecutorSpec extends Specification {
             executor.setTimeout(200);
             executor.execute(params);
         then:
-            1 * errorCallback.receive({it.getMessage() == "java.lang.RuntimeException: Processing time out - io.elastic.sailor.component.SleepAction"})
+            1 * errorCallback.receive({it.getMessage().contains("Processing time out - io.elastic.sailor.component.SleepAction")})
             0 * dataCallback.receive({})
             1 * endCallback.receive(_)
     }
