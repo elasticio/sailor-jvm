@@ -1,11 +1,7 @@
 package io.elastic.sailor
-
 import com.google.gson.JsonObject
-import io.elastic.api.Message
-import spock.lang.Ignore
 import spock.lang.Specification
 
-import io.elastic.sailor.Sailor
 import io.elastic.api.Message;
 
 class SailorSpec extends Specification {

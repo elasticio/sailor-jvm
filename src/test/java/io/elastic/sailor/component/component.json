@@ -4,13 +4,13 @@
   "language": "java",
   "triggers": {
     "sleep": {
-      "main": "groovy.io.elastic.sailor.component.SleepAction",
+      "main": "io.elastic.sailor.component.SleepAction",
       "title": "Sleep trigger"
     }
   },
   "actions": {
     "test": {
-      "main": "groovy.io.elastic.sailor.component.TestAction",
+      "main": "io.elastic.sailor.component.TestAction",
       "title": "Test action"
     }
   }

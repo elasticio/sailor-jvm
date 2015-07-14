@@ -39,7 +39,7 @@ class ComponentResolverSpec extends Specification {
             def result = resolver.findTriggerOrAction("sleep")
         then:
             notThrown(RuntimeException)
-            result == "SleepAction"
+            result == "io.elastic.sailor.component.SleepAction"
     }
 
     def "should find action"() {
@@ -48,7 +48,7 @@ class ComponentResolverSpec extends Specification {
             def result = resolver.findTriggerOrAction("test")
         then:
             notThrown(RuntimeException)
-            result == "TestAction"
+            result == "io.elastic.sailor.component.TestAction"
     }
 
     def "should throw exception if trigger or action is not found"() {
@@ -57,7 +57,7 @@ class ComponentResolverSpec extends Specification {
             resolver.findTriggerOrAction("missing_action")
         then:
             RuntimeException e = thrown()
-            e.getMessage() == "missing_action is not found"
+            e.getMessage() == "'missing_action' trigger or action is not found"
     }
 
 
