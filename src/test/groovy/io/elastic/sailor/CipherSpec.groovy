@@ -94,4 +94,13 @@ class CipherSpec extends Specification {
         then:
             getMessage().toString() == decrypt
     }
+
+    def "should not fail in case of null message"() {
+        given:
+        def cipher = new CipherWrapper(key, iv)
+        when:
+        cipher.decryptMessage(null);
+        then:
+        notThrown(RuntimeException)
+    }
 }

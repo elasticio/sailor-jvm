@@ -40,15 +40,16 @@ public final class CipherWrapper {
     }
 
     public Message decryptMessage(String encrypted) {
-        JsonObject payload = decryptMessageContent(encrypted);
         try {
-            JsonObject body = payload.getAsJsonObject("body");
-            JsonObject attachments = payload.getAsJsonObject("attachments");
-            if (body == null) {
-                body = new JsonObject();
+            JsonObject payload = decryptMessageContent(encrypted);
+            JsonObject body = new JsonObject();
+            JsonObject attachments = new JsonObject();
+
+            if (payload.has("body") && Utils.isJsonObject(payload.get("body"))) {
+                body = payload.getAsJsonObject("body");
             }
-            if (attachments == null) {
-                attachments = new JsonObject();
+            if (payload.has("attachments") && Utils.isJsonObject(payload.get("attachments"))) {
+                attachments = payload.getAsJsonObject("attachments");
             }
             return new Message.Builder().body(body).attachments(attachments).build();
         } catch (Exception e) {
@@ -64,7 +65,7 @@ public final class CipherWrapper {
     // decrypts string and returns JSON object
     public JsonObject decryptMessageContent(String message) {
         if (message == null || message.length() == 0) {
-            return null;
+            return new JsonObject();
         }
         try {
             message = decrypt(message);
@@ -80,10 +81,12 @@ public final class CipherWrapper {
 
     private String encrypt(String message){
         try {
-            if (ENCRYPTION_KEY == null) return URLEncoder.encode(message, "UTF-8");
+            if (ENCRYPTION_KEY == null) {
+                return URLEncoder.encode(message, "UTF-8");
+            }
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, ENCRYPTION_KEY,ENCRYPTION_IV);
+            cipher.init(Cipher.ENCRYPT_MODE, ENCRYPTION_KEY, ENCRYPTION_IV);
 
             byte[] a = cipher.doFinal(message.getBytes());
 
@@ -95,7 +98,9 @@ public final class CipherWrapper {
 
     private String decrypt(String message) {
         try {
-            if (ENCRYPTION_KEY == null) return URLDecoder.decode(message, "UTF-8");
+            if (ENCRYPTION_KEY == null) {
+                return URLDecoder.decode(message, "UTF-8");
+            }
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, ENCRYPTION_KEY, ENCRYPTION_IV);
