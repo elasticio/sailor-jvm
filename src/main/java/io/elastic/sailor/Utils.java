@@ -1,6 +1,7 @@
 package io.elastic.sailor;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSyntaxException;
 import org.apache.http.HttpEntity;
@@ -25,6 +26,10 @@ class Utils {
         } catch (JsonSyntaxException e) {
             return false;
         }
+    }
+
+    public static boolean isJsonObject(JsonElement input) {
+        return isJsonObject(input.getAsString());
     }
 
     public static String postJson(String url, JsonObject body) throws IOException {
