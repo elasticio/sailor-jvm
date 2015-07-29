@@ -28,8 +28,8 @@ class Utils {
         }
     }
 
-    public static boolean isJsonObject(JsonElement input) {
-        return isJsonObject(input.getAsString());
+    public static boolean isJsonObject(JsonElement element) {
+        return element != null && element.isJsonObject();
     }
 
     public static String postJson(String url, JsonObject body) throws IOException {
