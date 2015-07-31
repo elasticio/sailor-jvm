@@ -56,21 +56,21 @@ public final class Settings {
         for (Required each : Required.values()) {
             if (settings.containsKey(each.name())) {
                 result.put(each.name(), settings.get(each.name()));
-                logger.info("Validated setting: " + each + " => " + settings.get(each.name()));
             } else {
                 throwError(each + " is missing");
             }
         }
+        logger.info("Validated required settings");
 
         for (Optional each : Optional.values()) {
             if (settings.containsKey(each.name())) {
                 result.put(each.name(), settings.get(each.name()));
-                logger.info("Validated setting: " + each + " => " + settings.get(each.name()));
             } else {
                 result.put(each.name(), each.defaultValue);
-                logger.info("Validated setting: " + each + " => " + each.defaultValue);
+                logger.info("Validated setting: " + each + " with default value " + each.defaultValue);
             }
         }
+        logger.info("Validated optional settings");
 
         return result;
     }
