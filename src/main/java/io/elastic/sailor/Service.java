@@ -36,8 +36,8 @@ public class Service {
     }
 
     /**
-     * @return {'verified':true} in case there is no verification method or verification finished successfully,
-     * otherwise returns {'verified':false}
+     * @return {'verified':true} in case there is no verification class field in component.json
+     * or verification finished successfully, otherwise returns {'verified':false}
      */
     private JsonObject verifyCredentials() {
         JsonObject result = new JsonObject();
