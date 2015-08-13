@@ -5,6 +5,7 @@ import io.elastic.api.CredentialsVerifier;
 import io.elastic.api.InvalidCredentialsException;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.logging.Level;
@@ -34,20 +35,20 @@ public class Service {
         }
     }
 
-    @SuppressWarnings("ThrowFromFinallyBlock")
+    /**
+     * @return {'verified':true} in case there is no verification method or verification finished successfully,
+     * otherwise returns {'verified':false}
+     */
     private JsonObject verifyCredentials() {
         JsonObject result = new JsonObject();
-        result.addProperty("verified", false);
+        result.addProperty("verified", true);
         try {
             CredentialsVerifier credentialsVerifier =
                 (CredentialsVerifier)component.loadVerifyCredentials().newInstance();
             credentialsVerifier.verify(settings.credentials);
-            result.addProperty("verified", true);
-        } catch (InvalidCredentialsException e) {
+        } catch (InvalidCredentialsException | ReflectiveOperationException | NullPointerException e) {
+            result.addProperty("verified", false);
             result.addProperty("reason", e.getMessage());
-        } catch (ReflectiveOperationException e) {
-            result.addProperty("reason", e.getMessage());
-            throw new RuntimeException(e);
         }
         return result;
     }

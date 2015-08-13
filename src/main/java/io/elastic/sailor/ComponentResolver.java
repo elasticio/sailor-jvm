@@ -72,12 +72,8 @@ public final class ComponentResolver {
         }
     }
 
-    public Class loadVerifyCredentials() {
-        try {
-            String className = componentJson.getAsJsonObject("credentials").get("main").getAsString();
-            return Class.forName(className);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+    public Class loadVerifyCredentials() throws ClassNotFoundException {
+        String className = componentJson.getAsJsonObject("credentials").get("main").getAsString();
+        return Class.forName(className);
     }
 }
