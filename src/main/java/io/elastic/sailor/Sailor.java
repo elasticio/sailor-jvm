@@ -3,12 +3,12 @@ package io.elastic.sailor;
 import com.google.gson.JsonObject;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
+import io.elastic.api.Executor;
 import io.elastic.api.Message;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 
 public class Sailor {
@@ -79,7 +79,6 @@ public class Sailor {
                 .snapshot(snapshot)
                 .build();
 
-        final TaskExecutor executor = new TaskExecutor(className);
         final MessageProcessor processor = getMessageProcessor(incomingMessage, incomingHeaders, deliveryTag);
 
         // make data callback
@@ -114,20 +113,17 @@ public class Sailor {
             }
         };
 
-        // end callback
-        EventEmitter.Callback endCallback = new EventEmitter.Callback() {
-            @Override
-            public void receive(Object obj) {
-                processor.processEnd(obj);
-            }
-        };
-
-        executor.onData(dataCallback)
+        final EventEmitter eventEmitter = new EventEmitter.Builder()
+                .onData(dataCallback)
                 .onError(errorCallback)
                 .onRebound(reboundCallback)
                 .onSnapshot(snapshotCallback)
-                .onEnd(endCallback);
+                .build();
+
+        final Executor executor = new Executor(className, eventEmitter);
 
         executor.execute(params);
+
+        processor.processEnd();
     }
 }

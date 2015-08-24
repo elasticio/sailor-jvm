@@ -27,7 +27,7 @@ public final class CipherWrapper {
         if (password != null) {
             ENCRYPTION_KEY = generateKey(password);
         }
-        if (password != null) {
+        if (initializationVector != null) {
             ENCRYPTION_IV = new IvParameterSpec(initializationVector.getBytes());
         }
     }

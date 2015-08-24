@@ -118,7 +118,7 @@ public class MessageProcessor {
     }
 
     // should ack message
-    public void processEnd(Object obj){
+    public void processEnd(){
         System.out.println("End received");
         amqp.ack(deliveryTag);
     }
