@@ -13,7 +13,7 @@ class ServiceSpec extends SetupServerHelper {
     }};
 
     def getHandler() {
-        new SimpleRequestHandler("")
+        new SimpleRequestHandler()
     }
 
     def "it should verify credentials"() {

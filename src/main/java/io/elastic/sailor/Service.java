@@ -46,7 +46,7 @@ public class Service {
             CredentialsVerifier credentialsVerifier =
                 (CredentialsVerifier)component.loadVerifyCredentials().newInstance();
             credentialsVerifier.verify(settings.credentials);
-        } catch (InvalidCredentialsException | ReflectiveOperationException | NullPointerException e) {
+        } catch (Throwable e) {
             result.addProperty("verified", false);
             result.addProperty("reason", e.getMessage());
         }
