@@ -3,11 +3,15 @@ package io.elastic.sailor;
 import com.google.gson.JsonObject;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class MessageProcessor {
+
+    private static final Logger logger = LoggerFactory.getLogger(MessageProcessor.class);
 
     // incoming data
     private final Message incomingMessage;
@@ -60,14 +64,17 @@ public class MessageProcessor {
     // should send encrypted data to RabbitMQ
     public void processData(Object obj){
 
-        System.out.println("Data received");
+        logger.info("About to publish data to queue");
 
         // payload
         Message message = (Message)obj;
 
         // encrypt
         byte[] encryptedPayload = cipher.encryptMessage(message).getBytes();
+
         amqp.sendData(encryptedPayload, makeDefaultOptions());
+
+        logger.info("Successfully published data to queue");
     }
 
     // should send error to RabbitMQ
