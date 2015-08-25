@@ -1,89 +1,85 @@
 package io.elastic.sailor
 
-import com.google.gson.JsonObject
-
 class ServiceSpec extends SetupServerHelper {
-
-    def settings = new HashMap<String, String>(){{
-        put("POST_RESULT_URL", "http://localhost:10000");
-        put("ACTION_OR_TRIGGER", "test");
-        put("CFG", "{\"key\":0}");
-        put("GET_MODEL_METHOD", "getModel");
-        put("COMPONENT_PATH", "src/test/java/io/elastic/sailor/component");
-    }};
 
     def getHandler() {
         new SimpleRequestHandler()
     }
 
+    def cleanup() {
+        SimpleRequestHandler.lastMessage = ""
+    }
+
     def "it should verify credentials"() {
-        given:
-        Service.AvailableMethod method = Service.AvailableMethod.verifyCredentials;
-        ServiceSettings serviceSettings = new ServiceSettings(settings);
-        Service service = new Service(serviceSettings);
-        def success = new JsonObject();
-        success.addProperty("verified", true)
+        setup:
+        System.setProperty(ServiceSettings.ENV_VAR_POST_RESULT_URL, "http://localhost:10000")
+        System.setProperty(ServiceSettings.ENV_VAR_ACTION_OR_TRIGGER, "test")
+        System.setProperty(ServiceSettings.ENV_VAR_CFG, "{\"key\":0}")
+
+        ServiceMethods method = ServiceMethods.verifyCredentials;
+        System.setProperty(ServiceSettings.ENV_VAR_GET_MODEL_METHOD, method.name())
+
+        def args = ["", "", method.name()] as String[]
+
         when:
-        Utils.postJson(serviceSettings.postResultUrl, service.execService(method));
+        Service.main(args);
+
         then:
-        SimpleRequestHandler.lastMessage.contains(success.toString())
+        SimpleRequestHandler.lastMessage == '{"verified":true}'
     }
 
     def "it should get meta model"() {
-        given:
-        Service.AvailableMethod method = Service.AvailableMethod.getMetaModel;
-        ServiceSettings serviceSettings = new ServiceSettings(settings);
-        Service service = new Service(serviceSettings);
-        def success = new JsonObject();
-        success.addProperty("key", 0)
+        setup:
+        System.setProperty(ServiceSettings.ENV_VAR_POST_RESULT_URL, "http://localhost:10000")
+        System.setProperty(ServiceSettings.ENV_VAR_ACTION_OR_TRIGGER, "test")
+        System.setProperty(ServiceSettings.ENV_VAR_CFG, "{\"key\":0}")
+        ServiceMethods method = ServiceMethods.getMetaModel;
+
+        System.setProperty(ServiceSettings.ENV_VAR_GET_MODEL_METHOD, method.name())
+
+        def args = ["", "", method.name()] as String[]
+
         when:
-        Utils.postJson(serviceSettings.postResultUrl, service.execService(method));
+        Service.main(args);
+
         then:
-        SimpleRequestHandler.lastMessage.contains(success.toString())
+        SimpleRequestHandler.lastMessage == '{}'
     }
 
     def "it should get select model"() {
-        given:
-        Service.AvailableMethod method = Service.AvailableMethod.selectModel;
-        ServiceSettings serviceSettings = new ServiceSettings(settings);
-        Service service = new Service(serviceSettings);
-        def success = new JsonObject();
-        success.addProperty("key", 0)
+        setup:
+        System.setProperty(ServiceSettings.ENV_VAR_POST_RESULT_URL, "http://localhost:10000")
+        System.setProperty(ServiceSettings.ENV_VAR_ACTION_OR_TRIGGER, "test")
+        System.setProperty(ServiceSettings.ENV_VAR_CFG, "{\"key\":0}")
+        ServiceMethods method = ServiceMethods.selectModel;
+
+        System.setProperty(ServiceSettings.ENV_VAR_GET_MODEL_METHOD, method.name())
+
+        def args = ["", "", method.name()] as String[]
+
         when:
-        Utils.postJson(serviceSettings.postResultUrl, service.execService(method));
+        Service.main(args);
+
         then:
-        SimpleRequestHandler.lastMessage.contains(success.toString())
+        SimpleRequestHandler.lastMessage == '{}'
     }
 
-    def "ServiceSettings should throw an error when there are parameters missing or malformed"() {
-        given:
-        def badSettings = new HashMap<String, String>();
-        badSettings.put("POST_RESULT_URL", "http://localhost");
-        badSettings.put("ACTION_OR_TRIGGER", "action");
-        badSettings.put("CFG", "{\"property\":0}");
-        when:
-        new ServiceSettings(badSettings);
-        then:
-        thrown(RuntimeException)
-    }
+    def "it throw IllegalArgumentException if too few arguments"() {
+        setup:
+        System.setProperty(ServiceSettings.ENV_VAR_POST_RESULT_URL, "http://localhost:10000")
+        System.setProperty(ServiceSettings.ENV_VAR_ACTION_OR_TRIGGER, "test")
+        System.setProperty(ServiceSettings.ENV_VAR_CFG, "{\"key\":0}")
+        ServiceMethods method = ServiceMethods.selectModel;
 
-    def "ServiceSettings should not throw an error when there are no parameters missing or malformed"() {
+        System.setProperty(ServiceSettings.ENV_VAR_GET_MODEL_METHOD, method.name())
+
+        def args = [""] as String[]
+
         when:
-        new ServiceSettings(settings);
+        Service.main(args);
 
         then:
-        notThrown(RuntimeException)
-    }
-
-    def "Service should not fail if component.json does not have required auth class field"() {
-        given:
-        settings.put("COMPONENT_PATH", "src/test/java/io/elastic/sailor/malformedcomponent");
-        Service.AvailableMethod method = Service.AvailableMethod.verifyCredentials;
-        ServiceSettings serviceSettings = new ServiceSettings(settings);
-        Service service = new Service(serviceSettings);
-        when:
-        service.execService(method);
-        then:
-        notThrown(Exception)
+        def e = thrown(IllegalArgumentException)
+        e.message == '3 arguments are required, but were passed 1'
     }
 }

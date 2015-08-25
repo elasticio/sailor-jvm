@@ -1,65 +1,39 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonObject;
-import io.elastic.api.JSON;
-
-import java.util.Map;
-
 public final class ServiceSettings {
-    private final JsonObject envVars = new JsonObject();
-    public JsonObject credentials;
-    public String postResultUrl;
-    public String selectModelMethod;
-    public String actionOrTrigger;
 
-    public ServiceSettings(Map<String, String> envVars) {
-        validateAndParseVars(envVars);
+    public static final String ENV_VAR_POST_RESULT_URL = "POST_RESULT_URL";
+    public static final String ENV_VAR_CFG = "CFG";
+    public static final String ENV_VAR_ACTION_OR_TRIGGER = "ACTION_OR_TRIGGER";
+    public static final String ENV_VAR_GET_MODEL_METHOD = "GET_MODEL_METHOD";
+    public static final String ENV_VAR_SLUG_URL = "SLUG_URL";
+    public static final String ENV_VAR_MESSAGE_CRYPTO_PASSWORD = "MESSAGE_CRYPTO_PASSWORD";
+    public static final String ENV_VAR_MESSAGE_CRYPTO_IV = "MESSAGE_CRYPTO_IV";
+    public static final String ENV_VAR_COMPONENT_PATH = "COMPONENT_PATH";
+    public static final String ENV_VAR_AMQP_URI = "AMQP_URI";
+    public static final String ENV_VAR_LISTEN_MESSAGES_ON = "LISTEN_MESSAGES_ON";
+
+    public static String getEnvVarPostResultUrl() {
+        return Utils.getEnvVar(ServiceSettings.ENV_VAR_POST_RESULT_URL);
     }
 
-    public String getEnvVar(String name) {
-        if (envVars.has(name)) {
-            return envVars.get(name).getAsString();
-        } else {
-            throw new RuntimeException("No property with name " + name + " defined");
-        }
+    public static String getMessageCryptoPasswort() {
+        return Utils.getEnvVar(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_PASSWORD);
     }
 
-    private void validateAndParseVars(Map<String, String> envVars) {
-        String err = "";
-        for (Required key : Required.values()) {
-            if (envVars.containsKey(key.name())) {
-                key.parse(this, envVars.get(key.name()));
-            } else {
-                err += key.name() + " ";
-            }
-        }
-        if (err.length() > 0) {
-            throw new RuntimeException("Could not find properties: " + err);
-        }
+    public static String getMessageCryptoIV() {
+        return Utils.getEnvVar(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_IV);
     }
 
-    /**
-     * POST_RESULT_URL - URL where to POST the result of execution (JSON)
-     * CFG - JSON with user keys
-     * ACTION_OR_TRIGGER - which action or trigger to execute
-     * GET_MODEL_METHOD - name of the method to be called in Service.selectModel() function
-     * See https://github.com/elasticio/sailor-nodejs/wiki/Service-verification for details
-     */
-    private enum Required {
-        POST_RESULT_URL,
-        CFG,
-        ACTION_OR_TRIGGER,
-        GET_MODEL_METHOD,
-        COMPONENT_PATH;
+    public static String getComponentPath() {
+        return Utils.getEnvVar(ServiceSettings.ENV_VAR_COMPONENT_PATH);
+    }
 
-        public void parse(ServiceSettings that, String value) {
-            switch (this) {
-                case POST_RESULT_URL: that.postResultUrl = value; break;
-                case CFG: that.credentials = JSON.parse(value); break;
-                case ACTION_OR_TRIGGER: that.actionOrTrigger = value; break;
-                case GET_MODEL_METHOD: that.selectModelMethod = value; break;
-            }
-            that.envVars.addProperty(this.name(), value);
-        }
+    public static String getAmqpUri() {
+        return Utils.getEnvVar(ServiceSettings.ENV_VAR_AMQP_URI);
+    }
+
+    public static String getListenMessagesOn() {
+        return Utils.getEnvVar(ServiceSettings.ENV_VAR_LISTEN_MESSAGES_ON);
     }
 }
