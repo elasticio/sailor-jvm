@@ -28,8 +28,8 @@ public class Sailor {
 
     public void init(Map<String, String> envVars) {
         settings = new Settings(envVars);
-        componentResolver = new ComponentResolver(settings.get("COMPONENT_PATH"));
-        cipher = new CipherWrapper(settings.get("MESSAGE_CRYPTO_PASSWORD"), settings.get("MESSAGE_CRYPTO_IV"));
+        componentResolver = new ComponentResolver(ServiceSettings.getComponentPath());
+        cipher = new CipherWrapper(ServiceSettings.getMessageCryptoPasswort(), ServiceSettings.getMessageCryptoIV());
     }
 
     public void setAMQP(AMQPWrapperInterface amqp) {
@@ -39,8 +39,8 @@ public class Sailor {
     public void start() throws IOException {
         logger.info("Starting up");
         amqp = new AMQPWrapper(settings);
-        amqp.connect(settings.get("AMQP_URI"));
-        amqp.listenQueue(settings.get("LISTEN_MESSAGES_ON"), cipher, getMessageCallback());
+        amqp.connect(ServiceSettings.getAmqpUri());
+        amqp.listenQueue(ServiceSettings.getListenMessagesOn(), cipher, getMessageCallback());
         logger.info("Connected to AMQP successfully");
     }
 
