@@ -2,30 +2,37 @@ package io.elastic.sailor
 
 import com.google.gson.JsonObject
 import io.elastic.api.Message
-import io.elastic.sailor.AMQPWrapperInterface
-import io.elastic.sailor.CipherWrapper
-import io.elastic.sailor.MessageProcessor
-import io.elastic.sailor.Settings
 import spock.lang.Specification
-import io.elastic.api.Message
 
 class MessageProcessorSpec  extends Specification {
 
-    def getSettings(){
-        def envVars  = new HashMap<String, String>();
-        envVars.put("TASK", "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}");
-        envVars.put("STEP_ID", "step_1");
-        envVars.put("AMQP_URI", "amqp://guest:guest@some-rabbit-server.com:5672");
-        envVars.put("LISTEN_MESSAGES_ON", "5559edd38968ec0736000003:test_exec:step_1:messages");
-        envVars.put("PUBLISH_MESSAGES_TO", "5527f0ea43238e5d5f000002_exchange");
-        envVars.put("DATA_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.message");
-        envVars.put("ERROR_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.error");
-        envVars.put("SNAPSHOT_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.snapshot");
-        envVars.put("REBOUND_ROUTING_KEY", "5559edd38968ec0736000003.test_exec.step_1.rebound");
-        envVars.put("MESSAGE_CRYPTO_PASSWORD", "crypt123456");
-        envVars.put("MESSAGE_CRYPTO_IV", "0000000000000000");
-        envVars.put("COMPONENT_PATH", "/spec/component/");
-        return new Settings(envVars);
+    def envVars = [
+            (ServiceSettings.ENV_VAR_TASK) : "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}",
+            (ServiceSettings.ENV_VAR_STEP_ID): "step_1",
+            (ServiceSettings.ENV_VAR_AMQP_URI) : "amqp://guest:guest@some-rabbit-server.com:5672",
+            (ServiceSettings.ENV_VAR_LISTEN_MESSAGES_ON) : "5559edd38968ec0736000003:test_exec:step_1:messages",
+            (ServiceSettings.ENV_VAR_PUBLISH_MESSAGES_TO) : "5527f0ea43238e5d5f000002_exchange",
+            (ServiceSettings.ENV_VAR_DATA_ROUTING_KEY) : "5559edd38968ec0736000003.test_exec.step_1.message",
+            (ServiceSettings.ENV_VAR_ERROR_ROUTING_KEY) : "5559edd38968ec0736000003.test_exec.step_1.error",
+            (ServiceSettings.ENV_VAR_SNAPSHOT_ROUTING_KEY) : "5559edd38968ec0736000003.test_exec.step_1.snapshot",
+            (ServiceSettings.ENV_VAR_REBOUND_ROUTING_KEY) :  "5559edd38968ec0736000003.test_exec.step_1.rebound",
+            (ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_PASSWORD) : "crypt123456",
+            (ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_IV) : "0000000000000000",
+            (ServiceSettings.ENV_VAR_COMPONENT_PATH) : "/spec/component/"
+    ]
+
+    def setup() {
+        envVars.each { key, value ->
+            println "Setting env var ${key} to ${value}"
+            System.setProperty(key, value);
+        };
+    }
+
+    def cleanup() {
+        envVars.each { key, value ->
+            println "Removing value of env var ${key}"
+            System.getProperties().remove(key);
+        }
     }
 
     def getIncomingMessage(){
@@ -54,11 +61,11 @@ class MessageProcessorSpec  extends Specification {
 
     def makeProcessor(AMQPWrapperInterface amqp){
         return new MessageProcessor(
+            new ExecutionDetails(),
             getIncomingMessage(),
             getIncomingMessageHeaders(),
             getDeliveryTag(),
             amqp,
-            getSettings(),
             new CipherWrapper()
         );
     }

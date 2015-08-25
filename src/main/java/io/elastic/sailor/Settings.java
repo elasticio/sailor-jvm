@@ -95,14 +95,6 @@ public final class Settings {
         return Integer.parseInt(get(key));
     }
 
-    public URI getURI(String key) {
-        try {
-            return new URI(sailorSettings.get(key));
-        } catch (URISyntaxException e) {
-            throw new RuntimeException("Invalid URI in " + key);
-        }
-    }
-
     private static void throwError(String message) {
         throw new IllegalArgumentException(message);
     }

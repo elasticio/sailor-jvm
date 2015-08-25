@@ -55,15 +55,21 @@ class Utils {
     }
 
     public static String getEnvVar(final String key) {
-        String value = System.getenv(key);
-
-        if (value == null) {
-            value = System.getProperty(key);
-        }
+        final String value = getOptionalEnvVar(key);
 
         if (value == null) {
             throw new IllegalStateException(
                     String.format("Env var '%s' is required", key));
+        }
+
+        return value;
+    }
+
+    public static String getOptionalEnvVar(final String key) {
+        String value = System.getenv(key);
+
+        if (value == null) {
+            value = System.getProperty(key);
         }
 
         return value;

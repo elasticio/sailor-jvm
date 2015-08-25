@@ -15,19 +15,17 @@ public class Sailor {
 
     private static final Logger logger = LoggerFactory.getLogger(Sailor.class);
 
-    private Settings settings;
     private AMQPWrapperInterface amqp;
     private ComponentResolver componentResolver;
     private CipherWrapper cipher;
 
     public static void main(String[] args) throws IOException {
         Sailor sailor = new Sailor();
-        sailor.init(System.getenv());
+        sailor.init();
         sailor.start();
     }
 
-    public void init(Map<String, String> envVars) {
-        settings = new Settings(envVars);
+    public void init() {
         componentResolver = new ComponentResolver(ServiceSettings.getComponentPath());
         cipher = new CipherWrapper(ServiceSettings.getMessageCryptoPasswort(), ServiceSettings.getMessageCryptoIV());
     }
@@ -38,7 +36,7 @@ public class Sailor {
 
     public void start() throws IOException {
         logger.info("Starting up");
-        amqp = new AMQPWrapper(settings);
+        amqp = new AMQPWrapper();
         amqp.connect(ServiceSettings.getAmqpUri());
         amqp.listenQueue(ServiceSettings.getListenMessagesOn(), cipher, getMessageCallback());
         logger.info("Connected to AMQP successfully");
@@ -56,30 +54,35 @@ public class Sailor {
         };
     }
 
-    public MessageProcessor getMessageProcessor(final Message incomingMessage, final Map<String,Object> incomingHeaders, final Long deliveryTag) {
+    public MessageProcessor getMessageProcessor(final ExecutionDetails executionDetails,
+                                                final Message incomingMessage,
+                                                final Map<String,Object> incomingHeaders,
+                                                final Long deliveryTag) {
         return new MessageProcessor(
+            executionDetails,
             incomingMessage,
             incomingHeaders,
             deliveryTag,
             amqp,
-            settings,
             cipher
         );
     }
 
     public void processMessage(final Message incomingMessage, final Map<String,Object> incomingHeaders, final Long deliveryTag){
 
-        final String triggerOrAction = settings.getFunction();
+        final ExecutionDetails executionDetails = new ExecutionDetails();
+        final String triggerOrAction = executionDetails.getFunction();
         final String className = componentResolver.findTriggerOrAction(triggerOrAction);
-        final JsonObject cfg = settings.getCfg();
-        final JsonObject snapshot = settings.getSnapshot();
+        final JsonObject cfg = executionDetails.getCfg();
+        final JsonObject snapshot = executionDetails.getSnapshot();
 
         final ExecutionParameters params = new ExecutionParameters.Builder(incomingMessage)
                 .configuration(cfg)
                 .snapshot(snapshot)
                 .build();
 
-        final MessageProcessor processor = getMessageProcessor(incomingMessage, incomingHeaders, deliveryTag);
+        final MessageProcessor processor = getMessageProcessor(
+                executionDetails, incomingMessage, incomingHeaders, deliveryTag);
 
         // make data callback
         EventEmitter.Callback dataCallback = new EventEmitter.Callback() {

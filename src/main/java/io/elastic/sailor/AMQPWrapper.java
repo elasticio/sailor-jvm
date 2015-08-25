@@ -9,20 +9,9 @@ import java.net.URI;
 public class AMQPWrapper implements AMQPWrapperInterface {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AMQPWrapper.class);
 
-    private final Settings settings;
     private Connection amqp;
     private Channel subscribeChannel;
     private Channel publishChannel;
-
-    public AMQPWrapper(Settings settings) {
-        this.settings = settings;
-    }
-
-    public AMQPWrapper(Settings settings, Channel subscribeChannel, Channel publishChannel) {
-        this.settings = settings;
-        this.subscribeChannel = subscribeChannel;
-        this.publishChannel = publishChannel;
-    }
 
     public void connect(String link) {
         openConnection(link);
@@ -78,19 +67,19 @@ public class AMQPWrapper implements AMQPWrapperInterface {
     }
 
     public void sendData(byte[] payload, AMQP.BasicProperties options) {
-        sendToExchange(settings.get("PUBLISH_MESSAGES_TO"), settings.get("DATA_ROUTING_KEY"), payload, options);
+        sendToExchange(ServiceSettings.getDataRoutingKey(), payload, options);
     }
 
     public void sendSnapshot(byte[] payload, AMQP.BasicProperties options) {
-        sendToExchange(settings.get("PUBLISH_MESSAGES_TO"), settings.get("SNAPSHOT_ROUTING_KEY"), payload, options);
+        sendToExchange(ServiceSettings.getSnapshotRoutingKey(), payload, options);
     }
 
     public void sendError(byte[] payload, AMQP.BasicProperties options) {
-        sendToExchange(settings.get("PUBLISH_MESSAGES_TO"), settings.get("ERROR_ROUTING_KEY"), payload, options);
+        sendToExchange(ServiceSettings.getErrorRoutingKey(), payload, options);
     }
 
     public void sendRebound(byte[] payload, AMQP.BasicProperties options) {
-        sendToExchange(settings.get("PUBLISH_MESSAGES_TO"), settings.get("REBOUND_ROUTING_KEY"), payload, options);
+        sendToExchange(ServiceSettings.getReboundRoutingKey(), payload, options);
     }
 
     private AMQPWrapper openConnection(String uri) {
@@ -131,7 +120,9 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         }
     }
 
-    private void sendToExchange(String exchangeName, String routingKey, byte[] payload, AMQP.BasicProperties options) {
+    private void sendToExchange(String routingKey, byte[] payload, AMQP.BasicProperties options) {
+        final String exchangeName = ServiceSettings.getPublishMessagesTo();
+
         logger.info(String.format(
                 "Pushing to exchange=%s, routingKey=%s, data=%s, options=%s",
                 exchangeName, routingKey, new String(payload), options
@@ -147,5 +138,15 @@ public class AMQPWrapper implements AMQPWrapperInterface {
     protected void finalize() throws Throwable {
         disconnect();
         super.finalize();
+    }
+
+
+
+    public void setSubscribeChannel(Channel subscribeChannel) {
+        this.subscribeChannel = subscribeChannel;
+    }
+
+    public void setPublishChannel(Channel publishChannel) {
+        this.publishChannel = publishChannel;
     }
 }

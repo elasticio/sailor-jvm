@@ -15,43 +15,43 @@ public class MessageProcessor {
 
     // incoming data
     private final Message incomingMessage;
-    private final Map<String,Object> incomingHeaders;
+    private final Map<String, Object> incomingHeaders;
     private final long deliveryTag;
 
     // amqp, cipher, settings
     private final AMQPWrapperInterface amqp;
     private final CipherWrapper cipher;
-    private final Settings settings;
+    private final ExecutionDetails executionDetails;
 
     public MessageProcessor(
+            final ExecutionDetails executionDetails,
             final Message incomingMessage,
-            final Map<String,Object> incomingHeaders,
+            final Map<String, Object> incomingHeaders,
             final long deliveryTag,
             AMQPWrapperInterface amqp,
-            Settings settings,
-            CipherWrapper cipher
-    ) {
+            CipherWrapper cipher) {
+        this.executionDetails = executionDetails;
         this.incomingMessage = incomingMessage;
         this.incomingHeaders = incomingHeaders;
         this.deliveryTag = deliveryTag;
         this.amqp = amqp;
-        this.settings = settings;
         this.cipher = cipher;
+
     }
 
-    private Map<String, Object> makeDefaultHeaders(){
+    private Map<String, Object> makeDefaultHeaders() {
         HashMap<String, Object> headers = new HashMap<String, Object>();
         headers.put("execId", incomingHeaders.get("execId"));
         headers.put("taskId", incomingHeaders.get("taskId"));
         headers.put("userId", incomingHeaders.get("userId"));
-        headers.put("stepId", settings.getStepId());
-        headers.put("compId", settings.getCompId());
-        headers.put("function", settings.getFunction());
+        headers.put("stepId", executionDetails.getStepId());
+        headers.put("compId", executionDetails.getCompId());
+        headers.put("function", executionDetails.getFunction());
         headers.put("start", System.currentTimeMillis());
         return headers;
     }
 
-    private AMQP.BasicProperties makeDefaultOptions(){
+    private AMQP.BasicProperties makeDefaultOptions() {
         return new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
@@ -62,12 +62,12 @@ public class MessageProcessor {
     }
 
     // should send encrypted data to RabbitMQ
-    public void processData(Object obj){
+    public void processData(Object obj) {
 
         logger.info("About to publish data to queue");
 
         // payload
-        Message message = (Message)obj;
+        Message message = (Message) obj;
 
         // encrypt
         byte[] encryptedPayload = cipher.encryptMessage(message).getBytes();
@@ -78,8 +78,8 @@ public class MessageProcessor {
     }
 
     // should send error to RabbitMQ
-    public void processError(Object obj){
-        Error err = new Error((Throwable)obj);
+    public void processError(Object obj) {
+        Error err = new Error((Throwable) obj);
         sendError(err);
     }
 
@@ -100,23 +100,23 @@ public class MessageProcessor {
     }
 
     // should send snapshot to RabbitMQ
-    public void processSnapshot(Object obj){
-        JsonObject snapshot = (JsonObject)obj;
+    public void processSnapshot(Object obj) {
+        JsonObject snapshot = (JsonObject) obj;
         byte[] payload = snapshot.toString().getBytes();
         amqp.sendSnapshot(payload, makeDefaultOptions());
     }
 
     // should send rebound to RabbitMQ
-    public void processRebound(Object obj){
+    public void processRebound(Object obj) {
 
         int reboundIteration = getReboundIteration();
 
-        if (reboundIteration > settings.getInt("REBOUND_LIMIT")) {
+        if (reboundIteration > ServiceSettings.getReboundLimit()) {
             Error err = new Error("Error", "Rebound limit exceeded", Error.getStack(new RuntimeException()));
             sendError(err);
         } else {
             byte[] payload = cipher.encryptMessage(incomingMessage).getBytes();
-            Map<String,Object> headers = makeDefaultHeaders();
+            Map<String, Object> headers = makeDefaultHeaders();
             headers.put("reboundReason", obj.toString());
             headers.put("reboundIteration", reboundIteration);
             double expiration = getReboundExpiration(reboundIteration);
@@ -125,12 +125,12 @@ public class MessageProcessor {
     }
 
     // should ack message
-    public void processEnd(){
+    public void processEnd() {
         System.out.println("End received");
         amqp.ack(deliveryTag);
     }
 
-    private int getReboundIteration(){
+    private int getReboundIteration() {
         if (incomingHeaders.get("reboundIteration") != null) {
             try {
                 return Integer.parseInt(incomingHeaders.get("reboundIteration").toString()) + 1;
@@ -143,10 +143,10 @@ public class MessageProcessor {
     }
 
     private double getReboundExpiration(int reboundIteration) {
-        return Math.pow(2, reboundIteration - 1) * settings.getInt("REBOUND_INITIAL_EXPIRATION");
+        return Math.pow(2, reboundIteration - 1) * ServiceSettings.getReboundInitialExpiration();
     }
 
-    private AMQP.BasicProperties makeReboundOptions(Map<String,Object> headers, double expiration){
+    private AMQP.BasicProperties makeReboundOptions(Map<String, Object> headers, double expiration) {
         return new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
