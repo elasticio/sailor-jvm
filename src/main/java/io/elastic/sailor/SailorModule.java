@@ -8,12 +8,14 @@ import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.elastic.api.EventEmitter;
+import io.elastic.sailor.impl.MessageProcessorImpl;
 
 public class SailorModule extends AbstractModule {
 
     @Override
     protected void configure() {
         bind(AMQPWrapperInterface.class).to(AMQPWrapper.class);
+        bind(MessageProcessor.class).to(MessageProcessorImpl.class);
 
         install(new FactoryModuleBuilder()
                 .implement(EventEmitter.Callback.class, Names.named("data"), DataCallback.class)
