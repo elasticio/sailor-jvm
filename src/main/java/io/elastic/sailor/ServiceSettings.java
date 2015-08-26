@@ -5,8 +5,8 @@ import com.google.gson.JsonParser;
 
 public final class ServiceSettings {
 
-    private static final int DEFAULT_REBOUND_LIMIT = 20;
-    private static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;
+    public static final int DEFAULT_REBOUND_LIMIT = 20;
+    public static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;
 
     public static final String ENV_VAR_POST_RESULT_URL = "POST_RESULT_URL";
     public static final String ENV_VAR_CFG = "CFG";
@@ -28,35 +28,7 @@ public final class ServiceSettings {
     public static final String ENV_VAR_TASK = "TASK";
     public static final String ENV_VAR_STEP_ID = "STEP_ID";
 
-    public static int getReboundLimit() {
-
-        return getOptionalIntegerValue(ServiceSettings.ENV_VAR_REBOUND_LIMIT,
-                DEFAULT_REBOUND_LIMIT);
-    }
-
-    public static int getReboundInitialExpiration() {
-
-        return getOptionalIntegerValue(ServiceSettings.ENV_VAR_REBOUND_INITIAL_EXPIRATION,
-                DEFAULT_REBOUND_INITIAL_EXPIRATION);
-    }
-
-    public static JsonObject getTask() {
-        final String value = Utils.getEnvVar(ServiceSettings.ENV_VAR_TASK);
-
-        return new JsonParser().parse(value).getAsJsonObject();
-    }
-
     public static String getStepId() {
         return Utils.getEnvVar(ServiceSettings.ENV_VAR_STEP_ID);
-    }
-
-    private static int getOptionalIntegerValue(final String key, int defaultValue) {
-        final String value = Utils.getOptionalEnvVar(key);
-
-        if (value != null) {
-            return Integer.parseInt(value);
-        }
-
-        return defaultValue;
     }
 }

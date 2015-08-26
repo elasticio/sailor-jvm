@@ -2,6 +2,7 @@ package io.elastic.sailor;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.Message;
@@ -13,22 +14,28 @@ public class ReboundCallback implements EventEmitter.Callback {
     private ExecutionContext executionContext;
     private AMQPWrapperInterface amqp;
     private CipherWrapper cipher;
+    private Integer reboundLimit;
+    private Integer reboundInitialExpiration;
 
     @Inject
     public ReboundCallback(
             @Assisted ExecutionContext executionContext,
             AMQPWrapperInterface amqp,
-            CipherWrapper cipher) {
+            CipherWrapper cipher,
+            @Named(ServiceSettings.ENV_VAR_REBOUND_LIMIT) Integer reboundLimit,
+            @Named(ServiceSettings.ENV_VAR_REBOUND_INITIAL_EXPIRATION) Integer reboundInitialExpiration) {
         this.executionContext = executionContext;
         this.amqp = amqp;
         this.cipher = cipher;
+        this.reboundLimit = reboundLimit;
+        this.reboundInitialExpiration = reboundInitialExpiration;
     }
 
     public void receive(Object data) {
 
         int reboundIteration = getReboundIteration();
 
-        if (reboundIteration > ServiceSettings.getReboundLimit()) {
+        if (reboundIteration > this.reboundLimit) {
             throw new RuntimeException("Rebound limit exceeded");
         }
 
@@ -58,7 +65,7 @@ public class ReboundCallback implements EventEmitter.Callback {
     }
 
     private double getReboundExpiration(int reboundIteration) {
-        return Math.pow(2, reboundIteration - 1) * ServiceSettings.getReboundInitialExpiration();
+        return Math.pow(2, reboundIteration - 1) * this.reboundInitialExpiration;
     }
 
     private AMQP.BasicProperties makeReboundOptions(Map<String, Object> headers, double expiration) {
