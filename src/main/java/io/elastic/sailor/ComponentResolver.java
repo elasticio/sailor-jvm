@@ -2,6 +2,8 @@ package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,11 +25,13 @@ public final class ComponentResolver {
     /**
      * @param componentPath - path to the component, relative to sailor position
      */
-    public ComponentResolver(String componentPath){
+    @Inject
+    public ComponentResolver(
+            @Named(ServiceSettings.ENV_VAR_COMPONENT_PATH) String componentPath) {
         componentJson = loadComponentJson(componentPath);
     }
 
-    private JsonObject loadComponentJson(String componentPath){
+    private JsonObject loadComponentJson(String componentPath) {
 
         String componentFolder = new File(USERDIR, componentPath).getAbsolutePath();
         String componentJsonFile = new File(componentFolder, FILENAME).getAbsolutePath();
@@ -42,11 +46,10 @@ public final class ComponentResolver {
     }
 
     /**
-     *
      * @param name - trigger or action name
      * @return name of Java class to execute for that trigger or action
      */
-    public String findTriggerOrAction(String name){
+    public String findTriggerOrAction(String name) {
         JsonObject result = null;
         if (componentJson.get("triggers") != null && componentJson.getAsJsonObject("triggers").get(name) != null) {
             result = componentJson.getAsJsonObject("triggers").getAsJsonObject(name);

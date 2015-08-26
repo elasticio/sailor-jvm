@@ -28,50 +28,6 @@ public final class ServiceSettings {
     public static final String ENV_VAR_TASK = "TASK";
     public static final String ENV_VAR_STEP_ID = "STEP_ID";
 
-    public static String getEnvVarPostResultUrl() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_POST_RESULT_URL);
-    }
-
-    public static String getMessageCryptoPasswort() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_PASSWORD);
-    }
-
-    public static String getMessageCryptoIV() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_IV);
-    }
-
-    public static String getComponentPath() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_COMPONENT_PATH);
-    }
-
-    public static String getAmqpUri() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_AMQP_URI);
-    }
-
-    public static String getListenMessagesOn() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_LISTEN_MESSAGES_ON);
-    }
-
-    public static String getPublishMessagesTo() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_PUBLISH_MESSAGES_TO);
-    }
-
-    public static String getDataRoutingKey() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_DATA_ROUTING_KEY);
-    }
-
-    public static String getErrorRoutingKey() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_ERROR_ROUTING_KEY);
-    }
-
-    public static String getReboundRoutingKey() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_REBOUND_ROUTING_KEY);
-    }
-
-    public static String getSnapshotRoutingKey() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_SNAPSHOT_ROUTING_KEY);
-    }
-
     public static int getReboundLimit() {
 
         return getOptionalIntegerValue(ServiceSettings.ENV_VAR_REBOUND_LIMIT,

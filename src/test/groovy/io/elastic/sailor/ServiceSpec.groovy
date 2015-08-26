@@ -1,9 +1,21 @@
 package io.elastic.sailor
 
+import com.google.inject.Guice
+import com.google.inject.Injector
+
 class ServiceSpec extends SetupServerHelper {
 
     def getHandler() {
         new SimpleRequestHandler()
+    }
+
+
+    def service;
+
+    def setup() {
+        Injector injector = Guice.createInjector(new SailorModule(), new TestModule())
+
+        service = injector.getInstance(Service.class)
     }
 
     def cleanup() {
@@ -11,54 +23,24 @@ class ServiceSpec extends SetupServerHelper {
     }
 
     def "it should verify credentials"() {
-        setup:
-        System.setProperty(ServiceSettings.ENV_VAR_POST_RESULT_URL, "http://localhost:10000")
-        System.setProperty(ServiceSettings.ENV_VAR_ACTION_OR_TRIGGER, "test")
-        System.setProperty(ServiceSettings.ENV_VAR_CFG, "{\"key\":0}")
-
-        ServiceMethods method = ServiceMethods.verifyCredentials;
-        System.setProperty(ServiceSettings.ENV_VAR_GET_MODEL_METHOD, method.name())
-
-        def args = ["", "", method.name()] as String[]
-
         when:
-        Service.main(args);
+        service.start(ServiceMethods.verifyCredentials)
 
         then:
         SimpleRequestHandler.lastMessage == '{"verified":true}'
     }
 
     def "it should get meta model"() {
-        setup:
-        System.setProperty(ServiceSettings.ENV_VAR_POST_RESULT_URL, "http://localhost:10000")
-        System.setProperty(ServiceSettings.ENV_VAR_ACTION_OR_TRIGGER, "test")
-        System.setProperty(ServiceSettings.ENV_VAR_CFG, "{\"key\":0}")
-        ServiceMethods method = ServiceMethods.getMetaModel;
-
-        System.setProperty(ServiceSettings.ENV_VAR_GET_MODEL_METHOD, method.name())
-
-        def args = ["", "", method.name()] as String[]
-
         when:
-        Service.main(args);
+        service.start(ServiceMethods.getMetaModel);
 
         then:
         SimpleRequestHandler.lastMessage == '{}'
     }
 
     def "it should get select model"() {
-        setup:
-        System.setProperty(ServiceSettings.ENV_VAR_POST_RESULT_URL, "http://localhost:10000")
-        System.setProperty(ServiceSettings.ENV_VAR_ACTION_OR_TRIGGER, "test")
-        System.setProperty(ServiceSettings.ENV_VAR_CFG, "{\"key\":0}")
-        ServiceMethods method = ServiceMethods.selectModel;
-
-        System.setProperty(ServiceSettings.ENV_VAR_GET_MODEL_METHOD, method.name())
-
-        def args = ["", "", method.name()] as String[]
-
         when:
-        Service.main(args);
+        service.start(ServiceMethods.selectModel)
 
         then:
         SimpleRequestHandler.lastMessage == '{}'
@@ -66,12 +48,6 @@ class ServiceSpec extends SetupServerHelper {
 
     def "it throw IllegalArgumentException if too few arguments"() {
         setup:
-        System.setProperty(ServiceSettings.ENV_VAR_POST_RESULT_URL, "http://localhost:10000")
-        System.setProperty(ServiceSettings.ENV_VAR_ACTION_OR_TRIGGER, "test")
-        System.setProperty(ServiceSettings.ENV_VAR_CFG, "{\"key\":0}")
-        ServiceMethods method = ServiceMethods.selectModel;
-
-        System.setProperty(ServiceSettings.ENV_VAR_GET_MODEL_METHOD, method.name())
 
         def args = [""] as String[]
 

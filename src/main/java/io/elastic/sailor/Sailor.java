@@ -1,5 +1,8 @@
 package io.elastic.sailor;
 
+import com.google.inject.Guice;
+import com.google.inject.Inject;
+import com.google.inject.Injector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,35 +16,31 @@ public class Sailor {
     private ComponentResolver componentResolver;
     private CipherWrapper cipher;
 
+    @Inject
     public Sailor(final ComponentResolver componentResolver,
-                  final CipherWrapper cipher,
-                  final AMQPWrapperInterface amqp) {
+                  final CipherWrapper cipher) {
         this.componentResolver = componentResolver;
         this.cipher = cipher;
-        this.amqp = amqp;
     }
 
     public static void main(String[] args) throws IOException {
-        final ComponentResolver componentResolver
-                = new ComponentResolver(ServiceSettings.getComponentPath());
+        Injector injector = Guice.createInjector(new SailorModule(), new EnvironmentModule());
 
-        final CipherWrapper cipher = new CipherWrapper(
-                ServiceSettings.getMessageCryptoPasswort(), ServiceSettings.getMessageCryptoIV());
-
-        Sailor sailor = new Sailor(componentResolver, cipher, new AMQPWrapper(cipher));
+        Sailor sailor = injector.getInstance(Sailor.class);
 
         sailor.start();
     }
 
+    @Inject
     public void setAMQP(AMQPWrapperInterface amqp) {
         this.amqp = amqp;
     }
 
     public void start() throws IOException {
         logger.info("Starting up");
-        amqp.connect(ServiceSettings.getAmqpUri());
+        amqp.connect();
         final MessageProcessor processor = new MessageProcessor(amqp, cipher, componentResolver);
-        amqp.subscribeConsumer(ServiceSettings.getListenMessagesOn(), processor);
+        amqp.subscribeConsumer(processor);
         logger.info("Connected to AMQP successfully");
     }
 }

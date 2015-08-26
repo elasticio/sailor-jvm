@@ -2,6 +2,8 @@ package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.elastic.api.Message;
 import org.apache.commons.codec.binary.Base64;
 
@@ -18,12 +20,10 @@ public final class CipherWrapper {
     private Key ENCRYPTION_KEY;
     private IvParameterSpec ENCRYPTION_IV;
 
-    public CipherWrapper() {
-        ENCRYPTION_KEY = null;
-        ENCRYPTION_IV = null;
-    }
-
-    public CipherWrapper(String password, String initializationVector) {
+    @Inject
+    public CipherWrapper(
+            @Named(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_PASSWORD) String password,
+            @Named(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_IV) String initializationVector) {
         if (password != null) {
             ENCRYPTION_KEY = generateKey(password);
         }
@@ -53,7 +53,7 @@ public final class CipherWrapper {
             }
             return new Message.Builder().body(body).attachments(attachments).build();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to decrypt message: "  + e.getMessage());
+            throw new RuntimeException("Failed to decrypt message: " + e.getMessage());
         }
     }
 

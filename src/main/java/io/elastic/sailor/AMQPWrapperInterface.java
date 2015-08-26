@@ -4,9 +4,9 @@ import com.rabbitmq.client.AMQP;
 
 public interface AMQPWrapperInterface {
 
-    void connect(String uri);
+    void connect();
 
-    void subscribeConsumer(String queueName, MessageProcessor processor);
+    void subscribeConsumer(MessageProcessor processor);
 
     void sendData(byte[] payload, AMQP.BasicProperties options);
 
