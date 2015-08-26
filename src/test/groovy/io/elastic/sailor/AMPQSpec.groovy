@@ -36,6 +36,8 @@ class AMPQSpec extends Specification {
     }
 
     def setupSpec() {
+        System.getProperties().remove(ServiceSettings.ENV_VAR_LISTEN_MESSAGES_ON)
+        System.getProperties().remove(ServiceSettings.ENV_VAR_AMQP_URI)
     }
 
     def getOptions(){

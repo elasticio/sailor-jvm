@@ -13,6 +13,12 @@ public class AMQPWrapper implements AMQPWrapperInterface {
     private Channel subscribeChannel;
     private Channel publishChannel;
 
+    private CipherWrapper cipher;
+
+    public AMQPWrapper(CipherWrapper cipher) {
+        this.cipher = cipher;
+    }
+
     public void connect(String link) {
         openConnection(link);
         openPublishChannel();
@@ -39,9 +45,10 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public void listenQueue(String queueName, CipherWrapper cipher, Sailor.Callback callback) {
+    public void subscribeConsumer(String queueName, MessageProcessor processor) {
+        final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, processor);
+
         try {
-            MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, callback);
             subscribeChannel.basicConsume(queueName, consumer);
         } catch (IOException e) {
             throw new RuntimeException(e);

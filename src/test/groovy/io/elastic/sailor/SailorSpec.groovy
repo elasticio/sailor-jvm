@@ -1,17 +1,21 @@
 package io.elastic.sailor
 
-import com.google.gson.JsonObject
-import io.elastic.api.Message
+import spock.lang.Ignore
 import spock.lang.Specification
 
 class SailorSpec extends Specification {
 
     def amqp = Mock(AMQPWrapperInterface)
 
+    @Ignore
     def "it should not start if AMQP url is missing"() {
+        setup:
+        def componentResolver = new ComponentResolver("src/test/java/io/elastic/sailor/component");
+        def cipher = new CipherWrapper("crypt123456", "0000000000000000");
+        def sailor = new Sailor(componentResolver, cipher, amqp);
+
         when:
-        def sailor = new Sailor();
-        sailor.setAMQP(amqp);
+
         sailor.start();
         then:
         RuntimeException e = thrown()
@@ -21,76 +25,42 @@ class SailorSpec extends Specification {
         amqp.connect()
     }
 
-
-    def "should throw exception if failed to connect to AMQP"() {
+    @Ignore
+    def "it should not start if AMQP exchange to listen to is missing"() {
         setup:
-        System.setProperty(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_PASSWORD, "crypt123456")
-        System.setProperty(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_IV, "0000000000000000")
-        System.setProperty(ServiceSettings.ENV_VAR_COMPONENT_PATH, "src/test/java/io/elastic/sailor/component")
+        def componentResolver = new ComponentResolver("src/test/java/io/elastic/sailor/component");
+        def cipher = new CipherWrapper("crypt123456", "0000000000000000");
+        def sailor = new Sailor(componentResolver, cipher, amqp);
         System.setProperty(ServiceSettings.ENV_VAR_AMQP_URI, "amqp://guest:guest@some-rabbit-server.com:5672")
+
         when:
-        def sailor = new Sailor();
-        sailor.init();
+
         sailor.start();
         then:
         RuntimeException e = thrown()
-        e.getMessage() == "java.net.UnknownHostException: some-rabbit-server.com"
-    }
+        e.getMessage() == "Env var 'LISTEN_MESSAGES_ON' is required"
 
-    def "should throw exception if component is not found"() {
-        setup:
-        System.setProperty(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_PASSWORD, "crypt123456")
-        System.setProperty(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_IV, "0000000000000000")
-        System.setProperty(ServiceSettings.ENV_VAR_COMPONENT_PATH, "src/test/java/groovy/io/elastic")
-        System.setProperty(ServiceSettings.ENV_VAR_AMQP_URI, "amqp://guest:guest@some-rabbit-server.com:5672")
-        when:
-        def sailor = new Sailor();
-        sailor.init();
         then:
-        RuntimeException e = thrown()
-        e.getMessage().contains("component.json is not found in")
-    }
-
-    def checkOutgoingHeaders(HashMap headers, String function) {
-        return headers.get("execId") == "exec1" &&
-                headers.get("taskId") == "task2" &&
-                headers.get("userId") == "user3" &&
-                headers.get("stepId") == "step_1" &&
-                headers.get("compId") == "testcomponent" &&
-                headers.get("function") == function;
+        amqp.connect()
     }
 
     def "should process message with TestAction and send responses to AMQP"() {
         setup:
-        System.setProperty(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_PASSWORD, "crypt123456")
-        System.setProperty(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_IV, "0000000000000000")
-        System.setProperty(ServiceSettings.ENV_VAR_COMPONENT_PATH, "src/test/java/io/elastic/sailor/component")
-        System.setProperty(ServiceSettings.ENV_VAR_AMQP_URI, "amqp://guest:guest@127.0.0.1:5672")
-        System.setProperty(ServiceSettings.ENV_VAR_STEP_ID, "step_1");
-        System.setProperty(ServiceSettings.ENV_VAR_TASK, "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}");
 
-        // message
-        def body = new JsonObject();
-        body.addProperty("someProperty", "someValue");
-        def attachments = new JsonObject();
-        attachments.addProperty("attachment1", "attachmentContent");
-        def message = new Message(body, attachments);
-
-        // headers
-        def headers = new HashMap();
-        headers.put("execId", "exec1");
-        headers.put("taskId", "task2")
-        headers.put("userId", "user3");
-        when:
-        def sailor = new Sailor();
-        sailor.init();
+        def componentResolver = new ComponentResolver("src/test/java/io/elastic/sailor/component");
+        def cipher = new CipherWrapper("crypt123456", "0000000000000000");
+        def sailor = new Sailor(componentResolver, cipher, amqp);
         sailor.setAMQP(amqp);
-        sailor.processMessage(message, headers, 12345);
+
+        System.setProperty(ServiceSettings.ENV_VAR_AMQP_URI, "amqp://guest:guest@127.0.0.1:5672")
+        System.setProperty(ServiceSettings.ENV_VAR_LISTEN_MESSAGES_ON, "5559edd38968ec0736000003:test_exec:step_1:messages")
+
+
+        when:
+        sailor.start();
+
         then:
-        1 * amqp.sendData(_, _)
-        1 * amqp.sendSnapshot(_, _)
-        1 * amqp.sendRebound(_, _)
-        1 * amqp.sendError(_, _)
-        1 * amqp.ack(12345)
+        1 * amqp.connect("amqp://guest:guest@127.0.0.1:5672")
+        1 * amqp.subscribeConsumer("5559edd38968ec0736000003:test_exec:step_1:messages", _)
     }
 }

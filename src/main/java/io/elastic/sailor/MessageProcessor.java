@@ -1,158 +1,69 @@
 package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
-import com.rabbitmq.client.AMQP;
+import io.elastic.api.EventEmitter;
+import io.elastic.api.ExecutionParameters;
+import io.elastic.api.Executor;
 import io.elastic.api.Message;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class MessageProcessor {
 
-    private static final Logger logger = LoggerFactory.getLogger(MessageProcessor.class);
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageProcessor.class);
 
-    // incoming data
-    private final Message incomingMessage;
-    private final Map<String, Object> incomingHeaders;
-    private final long deliveryTag;
+    private AMQPWrapperInterface amqp;
+    private CipherWrapper cipher;
+    private ComponentResolver componentResolver;
 
-    // amqp, cipher, settings
-    private final AMQPWrapperInterface amqp;
-    private final CipherWrapper cipher;
-    private final ExecutionDetails executionDetails;
-
-    public MessageProcessor(
-            final ExecutionDetails executionDetails,
-            final Message incomingMessage,
-            final Map<String, Object> incomingHeaders,
-            final long deliveryTag,
-            AMQPWrapperInterface amqp,
-            CipherWrapper cipher) {
-        this.executionDetails = executionDetails;
-        this.incomingMessage = incomingMessage;
-        this.incomingHeaders = incomingHeaders;
-        this.deliveryTag = deliveryTag;
+    public MessageProcessor(AMQPWrapperInterface amqp, CipherWrapper cipher, ComponentResolver componentResolver) {
         this.amqp = amqp;
         this.cipher = cipher;
-
+        this.componentResolver = componentResolver;
     }
 
-    private Map<String, Object> makeDefaultHeaders() {
-        HashMap<String, Object> headers = new HashMap<String, Object>();
-        headers.put("execId", incomingHeaders.get("execId"));
-        headers.put("taskId", incomingHeaders.get("taskId"));
-        headers.put("userId", incomingHeaders.get("userId"));
-        headers.put("stepId", executionDetails.getStepId());
-        headers.put("compId", executionDetails.getCompId());
-        headers.put("function", executionDetails.getFunction());
-        headers.put("start", System.currentTimeMillis());
-        return headers;
-    }
+    public void processMessage(final Message incomingMessage,
+                               final Map<String, Object> incomingHeaders,
+                               final Long deliveryTag) {
 
-    private AMQP.BasicProperties makeDefaultOptions() {
-        return new AMQP.BasicProperties.Builder()
-                .contentType("application/json")
-                .contentEncoding("utf8")
-                .headers(makeDefaultHeaders())
-                .priority(1)// this should equal to mandatory true
-                .deliveryMode(2)//TODO: check if flag .mandatory(true) was set
+        final ExecutionContext executionContext = new ExecutionContext(incomingMessage, incomingHeaders);
+        final String triggerOrAction = executionContext.getFunction();
+        final String className = componentResolver.findTriggerOrAction(triggerOrAction);
+        final JsonObject cfg = executionContext.getCfg();
+        final JsonObject snapshot = executionContext.getSnapshot();
+
+        logger.info("About to execute {}", className);
+
+        final ExecutionParameters params = new ExecutionParameters.Builder(incomingMessage)
+                .configuration(cfg)
+                .snapshot(snapshot)
                 .build();
-    }
 
-    // should send encrypted data to RabbitMQ
-    public void processData(Object obj) {
+        // make data callback
+        EventEmitter.Callback dataCallback = new DataCallback(executionContext, amqp, cipher);
 
-        logger.info("About to publish data to queue");
+        // make error callback
+        EventEmitter.Callback errorCallback = new ErrorCallback(executionContext, amqp, cipher);
 
-        // payload
-        Message message = (Message) obj;
+        // make rebound callback
+        EventEmitter.Callback reboundCallback = new ReboundCallback(executionContext, amqp, cipher);
 
-        // encrypt
-        byte[] encryptedPayload = cipher.encryptMessage(message).getBytes();
+        // snapshot callback
+        EventEmitter.Callback snapshotCallback = new SnapshotCallback(executionContext, amqp);
 
-        amqp.sendData(encryptedPayload, makeDefaultOptions());
-
-        logger.info("Successfully published data to queue");
-    }
-
-    // should send error to RabbitMQ
-    public void processError(Object obj) {
-        Error err = new Error((Throwable) obj);
-        sendError(err);
-    }
-
-    private void sendError(Error err) {
-        // payload
-        JsonObject error = new JsonObject();
-        error.addProperty("name", err.name);
-        error.addProperty("message", err.message);
-        error.addProperty("stack", err.stack);
-
-        JsonObject payload = new JsonObject();
-        payload.addProperty("error", cipher.encryptMessageContent(error));
-        payload.addProperty("errorInput", cipher.encryptMessage(incomingMessage));
-
-        byte[] errorPayload = payload.toString().getBytes();
-
-        amqp.sendError(errorPayload, makeDefaultOptions());
-    }
-
-    // should send snapshot to RabbitMQ
-    public void processSnapshot(Object obj) {
-        JsonObject snapshot = (JsonObject) obj;
-        byte[] payload = snapshot.toString().getBytes();
-        amqp.sendSnapshot(payload, makeDefaultOptions());
-    }
-
-    // should send rebound to RabbitMQ
-    public void processRebound(Object obj) {
-
-        int reboundIteration = getReboundIteration();
-
-        if (reboundIteration > ServiceSettings.getReboundLimit()) {
-            Error err = new Error("Error", "Rebound limit exceeded", Error.getStack(new RuntimeException()));
-            sendError(err);
-        } else {
-            byte[] payload = cipher.encryptMessage(incomingMessage).getBytes();
-            Map<String, Object> headers = makeDefaultHeaders();
-            headers.put("reboundReason", obj.toString());
-            headers.put("reboundIteration", reboundIteration);
-            double expiration = getReboundExpiration(reboundIteration);
-            amqp.sendRebound(payload, makeReboundOptions(headers, expiration));
-        }
-    }
-
-    // should ack message
-    public void processEnd() {
-        System.out.println("End received");
-        amqp.ack(deliveryTag);
-    }
-
-    private int getReboundIteration() {
-        if (incomingHeaders.get("reboundIteration") != null) {
-            try {
-                return Integer.parseInt(incomingHeaders.get("reboundIteration").toString()) + 1;
-            } catch (Exception e) {
-                throw new RuntimeException("Not a number in reboundIteration header: " + incomingHeaders.get("reboundIteration"));
-            }
-        } else {
-            return 1;
-        }
-    }
-
-    private double getReboundExpiration(int reboundIteration) {
-        return Math.pow(2, reboundIteration - 1) * ServiceSettings.getReboundInitialExpiration();
-    }
-
-    private AMQP.BasicProperties makeReboundOptions(Map<String, Object> headers, double expiration) {
-        return new AMQP.BasicProperties.Builder()
-                .contentType("application/json")
-                .contentEncoding("utf8")
-                .expiration(Double.toString(expiration))
-                .headers(headers)
-                        //TODO: .mandatory(true)
+        final EventEmitter eventEmitter = new EventEmitter.Builder()
+                .onData(dataCallback)
+                .onError(errorCallback)
+                .onRebound(reboundCallback)
+                .onSnapshot(snapshotCallback)
                 .build();
+
+        final Executor executor = new Executor(className, eventEmitter);
+
+        executor.execute(params);
+
+
+        //TODO:processor.processEnd();
     }
 }

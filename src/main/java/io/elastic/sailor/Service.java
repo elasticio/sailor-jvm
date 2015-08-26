@@ -9,17 +9,6 @@ import java.io.IOException;
 public class Service {
     private static final Logger logger = LoggerFactory.getLogger(Service.class.getName());
 
-    /**
-    private final ComponentResolver component;
-    private final ServiceSettings settings;
-
-     **/
-
-    public Service(ServiceSettings serviceSettings) {
-        //settings = serviceSettings;
-        //component = new ComponentResolver(settings.getEnvVar("COMPONENT_PATH"));
-    }
-
 
     public static void main(String[] args) throws IOException {
         if (args.length < 3) {
