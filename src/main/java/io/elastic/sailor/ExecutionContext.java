@@ -11,22 +11,25 @@ import java.util.Map;
 
 public class ExecutionContext {
 
+    private final String stepId;
     private final JsonObject task;
     private final Message message;
     private final Map<String, Object> headers;
 
 
     public ExecutionContext(
+            final String stepId,
             final JsonObject task,
             final Message message,
             final Map<String, Object> headers) {
+        this.stepId = stepId;
         this.task = task;
         this.message = message;
         this.headers = headers;
     }
 
     public String getStepId() {
-        return ServiceSettings.getStepId();
+        return this.stepId;
     }
 
     public String getCompId() {

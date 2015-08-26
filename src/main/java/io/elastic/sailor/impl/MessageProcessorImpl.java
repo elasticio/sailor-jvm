@@ -7,10 +7,7 @@ import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Executor;
 import io.elastic.api.Message;
-import io.elastic.sailor.ComponentResolver;
-import io.elastic.sailor.EmitterCallbackFactory;
-import io.elastic.sailor.ExecutionContext;
-import io.elastic.sailor.MessageProcessor;
+import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
@@ -20,17 +17,20 @@ public class MessageProcessorImpl implements MessageProcessor {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageProcessorImpl.class);
 
-    private ComponentResolver componentResolver;
-    private EmitterCallbackFactory emitterCallbackFactory;
-    private JsonObject task;
+    private final ComponentResolver componentResolver;
+    private final EmitterCallbackFactory emitterCallbackFactory;
+    private final JsonObject task;
+    private final String stepId;
 
     @Inject
     public MessageProcessorImpl(ComponentResolver componentResolver,
-                            EmitterCallbackFactory emitterCallbackFactory,
-                            @Named("TaskJson") JsonObject task) {
+                                EmitterCallbackFactory emitterCallbackFactory,
+                                @Named("TaskJson") JsonObject task,
+                                @Named(ServiceSettings.ENV_VAR_STEP_ID) String stepId) {
         this.componentResolver = componentResolver;
         this.emitterCallbackFactory = emitterCallbackFactory;
         this.task = task;
+        this.stepId = stepId;
     }
 
     public void processMessage(final Message incomingMessage,
@@ -38,7 +38,7 @@ public class MessageProcessorImpl implements MessageProcessor {
                                final Long deliveryTag) {
 
         final ExecutionContext executionContext = new ExecutionContext(
-                this.task, incomingMessage, incomingHeaders);
+                this.stepId, this.task, incomingMessage, incomingHeaders);
 
         final String triggerOrAction = executionContext.getFunction();
         final String className = componentResolver.findTriggerOrAction(triggerOrAction);

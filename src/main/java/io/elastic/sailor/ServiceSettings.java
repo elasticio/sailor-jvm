@@ -1,8 +1,5 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
 public final class ServiceSettings {
 
     public static final int DEFAULT_REBOUND_LIMIT = 20;
@@ -11,8 +8,6 @@ public final class ServiceSettings {
     public static final String ENV_VAR_POST_RESULT_URL = "POST_RESULT_URL";
     public static final String ENV_VAR_CFG = "CFG";
     public static final String ENV_VAR_ACTION_OR_TRIGGER = "ACTION_OR_TRIGGER";
-    public static final String ENV_VAR_GET_MODEL_METHOD = "GET_MODEL_METHOD";
-    public static final String ENV_VAR_SLUG_URL = "SLUG_URL";
     public static final String ENV_VAR_MESSAGE_CRYPTO_PASSWORD = "MESSAGE_CRYPTO_PASSWORD";
     public static final String ENV_VAR_MESSAGE_CRYPTO_IV = "MESSAGE_CRYPTO_IV";
     public static final String ENV_VAR_COMPONENT_PATH = "COMPONENT_PATH";
@@ -28,7 +23,4 @@ public final class ServiceSettings {
     public static final String ENV_VAR_TASK = "TASK";
     public static final String ENV_VAR_STEP_ID = "STEP_ID";
 
-    public static String getStepId() {
-        return Utils.getEnvVar(ServiceSettings.ENV_VAR_STEP_ID);
-    }
 }
