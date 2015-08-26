@@ -17,7 +17,7 @@ public class Service {
 
     @Inject
     public Service(@Named(
-            ServiceSettings.ENV_VAR_POST_RESULT_URL) String postResultUrl) {
+            Constants.ENV_VAR_POST_RESULT_URL) String postResultUrl) {
         this.postResultUrl = postResultUrl;
     }
 

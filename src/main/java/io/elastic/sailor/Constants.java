@@ -1,6 +1,6 @@
 package io.elastic.sailor;
 
-public final class ServiceSettings {
+public final class Constants {
 
     public static final int DEFAULT_REBOUND_LIMIT = 20;
     public static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;

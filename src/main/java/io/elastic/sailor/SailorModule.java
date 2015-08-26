@@ -29,7 +29,7 @@ public class SailorModule extends AbstractModule {
     @Provides
     @Named("TaskJson")
     JsonObject provideTask(
-            @Named(ServiceSettings.ENV_VAR_TASK) String task) {
+            @Named(Constants.ENV_VAR_TASK) String task) {
 
         return new JsonParser().parse(task).getAsJsonObject();
     }

@@ -27,7 +27,7 @@ public final class ComponentResolver {
      */
     @Inject
     public ComponentResolver(
-            @Named(ServiceSettings.ENV_VAR_COMPONENT_PATH) String componentPath) {
+            @Named(Constants.ENV_VAR_COMPONENT_PATH) String componentPath) {
         componentJson = loadComponentJson(componentPath);
     }
 

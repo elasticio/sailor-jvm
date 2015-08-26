@@ -22,8 +22,8 @@ public class ReboundCallback implements EventEmitter.Callback {
             @Assisted ExecutionContext executionContext,
             AMQPWrapperInterface amqp,
             CipherWrapper cipher,
-            @Named(ServiceSettings.ENV_VAR_REBOUND_LIMIT) Integer reboundLimit,
-            @Named(ServiceSettings.ENV_VAR_REBOUND_INITIAL_EXPIRATION) Integer reboundInitialExpiration) {
+            @Named(Constants.ENV_VAR_REBOUND_LIMIT) Integer reboundLimit,
+            @Named(Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION) Integer reboundInitialExpiration) {
         this.executionContext = executionContext;
         this.amqp = amqp;
         this.cipher = cipher;

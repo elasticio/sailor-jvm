@@ -35,43 +35,43 @@ public class AMQPWrapper implements AMQPWrapperInterface {
 
     @Inject
     public void setAmqpUri(
-            @Named(ServiceSettings.ENV_VAR_AMQP_URI) String amqpUri) {
+            @Named(Constants.ENV_VAR_AMQP_URI) String amqpUri) {
         this.amqpUri = amqpUri;
     }
 
     @Inject
     public void setSubscribeExchangeName(
-            @Named(ServiceSettings.ENV_VAR_LISTEN_MESSAGES_ON) String subscribeExchangeName) {
+            @Named(Constants.ENV_VAR_LISTEN_MESSAGES_ON) String subscribeExchangeName) {
         this.subscribeExchangeName = subscribeExchangeName;
     }
 
     @Inject
     public void setPublishExchangeName(
-            @Named(ServiceSettings.ENV_VAR_PUBLISH_MESSAGES_TO) String publishExchangeName) {
+            @Named(Constants.ENV_VAR_PUBLISH_MESSAGES_TO) String publishExchangeName) {
         this.publishExchangeName = publishExchangeName;
     }
 
     @Inject
     public void setDataRoutingKey(
-            @Named(ServiceSettings.ENV_VAR_DATA_ROUTING_KEY) String dataRoutingKey) {
+            @Named(Constants.ENV_VAR_DATA_ROUTING_KEY) String dataRoutingKey) {
         this.dataRoutingKey = dataRoutingKey;
     }
 
     @Inject
     public void setErrorRoutingKey(
-            @Named(ServiceSettings.ENV_VAR_ERROR_ROUTING_KEY) String errorRoutingKey) {
+            @Named(Constants.ENV_VAR_ERROR_ROUTING_KEY) String errorRoutingKey) {
         this.errorRoutingKey = errorRoutingKey;
     }
 
     @Inject
     public void setReboundRoutingKey(
-            @Named(ServiceSettings.ENV_VAR_REBOUND_ROUTING_KEY) String reboundRoutingKey) {
+            @Named(Constants.ENV_VAR_REBOUND_ROUTING_KEY) String reboundRoutingKey) {
         this.reboundRoutingKey = reboundRoutingKey;
     }
 
     @Inject
     public void setSnapshotRoutingKey(
-            @Named(ServiceSettings.ENV_VAR_SNAPSHOT_ROUTING_KEY) String snapshotRoutingKey) {
+            @Named(Constants.ENV_VAR_SNAPSHOT_ROUTING_KEY) String snapshotRoutingKey) {
         this.snapshotRoutingKey = snapshotRoutingKey;
     }
 

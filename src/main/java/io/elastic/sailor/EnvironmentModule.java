@@ -12,20 +12,20 @@ public class EnvironmentModule extends AbstractModule {
 
     void bindEnvVars() {
         // required env vars
-        bindRequiredStringEnvVar(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_PASSWORD);
-        bindRequiredStringEnvVar(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_IV);
-        bindRequiredStringEnvVar(ServiceSettings.ENV_VAR_COMPONENT_PATH);
-        bindRequiredStringEnvVar(ServiceSettings.ENV_VAR_TASK);
-        bindRequiredStringEnvVar(ServiceSettings.ENV_VAR_STEP_ID);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_IV);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_COMPONENT_PATH);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_TASK);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID);
 
 
         // optional env vars
         bindOptionalIntegerEnvVar(
-                ServiceSettings.ENV_VAR_REBOUND_LIMIT,
-                ServiceSettings.DEFAULT_REBOUND_LIMIT);
+                Constants.ENV_VAR_REBOUND_LIMIT,
+                Constants.DEFAULT_REBOUND_LIMIT);
         bindOptionalIntegerEnvVar(
-                ServiceSettings.ENV_VAR_REBOUND_INITIAL_EXPIRATION,
-                ServiceSettings.DEFAULT_REBOUND_INITIAL_EXPIRATION);
+                Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION,
+                Constants.DEFAULT_REBOUND_INITIAL_EXPIRATION);
     }
 
     void bindRequiredStringEnvVar(final String name) {

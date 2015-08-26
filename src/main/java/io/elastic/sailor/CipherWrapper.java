@@ -23,14 +23,14 @@ public final class CipherWrapper {
 
     @Inject
     public CipherWrapper(
-            @Named(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_PASSWORD) String password,
-            @Named(ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_IV) String initializationVector) {
+            @Named(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD) String password,
+            @Named(Constants.ENV_VAR_MESSAGE_CRYPTO_IV) String initializationVector) {
 
         Preconditions.checkNotNull(password,
-                ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_PASSWORD + " is required");
+                Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD + " is required");
 
         Preconditions.checkNotNull(initializationVector,
-                ServiceSettings.ENV_VAR_MESSAGE_CRYPTO_IV + " is required");
+                Constants.ENV_VAR_MESSAGE_CRYPTO_IV + " is required");
 
         this.encryptionKey = generateKey(password);
         this.encryptionIV = new IvParameterSpec(initializationVector.getBytes());
