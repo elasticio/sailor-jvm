@@ -2,7 +2,10 @@ package io.elastic.sailor;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.rabbitmq.client.*;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -23,6 +26,7 @@ public class AMQPWrapper implements AMQPWrapperInterface {
     private String reboundRoutingKey;
     private String snapshotRoutingKey;
     private CipherWrapper cipher;
+    private MessageProcessor messageProcessor;
 
     @Inject
     public AMQPWrapper(CipherWrapper cipher) {
@@ -71,6 +75,11 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         this.snapshotRoutingKey = snapshotRoutingKey;
     }
 
+    @Inject
+    public void setMessageProcessor(MessageProcessor messageProcessor) {
+        this.messageProcessor = messageProcessor;
+    }
+
     public void connect() {
         openConnection(this.amqpUri);
         openPublishChannel();
@@ -97,8 +106,8 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public void subscribeConsumer(MessageProcessor processor) {
-        final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, processor);
+    public void subscribeConsumer() {
+        final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, this.messageProcessor);
 
         try {
             subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);

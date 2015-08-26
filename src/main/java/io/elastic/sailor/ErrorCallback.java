@@ -1,6 +1,8 @@
 package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import io.elastic.api.EventEmitter;
 
 import java.io.PrintWriter;
@@ -12,7 +14,11 @@ public class ErrorCallback implements EventEmitter.Callback {
     private AMQPWrapperInterface amqp;
     private CipherWrapper cipher;
 
-    public ErrorCallback(ExecutionContext executionContext, AMQPWrapperInterface amqp, CipherWrapper cipher) {
+    @Inject
+    public ErrorCallback(
+            @Assisted ExecutionContext executionContext,
+            AMQPWrapperInterface amqp,
+            CipherWrapper cipher) {
         this.executionContext = executionContext;
         this.amqp = amqp;
         this.cipher = cipher;

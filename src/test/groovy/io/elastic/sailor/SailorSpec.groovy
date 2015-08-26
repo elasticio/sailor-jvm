@@ -23,6 +23,6 @@ class SailorSpec extends Specification {
 
         then:
         1 * amqp.connect()
-        1 * amqp.subscribeConsumer(_)
+        1 * amqp.subscribeConsumer()
     }
 }

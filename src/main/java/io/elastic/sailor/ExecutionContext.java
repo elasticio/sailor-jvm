@@ -16,8 +16,11 @@ public class ExecutionContext {
     private final Map<String, Object> headers;
 
 
-    public ExecutionContext(final Message message, final Map<String, Object> headers) {
-        task = ServiceSettings.getTask();
+    public ExecutionContext(
+            final JsonObject task,
+            final Message message,
+            final Map<String, Object> headers) {
+        this.task = task;
         this.message = message;
         this.headers = headers;
     }

@@ -13,15 +13,6 @@ public class Sailor {
     private static final Logger logger = LoggerFactory.getLogger(Sailor.class);
 
     private AMQPWrapperInterface amqp;
-    private ComponentResolver componentResolver;
-    private CipherWrapper cipher;
-
-    @Inject
-    public Sailor(final ComponentResolver componentResolver,
-                  final CipherWrapper cipher) {
-        this.componentResolver = componentResolver;
-        this.cipher = cipher;
-    }
 
     public static void main(String[] args) throws IOException {
         Injector injector = Guice.createInjector(new SailorModule(), new EnvironmentModule());
@@ -39,8 +30,7 @@ public class Sailor {
     public void start() throws IOException {
         logger.info("Starting up");
         amqp.connect();
-        final MessageProcessor processor = new MessageProcessor(amqp, cipher, componentResolver);
-        amqp.subscribeConsumer(processor);
+        amqp.subscribeConsumer();
         logger.info("Connected to AMQP successfully");
     }
 }

@@ -6,7 +6,7 @@ public interface AMQPWrapperInterface {
 
     void connect();
 
-    void subscribeConsumer(MessageProcessor processor);
+    void subscribeConsumer();
 
     void sendData(byte[] payload, AMQP.BasicProperties options);
 

@@ -1,6 +1,8 @@
 package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Executor;
@@ -13,21 +15,26 @@ public class MessageProcessor {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageProcessor.class);
 
-    private AMQPWrapperInterface amqp;
-    private CipherWrapper cipher;
     private ComponentResolver componentResolver;
+    private EmitterCallbackFactory emitterCallbackFactory;
+    private JsonObject task;
 
-    public MessageProcessor(AMQPWrapperInterface amqp, CipherWrapper cipher, ComponentResolver componentResolver) {
-        this.amqp = amqp;
-        this.cipher = cipher;
+    @Inject
+    public MessageProcessor(ComponentResolver componentResolver,
+                            EmitterCallbackFactory emitterCallbackFactory,
+                            @Named("TaskJson") JsonObject task) {
         this.componentResolver = componentResolver;
+        this.emitterCallbackFactory = emitterCallbackFactory;
+        this.task = task;
     }
 
     public void processMessage(final Message incomingMessage,
                                final Map<String, Object> incomingHeaders,
                                final Long deliveryTag) {
 
-        final ExecutionContext executionContext = new ExecutionContext(incomingMessage, incomingHeaders);
+        final ExecutionContext executionContext = new ExecutionContext(
+                this.task, incomingMessage, incomingHeaders);
+
         final String triggerOrAction = executionContext.getFunction();
         final String className = componentResolver.findTriggerOrAction(triggerOrAction);
         final JsonObject cfg = executionContext.getCfg();
@@ -41,16 +48,16 @@ public class MessageProcessor {
                 .build();
 
         // make data callback
-        EventEmitter.Callback dataCallback = new DataCallback(executionContext, amqp, cipher);
+        EventEmitter.Callback dataCallback = emitterCallbackFactory.createDataCallback(executionContext);
 
         // make error callback
-        EventEmitter.Callback errorCallback = new ErrorCallback(executionContext, amqp, cipher);
+        EventEmitter.Callback errorCallback = emitterCallbackFactory.createErrorCallback(executionContext);
 
         // make rebound callback
-        EventEmitter.Callback reboundCallback = new ReboundCallback(executionContext, amqp, cipher);
+        EventEmitter.Callback reboundCallback = emitterCallbackFactory.createReboundCallback(executionContext);
 
         // snapshot callback
-        EventEmitter.Callback snapshotCallback = new SnapshotCallback(executionContext, amqp);
+        EventEmitter.Callback snapshotCallback = emitterCallbackFactory.createSnapshotCallback(executionContext);
 
         final EventEmitter eventEmitter = new EventEmitter.Builder()
                 .onData(dataCallback)

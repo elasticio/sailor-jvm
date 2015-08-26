@@ -1,5 +1,7 @@
 package io.elastic.sailor;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.Message;
@@ -12,7 +14,11 @@ public class ReboundCallback implements EventEmitter.Callback {
     private AMQPWrapperInterface amqp;
     private CipherWrapper cipher;
 
-    public ReboundCallback(ExecutionContext executionContext, AMQPWrapperInterface amqp, CipherWrapper cipher) {
+    @Inject
+    public ReboundCallback(
+            @Assisted ExecutionContext executionContext,
+            AMQPWrapperInterface amqp,
+            CipherWrapper cipher) {
         this.executionContext = executionContext;
         this.amqp = amqp;
         this.cipher = cipher;

@@ -1,6 +1,8 @@
 package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import io.elastic.api.EventEmitter;
 
 public class SnapshotCallback implements EventEmitter.Callback {
@@ -8,7 +10,10 @@ public class SnapshotCallback implements EventEmitter.Callback {
     private ExecutionContext executionDetails;
     private AMQPWrapperInterface amqp;
 
-    public SnapshotCallback(ExecutionContext executionDetails, AMQPWrapperInterface amqp) {
+    @Inject
+    public SnapshotCallback(
+            @Assisted ExecutionContext executionDetails,
+            AMQPWrapperInterface amqp) {
         this.executionDetails = executionDetails;
         this.amqp = amqp;
     }

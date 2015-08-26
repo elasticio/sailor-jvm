@@ -1,5 +1,7 @@
 package io.elastic.sailor;
 
+import com.google.inject.Inject;
+import com.google.inject.assistedinject.Assisted;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.Message;
 import org.slf4j.Logger;
@@ -13,7 +15,11 @@ public class DataCallback implements EventEmitter.Callback {
     private CipherWrapper cipher;
     private ExecutionContext executionContext;
 
-    public DataCallback(ExecutionContext executionContext, AMQPWrapperInterface amqp, CipherWrapper cipher) {
+    @Inject
+    public DataCallback(
+            @Assisted ExecutionContext executionContext,
+            AMQPWrapperInterface amqp,
+            CipherWrapper cipher) {
         this.executionContext = executionContext;
         this.amqp = amqp;
         this.cipher = cipher;

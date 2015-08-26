@@ -36,6 +36,9 @@ public class TestModule extends AbstractModule {
         bindRequiredStringEnvVar(ServiceSettings.ENV_VAR_POST_RESULT_URL, "http://localhost:10000");
         bindRequiredStringEnvVar(ServiceSettings.ENV_VAR_ACTION_OR_TRIGGER, "test");
         bindRequiredStringEnvVar(ServiceSettings.ENV_VAR_CFG, "{\"key\":0}");
+
+        bindRequiredStringEnvVar(ServiceSettings.ENV_VAR_TASK,
+                "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}");
     }
 
     void bindRequiredStringEnvVar(final String name, final String value) {
