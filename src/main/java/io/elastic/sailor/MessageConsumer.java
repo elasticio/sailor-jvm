@@ -27,7 +27,7 @@ public class MessageConsumer extends DefaultConsumer {
 
         Message message;
 
-        logger.info("Message {} arrived", envelope.getDeliveryTag());
+        logger.info("Consumer {} received message {}", consumerTag, envelope.getDeliveryTag());
 
         try {
             // decrypt message

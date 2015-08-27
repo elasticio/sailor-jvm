@@ -31,6 +31,5 @@ public class Sailor {
         logger.info("Starting up");
         amqp.connect();
         amqp.subscribeConsumer();
-        logger.info("Connected to AMQP successfully");
     }
 }

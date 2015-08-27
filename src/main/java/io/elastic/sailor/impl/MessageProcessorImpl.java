@@ -40,12 +40,16 @@ public class MessageProcessorImpl implements MessageProcessor {
         final ExecutionContext executionContext = new ExecutionContext(
                 this.stepId, this.task, incomingMessage, incomingHeaders);
 
+        logger.info("Processing step '{}' of a task", executionContext.getStepId());
+
         final String triggerOrAction = executionContext.getFunction();
         final String className = componentResolver.findTriggerOrAction(triggerOrAction);
         final JsonObject cfg = executionContext.getCfg();
         final JsonObject snapshot = executionContext.getSnapshot();
 
-        logger.info("About to execute {}", className);
+        logger.info("Component to be executed: {}",executionContext.getCompId());
+        logger.info("Trigger/action to be executed: {}",executionContext.getTriggerOrAction());
+        logger.info("Component Java class to be instantiated: {}", className);
 
         final ExecutionParameters params = new ExecutionParameters.Builder(incomingMessage)
                 .configuration(cfg)

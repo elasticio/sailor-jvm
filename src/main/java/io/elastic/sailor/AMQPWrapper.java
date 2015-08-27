@@ -114,6 +114,8 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        logger.info("Subscribed consumer. Waiting for messages to arrive ...");
     }
 
     public void ack(Long deliveryTag) {
