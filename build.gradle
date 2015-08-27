@@ -121,3 +121,13 @@ artifacts {
 task wrapper(type: Wrapper) {
     gradleVersion = '2.0'
 }
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'elastic.io Sailor for JVM',
+                'Implementation-Version': version
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}
