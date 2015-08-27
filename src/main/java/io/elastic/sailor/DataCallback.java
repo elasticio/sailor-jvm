@@ -27,7 +27,7 @@ public class DataCallback implements EventEmitter.Callback {
 
     @Override
     public void receive(Object data) {
-        logger.info("About to publish data to queue");
+        logger.info("Step produced data to be published");
 
         // payload
         Message message = (Message) data;
@@ -36,7 +36,5 @@ public class DataCallback implements EventEmitter.Callback {
         byte[] encryptedPayload = cipher.encryptMessage(message).getBytes();
 
         amqp.sendData(encryptedPayload, executionContext.buildDefaultOptions());
-
-        logger.info("Successfully published data to queue");
     }
 }

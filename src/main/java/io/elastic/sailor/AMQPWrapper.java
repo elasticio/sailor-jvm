@@ -1,6 +1,7 @@
 package io.elastic.sailor;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -11,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 
+@Singleton
 public class AMQPWrapper implements AMQPWrapperInterface {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AMQPWrapper.class);
 
@@ -192,15 +194,15 @@ public class AMQPWrapper implements AMQPWrapperInterface {
 
     private void sendToExchange(String routingKey, byte[] payload, AMQP.BasicProperties options) {
 
-        logger.info(String.format(
-                "Pushing to exchange=%s, routingKey=%s, data=%s, options=%s",
-                this.publishExchangeName, routingKey, new String(payload), options
-        ));
+        logger.info("Pushing to exchange={}, routingKey={}, data={}, options={}",
+                this.publishExchangeName, routingKey, new String(payload), options);
         try {
             publishChannel.basicPublish(this.publishExchangeName, routingKey, options, payload);
         } catch (IOException e) {
-            throw new RuntimeException(String.format("Failed to publish message to exchange %s, %s", subscribeExchangeName, e));
+            throw new RuntimeException(String.format("Failed to publish message to exchange %s", publishExchangeName), e);
         }
+
+        logger.info("Successfully published data to {}", this.publishExchangeName);
     }
 
     @Override

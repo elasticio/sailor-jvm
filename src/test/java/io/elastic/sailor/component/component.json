@@ -23,8 +23,8 @@
     }
   },
   "actions": {
-    "test": {
-      "main": "io.elastic.sailor.component.TestAction",
+    "helloworldaction": {
+      "main": "io.elastic.sailor.component.HelloWorldAction",
       "title": "Test action"
     }
   }
