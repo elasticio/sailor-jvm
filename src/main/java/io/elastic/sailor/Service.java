@@ -33,7 +33,7 @@ public class Service {
 
         final String methodName = args[2];
 
-        logger.info("Starting execution of " + methodName);
+        logger.info("Starting execution of {}",methodName);
 
         final ServiceMethods method = ServiceMethods.parse(methodName);
 
@@ -45,7 +45,7 @@ public class Service {
 
         final JsonObject result = method.execute();
 
-        logger.info("About to send response back");
+        logger.info("Sending response");
 
         String response = Utils.postJson(this.postResultUrl, result);
 
