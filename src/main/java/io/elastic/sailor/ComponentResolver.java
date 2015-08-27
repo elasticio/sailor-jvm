@@ -2,10 +2,12 @@ package io.elastic.sailor;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.File;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
 
 /**
  * Class to parse component.json
@@ -13,6 +15,7 @@ import java.io.File;
  */
 
 public final class ComponentResolver {
+    private static final Logger logger = LoggerFactory.getLogger(ComponentResolver.class);
 
     private static final String FILENAME = "component.json";
     private static final String USERDIR = System.getProperty("user.dir");
@@ -22,30 +25,45 @@ public final class ComponentResolver {
     /**
      * @param componentPath - path to the component, relative to sailor position
      */
-    public ComponentResolver(String componentPath){
+    @Inject
+    public ComponentResolver(
+            @Named(Constants.ENV_VAR_COMPONENT_PATH) String componentPath) {
         componentJson = loadComponentJson(componentPath);
     }
 
-    private JsonObject loadComponentJson(String componentPath){
+    private JsonObject loadComponentJson(String componentPath) {
+
+        logger.info("Component root directory: {}", componentPath);
 
         String componentFolder = new File(USERDIR, componentPath).getAbsolutePath();
         String componentJsonFile = new File(componentFolder, FILENAME).getAbsolutePath();
 
+        logger.info("Loading component descriptor from file: {}", componentJsonFile);
+
+        BufferedReader reader = null;
+
         try {
-            BufferedReader br = new BufferedReader(new FileReader(componentJsonFile));
+            reader = new BufferedReader(new FileReader(componentJsonFile));
             JsonParser parser = new JsonParser();
-            return parser.parse(br).getAsJsonObject();
+            return parser.parse(reader).getAsJsonObject();
         } catch (FileNotFoundException e) {
             throw new RuntimeException("component.json is not found in " + componentFolder);
+        } finally {
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    logger.error("Failed to close file reader", e);
+                }
+            }
         }
     }
 
     /**
-     *
      * @param name - trigger or action name
      * @return name of Java class to execute for that trigger or action
      */
-    public String findTriggerOrAction(String name){
+    public String findTriggerOrAction(String name) {
         JsonObject result = null;
         if (componentJson.get("triggers") != null && componentJson.getAsJsonObject("triggers").get(name) != null) {
             result = componentJson.getAsJsonObject("triggers").getAsJsonObject(name);
@@ -61,19 +79,5 @@ public final class ComponentResolver {
         }
 
         return result.get("main").getAsString();
-    }
-
-    public Class loadTriggerOrAction(String triggerOrActionName) {
-        try {
-            String className = findTriggerOrAction(triggerOrActionName);
-            return Class.forName(className);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    public Class loadVerifyCredentials() throws ClassNotFoundException {
-        String className = componentJson.getAsJsonObject("credentials").get("main").getAsString();
-        return Class.forName(className);
     }
 }

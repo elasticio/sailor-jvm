@@ -1,29 +1,26 @@
-group 'io.elastic'
-version '0.0.1-SNAPSHOT'
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'signing'
+
+group = 'io.elastic'
+version = '0.0.1-SNAPSHOT'
+ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 sourceCompatibility = 1.6
 targetCompatibility = 1.6
 
-repositories {
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots"
-    }
-    mavenLocal()
-    mavenCentral()
-    flatDir {
-        name "fileRepo"
-        dirs "lib"
-    }
+signing {
+    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
+    sign configurations.archives
 }
 
-task bundle(type: Copy, dependsOn: build) {
-    into "lib"
-    from configurations.compile
+repositories {
+    mavenCentral()
 }
+
 
 dependencies {
     compile "com.google.code.gson:gson:2.2.4"
@@ -31,30 +28,106 @@ dependencies {
     compile "com.rabbitmq:amqp-client:3.5.1"
     compile "commons-codec:commons-codec:1.10"
     compile "org.apache.httpcomponents:httpclient:4.3.5"
+    compile "com.google.inject:guice:4.0"
+    compile "com.google.inject.extensions:guice-assistedinject:4.0"
 
     testRuntime 'org.codehaus.groovy:groovy-all:2.0.5'
     testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
     testCompile 'org.eclipse.jetty:jetty-server:8.1.9.v20130131'
     testCompile 'org.eclipse.jetty:jetty-servlet:8.1.9.v20130131'
     testCompile 'org.apache.commons:commons-io:1.3.2'
-    testCompile group: 'junit', name: 'junit', version: '4.11'
 
 }
 
 uploadArchives {
     repositories {
-        add project.repositories.fileRepo
+        mavenLocal()
+        if (project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')) {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
+                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                }
+
+                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
+                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                }
+
+                pom.project {
+                    name 'elasticio-sailor-jvm'
+                    packaging 'jar'
+                    description 'Sailor for JVM'
+                    url 'http://www.elastic.io'
+                    inceptionYear '2015'
+
+                    organization {
+                        name 'elastic.io GmbH'
+                        url 'http://www.elastic.io'
+                    }
+
+                    scm {
+                        url 'scm:git@github.com:elasticio/sailor-jvm.git'
+                        connection 'scm:git@github.com:elasticio/sailor-jvm.git'
+                        developerConnection 'scm:git@github.com:elasticio/sailor-jvm.git'
+                    }
+
+                    licenses {
+                        license {
+                            name 'The Apache Software License, Version 2.0'
+                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                            distribution 'repo'
+                        }
+                    }
+
+                    issueManagement {
+                        system 'GitHub'
+                        url 'https://github.com/elasticio/sailor-jvm/issues'
+                    }
+
+                    developers {
+                        developer {
+                            id 'elasticio'
+                            name 'elastic.io GmbH'
+                            email 'support@elastic.io'
+                        }
+                    }
+                }
+            }
+        }
     }
 }
-task elastic(dependsOn: ['clean', 'build', 'bundle', 'uploadArchives'])
 
-task wrapper(type: Wrapper) {
-	gradleVersion = '2.0'
+task sourceJar(type: Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allJava
 }
 
-build.mustRunAfter 'clean'
-uploadArchives.mustRunAfter 'build'
-bundle.mustRunAfter 'build'
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
 
-sourceSets.test.groovy.srcDirs = ["src/test/groovy", "src/test/java"]
-sourceSets.main.java.srcDirs = ["src/main/java"]
+task javadocs(type: Javadoc) {
+    source = sourceSets.main.allJava
+    classpath = configurations.compile
+}
+
+artifacts {
+    archives sourceJar
+    archives javadocJar
+}
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.0'
+}
+
+task fatJar(type: Jar) {
+    manifest {
+        attributes 'Implementation-Title': 'elastic.io Sailor for JVM',
+                'Implementation-Version': version
+    }
+    baseName = project.name + '-all'
+    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
+    with jar
+}

@@ -1,7 +1,10 @@
 package io.elastic.sailor;
 
+import com.google.common.base.Preconditions;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import io.elastic.api.Message;
 import org.apache.commons.codec.binary.Base64;
 
@@ -15,21 +18,22 @@ import java.security.MessageDigest;
 
 public final class CipherWrapper {
     private final String ALGORITHM = "AES/CBC/PKCS5Padding";
-    private Key ENCRYPTION_KEY;
-    private IvParameterSpec ENCRYPTION_IV;
+    private Key encryptionKey;
+    private IvParameterSpec encryptionIV;
 
-    public CipherWrapper() {
-        ENCRYPTION_KEY = null;
-        ENCRYPTION_IV = null;
-    }
+    @Inject
+    public CipherWrapper(
+            @Named(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD) String password,
+            @Named(Constants.ENV_VAR_MESSAGE_CRYPTO_IV) String initializationVector) {
 
-    public CipherWrapper(String password, String initializationVector) {
-        if (password != null) {
-            ENCRYPTION_KEY = generateKey(password);
-        }
-        if (password != null) {
-            ENCRYPTION_IV = new IvParameterSpec(initializationVector.getBytes());
-        }
+        Preconditions.checkNotNull(password,
+                Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD + " is required");
+
+        Preconditions.checkNotNull(initializationVector,
+                Constants.ENV_VAR_MESSAGE_CRYPTO_IV + " is required");
+
+        this.encryptionKey = generateKey(password);
+        this.encryptionIV = new IvParameterSpec(initializationVector.getBytes());
     }
 
     public String encryptMessage(Message message) {
@@ -53,7 +57,7 @@ public final class CipherWrapper {
             }
             return new Message.Builder().body(body).attachments(attachments).build();
         } catch (Exception e) {
-            throw new RuntimeException("Failed to decrypt message: "  + e.getMessage());
+            throw new RuntimeException("Failed to decrypt message: " + e.getMessage());
         }
     }
 
@@ -82,12 +86,12 @@ public final class CipherWrapper {
     private String encrypt(String message) {
         try {
             String urlEncodedMessage = URLEncoder.encode(message, "UTF-8");
-            if (ENCRYPTION_KEY == null) {
+            if (encryptionKey == null) {
                 return urlEncodedMessage;
             }
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, ENCRYPTION_KEY, ENCRYPTION_IV);
+            cipher.init(Cipher.ENCRYPT_MODE, encryptionKey, encryptionIV);
 
             byte[] a = cipher.doFinal(urlEncodedMessage.getBytes());
 
@@ -99,12 +103,9 @@ public final class CipherWrapper {
 
     private String decrypt(String message) {
         try {
-            if (ENCRYPTION_KEY == null) {
-                return URLDecoder.decode(message, "UTF-8");
-            }
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, ENCRYPTION_KEY, ENCRYPTION_IV);
+            cipher.init(Cipher.DECRYPT_MODE, encryptionKey, encryptionIV);
 
             byte[] a = cipher.doFinal(Base64.decodeBase64(message.getBytes()));
 

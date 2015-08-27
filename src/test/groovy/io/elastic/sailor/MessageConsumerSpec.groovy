@@ -2,66 +2,89 @@ package io.elastic.sailor
 
 import com.google.gson.JsonObject
 import com.rabbitmq.client.AMQP
+import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Envelope
-import io.elastic.sailor.CipherWrapper
-import io.elastic.sailor.MessageConsumer
-import io.elastic.sailor.Sailor
+import io.elastic.api.Message
+import spock.lang.Shared
 import spock.lang.Specification
 
 class MessageConsumerSpec extends Specification {
 
-    def "should decrypt message and pass parameters to callback"() {
-        setup:
-            def callback = Mock(Sailor.Callback)
-            def cipher = new CipherWrapper();
-            def consumer = new MessageConsumer(null, cipher, callback);
-            def consumerTag = "tag12345";
+    Channel channel = Mock()
+    MessageProcessor processor = Mock()
 
-            def headers = new HashMap();
-            headers.put("execId", "exec1");
-            headers.put("taskId", "task2");
-            headers.put("userId", "user3");
+    @Shared
+    CipherWrapper cipher = new CipherWrapper("testCryptoPassword", "iv=any16_symbols")
 
-            def options = new AMQP.BasicProperties.Builder()
-                    .contentType("application/json")
-                    .contentEncoding("utf8")
-                    .headers(headers)
-                    .build();
+    def consumer
 
-            def envelope = new Envelope(123456, false, "test", "test2");
-        when:
-            String message = new String("{\"body\":{\"content\":\"Hello world!\"}}");
-            message = URLEncoder.encode(message, "UTF-8");
-            consumer.handleDelivery(consumerTag, envelope, options, message.getBytes());
-        then:
-            1 * callback.receive({it.getBody().toString() == "{\"content\":\"Hello world!\"}"}, headers, 123456)
+    @Shared
+    def options
+
+    @Shared
+    def headers
+
+    def consumerTag = "tag12345"
+
+    def envelope = new Envelope(123456, false, "test", "test2")
+
+    @Shared
+    def encryptedMessage
+
+    def setupSpec() {
+
+        headers = ["execId": "exec1", "taskId": "task2", "userId": "user3"] as Map
+
+        options = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .build();
+
+        def body = new JsonObject();
+        body.addProperty("content", "Hello world!");
+
+        def msg = new Message.Builder().body(body).build();
+        encryptedMessage = cipher.encryptMessage(msg)
     }
 
-    def "should decrypt encrypted message and pass parameters to callback"() {
-        setup:
-            def callback = Mock(Sailor.Callback)
-            def cipher = new CipherWrapper("testCryptoPassword", "iv=any16_symbols");
-            def consumer = new MessageConsumer(null, cipher, callback);
-            def consumerTag = "tag12345";
-
-            def headers = new HashMap();
-            headers.put("execId", "exec1");
-            headers.put("taskId", "task2")
-            headers.put("userId", "user3");
-
-            def options = new AMQP.BasicProperties.Builder()
-                    .contentType("application/json")
-                    .contentEncoding("utf8")
-                    .headers(headers)
-                    .build();
-            def envelope = new Envelope(654321, false, "test", "test2");
-        when:
-
-            byte[] messageContent = new String("vSx5ntK2UdYh2Wjcdy8rgM7Yz5a/H8koXKtwNI0FL/Y9QiQFcUrtT4HJUkYXACNL").getBytes();
-            consumer.handleDelivery(consumerTag, envelope, options, messageContent);
-        then:
-            1 * callback.receive({it.getBody().toString() == "{\"someKey\":\"someValue\"}"}, headers, 654321)
+    def setup() {
+        consumer = new MessageConsumer(channel, cipher, processor);
     }
 
+    def "should decrypt and process message successfully"() {
+
+        when:
+        consumer.handleDelivery(consumerTag, envelope, options, encryptedMessage.getBytes());
+
+        then:
+        1 * processor.processMessage({
+            it.getBody().toString() == "{\"content\":\"Hello world!\"}"
+        }, headers, 123456)
+        0 * _
+
+    }
+
+    def "should reject message if processing fails"() {
+
+        when:
+        consumer.handleDelivery(consumerTag, envelope, options, encryptedMessage.getBytes());
+
+        then:
+        1 * processor.processMessage({
+            it.getBody().toString() == "{\"content\":\"Hello world!\"}"
+        }, headers, 123456) >> { throw new Exception("Ouch") }
+        1 * channel.basicReject(123456, false)
+
+    }
+
+    def "should reject message if decryption fails"() {
+        when:
+        consumer.handleDelivery(consumerTag, envelope, options, "here be monsters".getBytes());
+
+        then:
+        1 * channel.basicReject(123456, false)
+
+    }
 
 }

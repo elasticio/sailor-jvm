@@ -1,31 +1,89 @@
 package io.elastic.sailor;
 
-import com.rabbitmq.client.*;
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
+import com.rabbitmq.client.Connection;
+import com.rabbitmq.client.ConnectionFactory;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
 
+@Singleton
 public class AMQPWrapper implements AMQPWrapperInterface {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AMQPWrapper.class);
 
-    private final Settings settings;
     private Connection amqp;
     private Channel subscribeChannel;
     private Channel publishChannel;
 
-    public AMQPWrapper(Settings settings) {
-        this.settings = settings;
+    private String amqpUri;
+    private String subscribeExchangeName;
+    private String publishExchangeName;
+    private String dataRoutingKey;
+    private String errorRoutingKey;
+    private String reboundRoutingKey;
+    private String snapshotRoutingKey;
+    private CipherWrapper cipher;
+    private MessageProcessor messageProcessor;
+
+    @Inject
+    public AMQPWrapper(CipherWrapper cipher) {
+        this.cipher = cipher;
     }
 
-    public AMQPWrapper(Settings settings, Channel subscribeChannel, Channel publishChannel) {
-        this.settings = settings;
-        this.subscribeChannel = subscribeChannel;
-        this.publishChannel = publishChannel;
+    @Inject
+    public void setAmqpUri(
+            @Named(Constants.ENV_VAR_AMQP_URI) String amqpUri) {
+        this.amqpUri = amqpUri;
     }
 
-    public void connect(String link) {
-        openConnection(link);
+    @Inject
+    public void setSubscribeExchangeName(
+            @Named(Constants.ENV_VAR_LISTEN_MESSAGES_ON) String subscribeExchangeName) {
+        this.subscribeExchangeName = subscribeExchangeName;
+    }
+
+    @Inject
+    public void setPublishExchangeName(
+            @Named(Constants.ENV_VAR_PUBLISH_MESSAGES_TO) String publishExchangeName) {
+        this.publishExchangeName = publishExchangeName;
+    }
+
+    @Inject
+    public void setDataRoutingKey(
+            @Named(Constants.ENV_VAR_DATA_ROUTING_KEY) String dataRoutingKey) {
+        this.dataRoutingKey = dataRoutingKey;
+    }
+
+    @Inject
+    public void setErrorRoutingKey(
+            @Named(Constants.ENV_VAR_ERROR_ROUTING_KEY) String errorRoutingKey) {
+        this.errorRoutingKey = errorRoutingKey;
+    }
+
+    @Inject
+    public void setReboundRoutingKey(
+            @Named(Constants.ENV_VAR_REBOUND_ROUTING_KEY) String reboundRoutingKey) {
+        this.reboundRoutingKey = reboundRoutingKey;
+    }
+
+    @Inject
+    public void setSnapshotRoutingKey(
+            @Named(Constants.ENV_VAR_SNAPSHOT_ROUTING_KEY) String snapshotRoutingKey) {
+        this.snapshotRoutingKey = snapshotRoutingKey;
+    }
+
+    @Inject
+    public void setMessageProcessor(MessageProcessor messageProcessor) {
+        this.messageProcessor = messageProcessor;
+    }
+
+    public void connect() {
+        openConnection(this.amqpUri);
         openPublishChannel();
         openSubscribeChannel();
     }
@@ -50,13 +108,16 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public void listenQueue(String queueName, CipherWrapper cipher, Sailor.Callback callback) {
+    public void subscribeConsumer() {
+        final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, this.messageProcessor);
+
         try {
-            MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, callback);
-            subscribeChannel.basicConsume(queueName, consumer);
+            subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+
+        logger.info("Subscribed consumer. Waiting for messages to arrive ...");
     }
 
     public void ack(Long deliveryTag) {
@@ -78,19 +139,19 @@ public class AMQPWrapper implements AMQPWrapperInterface {
     }
 
     public void sendData(byte[] payload, AMQP.BasicProperties options) {
-        sendToExchange(settings.get("PUBLISH_MESSAGES_TO"), settings.get("DATA_ROUTING_KEY"), payload, options);
+        sendToExchange(this.dataRoutingKey, payload, options);
     }
 
     public void sendSnapshot(byte[] payload, AMQP.BasicProperties options) {
-        sendToExchange(settings.get("PUBLISH_MESSAGES_TO"), settings.get("SNAPSHOT_ROUTING_KEY"), payload, options);
+        sendToExchange(this.snapshotRoutingKey, payload, options);
     }
 
     public void sendError(byte[] payload, AMQP.BasicProperties options) {
-        sendToExchange(settings.get("PUBLISH_MESSAGES_TO"), settings.get("ERROR_ROUTING_KEY"), payload, options);
+        sendToExchange(this.errorRoutingKey, payload, options);
     }
 
     public void sendRebound(byte[] payload, AMQP.BasicProperties options) {
-        sendToExchange(settings.get("PUBLISH_MESSAGES_TO"), settings.get("REBOUND_ROUTING_KEY"), payload, options);
+        sendToExchange(this.reboundRoutingKey, payload, options);
     }
 
     private AMQPWrapper openConnection(String uri) {
@@ -131,21 +192,31 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         }
     }
 
-    private void sendToExchange(String exchangeName, String routingKey, byte[] payload, AMQP.BasicProperties options) {
-        logger.info(String.format(
-                "Pushing to exchange=%s, routingKey=%s, data=%s, options=%s",
-                exchangeName, routingKey, new String(payload), options
-        ));
+    private void sendToExchange(String routingKey, byte[] payload, AMQP.BasicProperties options) {
+
+        logger.info("Pushing to exchange={}, routingKey={}, data={}, options={}",
+                this.publishExchangeName, routingKey, new String(payload), options);
         try {
-            publishChannel.basicPublish(exchangeName, routingKey, options, payload);
+            publishChannel.basicPublish(this.publishExchangeName, routingKey, options, payload);
         } catch (IOException e) {
-            throw new RuntimeException(String.format("Failed to publish message to exchange %s, %s", exchangeName, e));
+            throw new RuntimeException(String.format("Failed to publish message to exchange %s", publishExchangeName), e);
         }
+
+        logger.info("Successfully published data to {}", this.publishExchangeName);
     }
 
     @Override
     protected void finalize() throws Throwable {
         disconnect();
         super.finalize();
+    }
+
+
+    public void setSubscribeChannel(Channel subscribeChannel) {
+        this.subscribeChannel = subscribeChannel;
+    }
+
+    public void setPublishChannel(Channel publishChannel) {
+        this.publishChannel = publishChannel;
     }
 }

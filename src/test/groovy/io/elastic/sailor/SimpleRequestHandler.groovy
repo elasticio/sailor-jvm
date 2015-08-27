@@ -11,7 +11,7 @@ public class SimpleRequestHandler extends AbstractHandler {
     public static String lastMessage = "";
     private Deque<String> mockResponsePaths;
 
-    public SimpleRequestHandler(String[] mockResponsePath) {
+    public SimpleRequestHandler(String... mockResponsePath) {
         this.mockResponsePaths = new ArrayDeque<String>();
 
         for (int i = 0; i < mockResponsePath.length; i++) {
@@ -30,9 +30,9 @@ public class SimpleRequestHandler extends AbstractHandler {
         final InputStream body = request.getInputStream();
 
         pipe(body, System.err);
+        pipe(body, response.getOutputStream());
 
-        pipe(this.getClass().getResourceAsStream(this.mockResponsePaths.pop()),
-                response.getOutputStream());
+        //pipe(this.getClass().getResourceAsStream(this.mockResponsePaths.pop()),response.getOutputStream());
     }
 
     public static void pipe(InputStream is, OutputStream os) throws IOException {

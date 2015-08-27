@@ -11,13 +11,13 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 class Utils {
-    private static final Logger logger = Logger.getLogger(Utils.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Utils.class.getName());
 
     public static boolean isJsonObject(String input) {
         try {
@@ -46,11 +46,32 @@ class Utils {
             } else {
                 String result = EntityUtils.toString(responseEntity);
                 EntityUtils.consume(responseEntity);
-                logger.log(Level.INFO, "Successfully posted json " + body.toString().length() + " bytes length");
+                logger.info("Successfully posted json {} bytes length", body.toString().length());
                 return result;
             }
         } finally {
             httpClient.close();
         }
+    }
+
+    public static String getEnvVar(final String key) {
+        final String value = getOptionalEnvVar(key);
+
+        if (value == null) {
+            throw new IllegalStateException(
+                    String.format("Env var '%s' is required", key));
+        }
+
+        return value;
+    }
+
+    public static String getOptionalEnvVar(final String key) {
+        String value = System.getenv(key);
+
+        if (value == null) {
+            value = System.getProperty(key);
+        }
+
+        return value;
     }
 }

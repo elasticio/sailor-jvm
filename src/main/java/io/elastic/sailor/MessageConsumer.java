@@ -4,45 +4,45 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
-
-import java.io.IOException;
 import io.elastic.api.Message;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
 
 public class MessageConsumer extends DefaultConsumer {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
-    private final Sailor.Callback callback;
     private final CipherWrapper cipher;
+    private final MessageProcessor processor;
 
-    public MessageConsumer(Channel channel, CipherWrapper cipher, Sailor.Callback callback) {
+    public MessageConsumer(Channel channel, CipherWrapper cipher, MessageProcessor processor) {
         super(channel);
         this.cipher = cipher;
-        this.callback = callback;
+        this.processor = processor;
     }
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
 
-        Message message = null;
+        Message message;
 
-        logger.info(String.format("Message %s arrived", envelope.getDeliveryTag()));
+        logger.info("Consumer {} received message {}", consumerTag, envelope.getDeliveryTag());
 
         try {
             // decrypt message
             String bodyString = new String(body, "UTF-8");
             message = cipher.decryptMessage(bodyString);
         } catch (Exception e) {
-            logger.info(String.format("Failed to decrypt message %s: %s", envelope.getDeliveryTag(), e.getMessage()));
+            logger.info("Failed to decrypt message {}: {}", envelope.getDeliveryTag(), e.getMessage());
             this.getChannel().basicReject(envelope.getDeliveryTag(), false);
             return;
         }
 
         try {
-            this.callback.receive(message, properties.getHeaders(), envelope.getDeliveryTag());
+            processor.processMessage(message, properties.getHeaders(), envelope.getDeliveryTag());
         } catch (Exception e) {
-            logger.info(String.format("Failed to process message %s: %s", envelope.getDeliveryTag(), e.getMessage()));
+            logger.info("Failed to process message {}: {}", envelope.getDeliveryTag(), e.getMessage());
             this.getChannel().basicReject(envelope.getDeliveryTag(), false);
         }
     }
