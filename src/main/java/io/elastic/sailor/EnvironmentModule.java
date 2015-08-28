@@ -1,6 +1,8 @@
 package io.elastic.sailor;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
+import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.name.Names;
 
 public class EnvironmentModule extends AbstractModule {
@@ -17,6 +19,8 @@ public class EnvironmentModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_COMPONENT_PATH);
         bindRequiredStringEnvVar(Constants.ENV_VAR_TASK);
         bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_CFG);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_ACTION_OR_TRIGGER);
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_AMQP_URI);
         bindRequiredStringEnvVar(Constants.ENV_VAR_LISTEN_MESSAGES_ON);
@@ -36,6 +40,8 @@ public class EnvironmentModule extends AbstractModule {
         bindOptionalIntegerEnvVar(
                 Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION,
                 Constants.DEFAULT_REBOUND_INITIAL_EXPIRATION);
+
+        bindOptionalStringEnvVar(Constants.ENV_VAR_GET_MODEL_METHOD);
     }
 
     void bindRequiredStringEnvVar(final String name) {
@@ -58,5 +64,19 @@ public class EnvironmentModule extends AbstractModule {
         }
 
         return defaultValue;
+    }
+
+
+    void bindOptionalStringEnvVar(final String name) {
+
+        bind(String.class)
+                .annotatedWith(Names.named(name))
+                .toProvider(new Provider<String>() {
+
+                    @Override
+                    public String get() {
+                        return Utils.getOptionalEnvVar(name);
+                    }
+                });
     }
 }

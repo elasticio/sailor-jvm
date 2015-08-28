@@ -1,5 +1,6 @@
 package io.elastic.sailor;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Inject;
@@ -64,20 +65,35 @@ public final class ComponentResolver {
      * @return name of Java class to execute for that trigger or action
      */
     public String findTriggerOrAction(String name) {
-        JsonObject result = null;
-        if (componentJson.get("triggers") != null && componentJson.getAsJsonObject("triggers").get(name) != null) {
-            result = componentJson.getAsJsonObject("triggers").getAsJsonObject(name);
+
+        final JsonObject object = findTriggerOrActionObject(name).getAsJsonObject();
+
+        final JsonElement main = object.get("main");
+
+        if (main == null) {
+            throw new RuntimeException("Main class of '" + name + "' trigger/action is not specified");
         }
-        if (componentJson.get("actions") != null && componentJson.getAsJsonObject("actions").get(name) != null) {
-            result = componentJson.getAsJsonObject("actions").getAsJsonObject(name);
+
+        return main.getAsString();
+    }
+
+    public JsonElement findTriggerOrActionObject(String name) {
+        JsonObject result = null;
+
+        final JsonObject triggers = componentJson.getAsJsonObject("triggers");
+        final JsonObject actions = componentJson.getAsJsonObject("actions");
+
+        if (triggers != null && triggers.get(name) != null) {
+            result = triggers.getAsJsonObject(name);
+        }
+        if (actions != null && actions.get(name) != null) {
+            result = actions.getAsJsonObject(name);
         }
 
         if (result == null) {
             throw new RuntimeException("'" + name + "' trigger or action is not found");
-        } else if (result.get("main") == null) {
-            throw new RuntimeException("Main class of '" + name + "' trigger or action is not specified");
         }
 
-        return result.get("main").getAsString();
+        return result;
     }
 }

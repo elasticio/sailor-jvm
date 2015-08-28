@@ -33,4 +33,12 @@ public class SailorModule extends AbstractModule {
 
         return new JsonParser().parse(task).getAsJsonObject();
     }
+
+    @Provides
+    @Named("ConfigurationJson")
+    JsonObject provideConfiguration(
+            @Named(Constants.ENV_VAR_CFG) String cfg) {
+
+        return new JsonParser().parse(cfg).getAsJsonObject();
+    }
 }

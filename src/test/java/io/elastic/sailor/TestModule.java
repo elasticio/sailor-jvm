@@ -1,7 +1,10 @@
 package io.elastic.sailor;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Provider;
+import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.name.Names;
+import io.elastic.sailor.component.SimpleSelectModelProvider;
 
 public class TestModule extends AbstractModule {
 
@@ -34,15 +37,17 @@ public class TestModule extends AbstractModule {
                 "5559edd38968ec0736000003.test_exec.step_1.snapshot");
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_POST_RESULT_URL, "http://localhost:10000");
-        bindRequiredStringEnvVar(Constants.ENV_VAR_ACTION_OR_TRIGGER, "test");
+        bindRequiredStringEnvVar(Constants.ENV_VAR_ACTION_OR_TRIGGER, "helloworldaction");
         bindRequiredStringEnvVar(Constants.ENV_VAR_CFG, "{\"key\":0}");
 
-        bindRequiredStringEnvVar(Constants.ENV_VAR_REBOUND_LIMIT, 5);
-        bindRequiredStringEnvVar(Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION, 10000);
+        bindRequiredIntegerEnvVar(Constants.ENV_VAR_REBOUND_LIMIT, 5);
+        bindRequiredIntegerEnvVar(Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION, 10000);
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID, "step_1");
         bindRequiredStringEnvVar(Constants.ENV_VAR_TASK,
                 "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}");
+
+        bindRequiredStringEnvVar(Constants.ENV_VAR_GET_MODEL_METHOD, SimpleSelectModelProvider.class.getName());
     }
 
     void bindRequiredStringEnvVar(final String name, final String value) {
@@ -51,9 +56,10 @@ public class TestModule extends AbstractModule {
                 .toInstance(value);
     }
 
-    void bindRequiredStringEnvVar(final String name, final Integer value) {
+    void bindRequiredIntegerEnvVar(final String name, final Integer value) {
         bind(Integer.class)
                 .annotatedWith(Names.named(name))
                 .toInstance(value);
     }
+
 }

@@ -35,7 +35,7 @@ class ServiceSpec extends SetupServerHelper {
         service.start(ServiceMethods.getMetaModel);
 
         then:
-        SimpleRequestHandler.lastMessage == '{}'
+        SimpleRequestHandler.lastMessage == '{"in":{"type":"object"},"out":{}}'
     }
 
     def "it should get select model"() {
@@ -43,7 +43,7 @@ class ServiceSpec extends SetupServerHelper {
         service.start(ServiceMethods.selectModel)
 
         then:
-        SimpleRequestHandler.lastMessage == '{}'
+        SimpleRequestHandler.lastMessage == '{"de":"Germany","us":"United States","cfg":{"key":0}}'
     }
 
     def "it throw IllegalArgumentException if too few arguments"() {
