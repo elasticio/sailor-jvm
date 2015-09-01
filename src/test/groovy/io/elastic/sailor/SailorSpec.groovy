@@ -11,7 +11,7 @@ class SailorSpec extends Specification {
     def sailor;
 
     def setup() {
-        Injector injector = Guice.createInjector(new SailorModule(), new TestModule())
+        Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule())
 
         sailor = injector.getInstance(Sailor.class)
         sailor.setAMQP(amqp)

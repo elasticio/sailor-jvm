@@ -12,7 +12,7 @@ class MessageProcessorSpec extends Specification {
     MessageProcessor processor
 
     def setupSpec() {
-        Injector injector = Guice.createInjector(new SailorModule(), new TestModule());
+        Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule());
 
         processor = injector.getInstance(MessageProcessor.class);
     }

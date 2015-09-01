@@ -22,7 +22,7 @@ class AMPQSpec extends Specification {
     def amqp;
 
     def setup() {
-        Injector injector = Guice.createInjector(new SailorModule(), new TestModule())
+        Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule())
 
         amqp = injector.getInstance(AMQPWrapper.class)
         amqp.setSubscribeChannel(subscribeChannel)

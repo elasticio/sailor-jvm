@@ -13,7 +13,7 @@ class CipherSpec extends Specification {
     def cipher;
 
     def setupSpec() {
-        Injector injector = Guice.createInjector(new SailorModule(), new TestModule());
+        Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule());
 
         cipher = injector.getInstance(CipherWrapper.class);
     }

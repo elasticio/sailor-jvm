@@ -15,7 +15,7 @@ public class Sailor {
     private AMQPWrapperInterface amqp;
 
     public static void main(String[] args) throws IOException {
-        Injector injector = Guice.createInjector(new SailorModule(), new EnvironmentModule());
+        Injector injector = Guice.createInjector(new SailorModule(), new SailorEnvironmentModule());
 
         Sailor sailor = injector.getInstance(Sailor.class);
 

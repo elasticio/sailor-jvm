@@ -11,7 +11,7 @@ class ComponentResolverSpec extends Specification {
     def resolver;
 
     def setupSpec() {
-        Injector injector = Guice.createInjector(new SailorModule(), new TestModule());
+        Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule());
 
         resolver = injector.getInstance(ComponentResolver.class);
     }

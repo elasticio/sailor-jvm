@@ -16,7 +16,7 @@ class EmitterCallbackFactorySpec extends Specification {
             "step_1", new JsonObject(), new Message.Builder().build(), Collections.emptyMap());
 
     def setupSpec() {
-        Injector injector = Guice.createInjector(new SailorModule(), new TestModule());
+        Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule());
 
         factory = injector.getInstance(EmitterCallbackFactory.class);
     }

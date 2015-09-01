@@ -5,7 +5,7 @@ import com.google.inject.Provider;
 import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.name.Names;
 
-public class EnvironmentModule extends AbstractModule {
+public class SailorEnvironmentModule extends AbstractModule {
 
     @Override
     protected void configure() {

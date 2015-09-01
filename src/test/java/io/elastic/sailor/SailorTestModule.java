@@ -1,12 +1,9 @@
 package io.elastic.sailor;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
-import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.name.Names;
-import io.elastic.sailor.component.SimpleSelectModelProvider;
 
-public class TestModule extends AbstractModule {
+public class SailorTestModule extends AbstractModule {
 
     @Override
     protected void configure() {
