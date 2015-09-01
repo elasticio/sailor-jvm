@@ -64,6 +64,11 @@ public enum ServiceMethods {
     }
 
     private static <T> T newInstance(final JsonObject triggerOrAction, final String name) {
+        if (triggerOrAction == null) {
+            throw new IllegalStateException(String.format(
+                    "Env var '%s' is required", Constants.ENV_VAR_ACTION_OR_TRIGGER));
+        }
+
         final JsonElement element = triggerOrAction.get(name);
 
         if (element == null) {

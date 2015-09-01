@@ -14,13 +14,12 @@ public class ServiceEnvironmentModule extends AbstractModule {
     void bindEnvVars() {
         // required env vars
         bindRequiredStringEnvVar(Constants.ENV_VAR_CFG);
-        bindRequiredStringEnvVar(Constants.ENV_VAR_ACTION_OR_TRIGGER);
-
         bindRequiredStringEnvVar(Constants.ENV_VAR_POST_RESULT_URL);
 
 
         // optional env vars
 
+        bindOptionalStringEnvVar(Constants.ENV_VAR_ACTION_OR_TRIGGER);
         bindOptionalStringEnvVar(Constants.ENV_VAR_GET_MODEL_METHOD);
     }
 

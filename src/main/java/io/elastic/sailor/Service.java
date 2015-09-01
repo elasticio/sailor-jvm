@@ -22,16 +22,24 @@ public class Service {
     public Service(ComponentResolver resolver,
                    @Named(Constants.ENV_VAR_POST_RESULT_URL) String postResultUrl,
                    @Named("ConfigurationJson") JsonObject configuration,
-                   @Named(Constants.ENV_VAR_ACTION_OR_TRIGGER) String triggerOrAction,
+                   @Named(Constants.ENV_VAR_ACTION_OR_TRIGGER) Provider<String> triggerOrActionProvider,
                    @Named(Constants.ENV_VAR_GET_MODEL_METHOD) Provider<String> metaModelName) {
         this.postResultUrl = postResultUrl;
 
-        final JsonElement triggerOrActionObj
-                = resolver.findTriggerOrActionObject(triggerOrAction);
+        final String triggerOrAction = triggerOrActionProvider.get();
+
+
+        JsonObject triggerOrActionObj  = null;
+
+        if (triggerOrAction != null) {
+            triggerOrActionObj = resolver
+                    .findTriggerOrActionObject(triggerOrAction)
+                    .getAsJsonObject();
+        }
 
         params = new ServiceExecutionParameters.Builder()
                 .configuration(configuration)
-                .triggerOrAction(triggerOrActionObj.getAsJsonObject())
+                .triggerOrAction(triggerOrActionObj)
                 .modelClassName(metaModelName.get())
                 .build();
     }
