@@ -13,7 +13,7 @@ class ServiceSpec extends SetupServerHelper {
     def service;
 
     def setup() {
-        Injector injector = Guice.createInjector(new SailorModule(), new TestModule())
+        Injector injector = Guice.createInjector(new ServiceModule(), new TestServiceEnvironmentModule())
 
         service = injector.getInstance(Service.class)
     }

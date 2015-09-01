@@ -42,7 +42,7 @@ public class Service {
             throw new IllegalArgumentException("1 argument is required, but were passed " + args.length);
         }
 
-        Injector injector = Guice.createInjector(new SailorModule(), new EnvironmentModule());
+        Injector injector = Guice.createInjector(new ServiceModule(), new ServiceEnvironmentModule());
 
         final Service service = injector.getInstance(Service.class);
 
