@@ -38,15 +38,15 @@ public class Service {
 
 
     public static void main(String[] args) throws IOException {
-        if (args.length < 3) {
-            throw new IllegalArgumentException("3 arguments are required, but were passed " + args.length);
+        if (args.length < 1) {
+            throw new IllegalArgumentException("1 argument is required, but were passed " + args.length);
         }
 
         Injector injector = Guice.createInjector(new SailorModule(), new EnvironmentModule());
 
         final Service service = injector.getInstance(Service.class);
 
-        final String methodName = args[2];
+        final String methodName = args[0];
 
         logger.info("Starting execution of {}", methodName);
 

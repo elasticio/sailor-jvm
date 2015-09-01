@@ -49,13 +49,13 @@ class ServiceSpec extends SetupServerHelper {
     def "it throw IllegalArgumentException if too few arguments"() {
         setup:
 
-        def args = [""] as String[]
+        def args = [] as String[]
 
         when:
         Service.main(args);
 
         then:
         def e = thrown(IllegalArgumentException)
-        e.message == '3 arguments are required, but were passed 1'
+        e.message == '1 argument is required, but were passed 0'
     }
 }
