@@ -16,38 +16,16 @@ class ComponentResolverSpec extends Specification {
         resolver = injector.getInstance(ComponentResolver.class);
     }
 
-    def "should throw error if component.json is not found"() {
-        when:
-        new ComponentResolver("src/test/java/groovy/io")
-        then:
-        RuntimeException e = thrown()
-        e.getMessage().contains("component.json is not found")
-    }
-
-    def "should successfully load component.json"() {
-        when:
-        new ComponentResolver("/src/test/java/io/elastic/sailor/component/")
-        then:
-        notThrown(RuntimeException)
-    }
-
-    def "should successfully load component.json if no slash at the beginning"() {
-        when:
-        new ComponentResolver("src/test/java/io/elastic/sailor/component/")
-        then:
-        notThrown(RuntimeException)
-    }
-
     def "should successfully load component.json if no slash at the end"() {
         when:
-        new ComponentResolver("src/test/java/io/elastic/sailor/component")
+        new ComponentResolver()
         then:
         notThrown(RuntimeException)
     }
 
     def "should find trigger"() {
         when:
-        def resolver = new ComponentResolver("src/test/java/io/elastic/sailor/component")
+        def resolver = new ComponentResolver()
         def result = resolver.findTriggerOrAction("sleep")
         then:
         notThrown(RuntimeException)

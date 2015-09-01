@@ -18,43 +18,39 @@ import java.io.*;
 public final class ComponentResolver {
     private static final Logger logger = LoggerFactory.getLogger(ComponentResolver.class);
 
-    private static final String FILENAME = "component.json";
-    private static final String USERDIR = System.getProperty("user.dir");
+    private static final String FILENAME = "/component.json";
 
     private final JsonObject componentJson;
 
-    /**
-     * @param componentPath - path to the component, relative to sailor position
-     */
-    @Inject
-    public ComponentResolver(
-            @Named(Constants.ENV_VAR_COMPONENT_PATH) String componentPath) {
-        componentJson = loadComponentJson(componentPath);
+    public ComponentResolver() {
+        componentJson = loadComponentJson();
     }
 
-    private JsonObject loadComponentJson(String componentPath) {
+    private static JsonObject loadComponentJson() {
 
-        logger.info("Component root directory: {}", componentPath);
+        logger.info("Component descriptor from classpath: {}", FILENAME);
 
-        String componentFolder = new File(USERDIR, componentPath).getAbsolutePath();
-        String componentJsonFile = new File(componentFolder, FILENAME).getAbsolutePath();
+        final InputStream stream = ComponentResolver.class
+                .getResourceAsStream(FILENAME);
 
-        logger.info("Loading component descriptor from file: {}", componentJsonFile);
+        if (stream == null) {
+            throw new IllegalStateException(String.format(
+                    "Component descriptor %s is not found in the classpath",
+                    FILENAME));
+        }
 
-        BufferedReader reader = null;
+        InputStreamReader reader = null;
 
         try {
-            reader = new BufferedReader(new FileReader(componentJsonFile));
+            reader = new InputStreamReader(stream);
             JsonParser parser = new JsonParser();
             return parser.parse(reader).getAsJsonObject();
-        } catch (FileNotFoundException e) {
-            throw new RuntimeException("component.json is not found in " + componentFolder);
         } finally {
             if (reader != null) {
                 try {
                     reader.close();
                 } catch (IOException e) {
-                    logger.error("Failed to close file reader", e);
+                    logger.error("Failed to close reader", e);
                 }
             }
         }

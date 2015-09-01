@@ -11,7 +11,6 @@ public final class Constants {
     public static final String ENV_VAR_GET_MODEL_METHOD = "GET_MODEL_METHOD";
     public static final String ENV_VAR_MESSAGE_CRYPTO_PASSWORD = "MESSAGE_CRYPTO_PASSWORD";
     public static final String ENV_VAR_MESSAGE_CRYPTO_IV = "MESSAGE_CRYPTO_IV";
-    public static final String ENV_VAR_COMPONENT_PATH = "COMPONENT_PATH";
     public static final String ENV_VAR_AMQP_URI = "AMQP_URI";
     public static final String ENV_VAR_LISTEN_MESSAGES_ON = "LISTEN_MESSAGES_ON";
     public static final String ENV_VAR_PUBLISH_MESSAGES_TO = "PUBLISH_MESSAGES_TO";
