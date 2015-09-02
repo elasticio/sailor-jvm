@@ -1,6 +1,5 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
@@ -41,6 +40,7 @@ public class Service {
                 .configuration(configuration)
                 .triggerOrAction(triggerOrActionObj)
                 .modelClassName(metaModelName.get())
+                .credentialsVerifierClassName(resolver.findCredentialsVerifier())
                 .build();
     }
 

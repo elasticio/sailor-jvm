@@ -3,7 +3,7 @@
     "description": "Test component for sailor-jvm",
     "language": "java",
     "credentials": {
-        "main": "io.elastic.sailor.component.CredentialsVerifierImpl",
+        "verifier": "io.elastic.sailor.component.CredentialsVerifierImpl",
         "fields": {
             "oauth": {
                 "label": "Authentication",

@@ -3,12 +3,12 @@ package io.elastic.sailor;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 
 /**
  * Class to parse component.json
@@ -54,6 +54,23 @@ public final class ComponentResolver {
                 }
             }
         }
+    }
+
+    public String findCredentialsVerifier() {
+
+        final JsonObject credentials = componentJson.getAsJsonObject("credentials");
+
+        if (credentials == null) {
+            return null;
+        }
+
+        final JsonElement verifier = credentials.get("verifier");
+
+        if (verifier == null) {
+            return null;
+        }
+
+        return verifier.getAsString();
     }
 
     /**

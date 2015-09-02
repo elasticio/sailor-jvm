@@ -2,7 +2,9 @@ package io.elastic.sailor;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.elastic.api.CredentialsVerifier;
 import io.elastic.api.DynamicMetadataProvider;
+import io.elastic.api.InvalidCredentialsException;
 import io.elastic.api.SelectModelProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +18,32 @@ public enum ServiceMethods {
         JsonObject execute(final ServiceExecutionParameters params) {
             logger.info("About to verify credentials");
 
+            final String verifierClassName
+                    = params.getCredentialsVerifierClassName();
+
+            if (verifierClassName == null) {
+                logger.info("No implementation of {} found",
+                        CredentialsVerifier.class.getName());
+                return createResult(true);
+
+            }
+
+            final CredentialsVerifier verifier = newInstance(verifierClassName);
+
+            boolean verified = true;
+            try {
+                verifier.verify(params.getConfiguration());
+            } catch (InvalidCredentialsException e) {
+                verified = false;
+            }
+
+            return createResult(verified);
+        }
+
+        private JsonObject createResult(boolean verified) {
             JsonObject result = new JsonObject();
-            result.addProperty("verified", true);
+
+            result.addProperty("verified", verified);
 
             return result;
         }

@@ -2,6 +2,7 @@ package io.elastic.sailor
 
 import com.google.inject.Guice
 import com.google.inject.Injector
+import io.elastic.sailor.component.CredentialsVerifierImpl
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -46,6 +47,13 @@ class ComponentResolverSpec extends Specification {
         then:
         RuntimeException e = thrown()
         e.getMessage() == "'missing_action' trigger or action is not found"
+    }
+
+    def "should find credentials verifier"() {
+        when:
+        def result = resolver.findCredentialsVerifier();
+        then:
+        result == CredentialsVerifierImpl.class.getName()
     }
 
 

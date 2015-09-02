@@ -8,16 +8,18 @@ public class ServiceExecutionParameters {
     private final JsonObject configuration;
     private final JsonObject triggerOrAction;
     private final String modelClassName;
+    private final String credentialsVerifierClassName;
 
     private ServiceExecutionParameters(
             final String componentClassName,
             final JsonObject configuration,
             final JsonObject triggerOrAction,
-            final String modelClassName) {
+            final String modelClassName, String credentialsVerifierClassName) {
         this.className = componentClassName;
         this.configuration = configuration;
         this.triggerOrAction = triggerOrAction;
         this.modelClassName = modelClassName;
+        this.credentialsVerifierClassName = credentialsVerifierClassName;
     }
 
     public String getClassName() {
@@ -36,11 +38,16 @@ public class ServiceExecutionParameters {
         return modelClassName;
     }
 
+    public String getCredentialsVerifierClassName() {
+        return credentialsVerifierClassName;
+    }
+
     public static final class Builder {
         private String componentClassName;
         private JsonObject configuration;
         private JsonObject triggerOrAction;
         private String modelClassName;
+        private String credentialsVerifierClassName;
 
         public Builder() {
             this.configuration = new JsonObject();
@@ -74,12 +81,20 @@ public class ServiceExecutionParameters {
             return this;
         }
 
+        public Builder credentialsVerifierClassName(String value) {
+
+            this.credentialsVerifierClassName = value;
+
+            return this;
+        }
+
         public ServiceExecutionParameters build() {
             return new ServiceExecutionParameters(
                     this.componentClassName,
                     this.configuration,
                     this.triggerOrAction,
-                    this.modelClassName);
+                    this.modelClassName,
+                    this.credentialsVerifierClassName);
         }
     }
 }
