@@ -14,7 +14,7 @@ public class TestServiceEnvironmentModule extends AbstractModule {
 
     void bindEnvVars() {
 
-        bindRequiredStringEnvVar(Constants.ENV_VAR_POST_RESULT_URL, "http://localhost:10000");
+        bindRequiredStringEnvVar(Constants.ENV_VAR_POST_RESULT_URL, "http://admin:secret@localhost:10000");
         bindRequiredStringEnvVar(Constants.ENV_VAR_ACTION_OR_TRIGGER, "helloworldaction");
         bindRequiredStringEnvVar(Constants.ENV_VAR_CFG, "{\"key\":0}");
         bindRequiredStringEnvVar(Constants.ENV_VAR_GET_MODEL_METHOD, SimpleSelectModelProvider.class.getName());

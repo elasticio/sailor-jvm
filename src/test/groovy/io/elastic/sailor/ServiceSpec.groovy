@@ -18,10 +18,6 @@ class ServiceSpec extends SetupServerHelper {
         service = injector.getInstance(Service.class)
     }
 
-    def cleanup() {
-        SimpleRequestHandler.lastMessage = ""
-    }
-
     def "it should verify credentials"() {
         when:
         service.start(ServiceMethods.verifyCredentials)

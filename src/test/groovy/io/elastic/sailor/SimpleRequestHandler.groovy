@@ -9,6 +9,8 @@ import javax.servlet.http.HttpServletResponse
 
 public class SimpleRequestHandler extends AbstractHandler {
     public static String lastMessage = "";
+    public static Map<String, String> headers = new HashMap<String, String>();
+
     private Deque<String> mockResponsePaths;
 
     public SimpleRequestHandler(String... mockResponsePath) {
@@ -24,6 +26,9 @@ public class SimpleRequestHandler extends AbstractHandler {
                        HttpServletRequest request, HttpServletResponse response)
             throws IOException, ServletException {
 
+        lastMessage = ""
+        headers.clear();
+
         baseRequest.setHandled(true);
         response.setContentType("application/json");
 
@@ -31,6 +36,10 @@ public class SimpleRequestHandler extends AbstractHandler {
 
         pipe(body, System.err);
         pipe(body, response.getOutputStream());
+
+        for(String headerName : request.getHeaderNames()){
+            headers.put(headerName, request.getHeader(headerName));
+        }
 
         //pipe(this.getClass().getResourceAsStream(this.mockResponsePaths.pop()),response.getOutputStream());
     }
