@@ -16,7 +16,7 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_IV);
         bindRequiredStringEnvVar(Constants.ENV_VAR_TASK);
         bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID);
-        bindRequiredStringEnvVar(Constants.ENV_VAR_ACTION_OR_TRIGGER);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_FUNCTION);
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_AMQP_URI);
         bindRequiredStringEnvVar(Constants.ENV_VAR_LISTEN_MESSAGES_ON);
