@@ -1,8 +1,6 @@
 package io.elastic.sailor;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
-import com.google.inject.binder.LinkedBindingBuilder;
 import com.google.inject.name.Names;
 
 public class SailorEnvironmentModule extends AbstractModule {
@@ -18,7 +16,6 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_IV);
         bindRequiredStringEnvVar(Constants.ENV_VAR_TASK);
         bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID);
-        bindRequiredStringEnvVar(Constants.ENV_VAR_CFG);
         bindRequiredStringEnvVar(Constants.ENV_VAR_ACTION_OR_TRIGGER);
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_AMQP_URI);
@@ -59,19 +56,5 @@ public class SailorEnvironmentModule extends AbstractModule {
         }
 
         return defaultValue;
-    }
-
-
-    void bindOptionalStringEnvVar(final String name) {
-
-        bind(String.class)
-                .annotatedWith(Names.named(name))
-                .toProvider(new Provider<String>() {
-
-                    @Override
-                    public String get() {
-                        return Utils.getOptionalEnvVar(name);
-                    }
-                });
     }
 }
