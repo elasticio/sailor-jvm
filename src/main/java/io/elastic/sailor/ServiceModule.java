@@ -14,7 +14,7 @@ public class ServiceModule extends AbstractModule {
     }
 
     @Provides
-    @Named("ConfigurationJson")
+    @Named(Constants.NAME_CFG_JSON)
     JsonObject provideConfiguration(
             @Named(Constants.ENV_VAR_CFG) String cfg) {
 

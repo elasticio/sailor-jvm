@@ -2,6 +2,9 @@ package io.elastic.sailor;
 
 public final class Constants {
 
+    public static final String NAME_TASK_JSON = "TaskJson";
+    public static final String NAME_CFG_JSON = "ConfigurationJson";
+
     public static final int DEFAULT_REBOUND_LIMIT = 20;
     public static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;
 

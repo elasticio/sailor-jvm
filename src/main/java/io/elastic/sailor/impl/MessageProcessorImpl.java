@@ -25,7 +25,7 @@ public class MessageProcessorImpl implements MessageProcessor {
     @Inject
     public MessageProcessorImpl(ComponentResolver componentResolver,
                                 EmitterCallbackFactory emitterCallbackFactory,
-                                @Named("TaskJson") JsonObject task,
+                                @Named(Constants.NAME_TASK_JSON) JsonObject task,
                                 @Named(Constants.ENV_VAR_STEP_ID) String stepId) {
         this.componentResolver = componentResolver;
         this.emitterCallbackFactory = emitterCallbackFactory;

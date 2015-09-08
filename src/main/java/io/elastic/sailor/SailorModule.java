@@ -1,5 +1,6 @@
 package io.elastic.sailor;
 
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.AbstractModule;
@@ -27,7 +28,7 @@ public class SailorModule extends AbstractModule {
 
 
     @Provides
-    @Named("TaskJson")
+    @Named(Constants.NAME_TASK_JSON)
     JsonObject provideTask(
             @Named(Constants.ENV_VAR_TASK) String task) {
 
@@ -35,10 +36,24 @@ public class SailorModule extends AbstractModule {
     }
 
     @Provides
-    @Named("ConfigurationJson")
+    @Named(Constants.NAME_CFG_JSON)
     JsonObject provideConfiguration(
-            @Named(Constants.ENV_VAR_CFG) String cfg) {
+            @Named(Constants.ENV_VAR_STEP_ID) String stepId,
+            @Named(Constants.NAME_TASK_JSON) JsonObject task) {
 
-        return new JsonParser().parse(cfg).getAsJsonObject();
+        final JsonElement data = task.get("data");
+
+        if (data == null) {
+            throw new IllegalStateException("Property 'data' is missing in task's JSON");
+        }
+
+        final JsonElement stepData = data.getAsJsonObject().get(stepId);
+
+
+        if (stepData == null) {
+            throw new IllegalStateException("No configuration provided for step:" + stepId);
+        }
+
+        return stepData.getAsJsonObject();
     }
 }

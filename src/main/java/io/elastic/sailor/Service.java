@@ -20,7 +20,7 @@ public class Service {
     @Inject()
     public Service(ComponentResolver resolver,
                    @Named(Constants.ENV_VAR_POST_RESULT_URL) String postResultUrl,
-                   @Named("ConfigurationJson") JsonObject configuration,
+                   @Named(Constants.NAME_CFG_JSON) JsonObject configuration,
                    @Named(Constants.ENV_VAR_ACTION_OR_TRIGGER) Provider<String> triggerOrActionProvider,
                    @Named(Constants.ENV_VAR_GET_MODEL_METHOD) Provider<String> metaModelName) {
         this.postResultUrl = postResultUrl;
