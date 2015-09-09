@@ -3,9 +3,9 @@ package io.elastic.sailor;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import io.elastic.api.EventEmitter;
+import io.elastic.sailor.impl.CountingCallbackImpl;
 
-public class SnapshotCallback implements EventEmitter.Callback {
+public class SnapshotCallback extends CountingCallbackImpl {
 
     private ExecutionContext executionDetails;
     private AMQPWrapperInterface amqp;
@@ -19,7 +19,7 @@ public class SnapshotCallback implements EventEmitter.Callback {
     }
 
     @Override
-    public void receive(Object data) {
+    public void receiveData(Object data) {
         JsonObject snapshot = (JsonObject) data;
 
         byte[] payload = snapshot.toString().getBytes();

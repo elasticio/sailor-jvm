@@ -33,9 +33,9 @@ public class MessageProcessorImpl implements MessageProcessor {
         this.stepId = stepId;
     }
 
-    public void processMessage(final Message incomingMessage,
-                               final Map<String, Object> incomingHeaders,
-                               final Long deliveryTag) {
+    public ExecutionStats processMessage(final Message incomingMessage,
+                                         final Map<String, Object> incomingHeaders,
+                                         final Long deliveryTag) {
 
         final ExecutionContext executionContext = new ExecutionContext(
                 this.stepId, this.task, incomingMessage, incomingHeaders);
@@ -47,8 +47,8 @@ public class MessageProcessorImpl implements MessageProcessor {
         final JsonObject cfg = executionContext.getCfg();
         final JsonObject snapshot = executionContext.getSnapshot();
 
-        logger.info("Component to be executed: {}",executionContext.getCompId());
-        logger.info("Trigger/action to be executed: {}",executionContext.getTriggerOrAction());
+        logger.info("Component to be executed: {}", executionContext.getCompId());
+        logger.info("Trigger/action to be executed: {}", executionContext.getTriggerOrAction());
         logger.info("Component Java class to be instantiated: {}", className);
 
         final ExecutionParameters params = new ExecutionParameters.Builder(incomingMessage)
@@ -57,16 +57,16 @@ public class MessageProcessorImpl implements MessageProcessor {
                 .build();
 
         // make data callback
-        EventEmitter.Callback dataCallback = emitterCallbackFactory.createDataCallback(executionContext);
+        CountingCallback dataCallback = emitterCallbackFactory.createDataCallback(executionContext);
 
         // make error callback
-        EventEmitter.Callback errorCallback = emitterCallbackFactory.createErrorCallback(executionContext);
+        CountingCallback errorCallback = emitterCallbackFactory.createErrorCallback(executionContext);
 
         // make rebound callback
-        EventEmitter.Callback reboundCallback = emitterCallbackFactory.createReboundCallback(executionContext);
+        CountingCallback reboundCallback = emitterCallbackFactory.createReboundCallback(executionContext);
 
         // snapshot callback
-        EventEmitter.Callback snapshotCallback = emitterCallbackFactory.createSnapshotCallback(executionContext);
+        CountingCallback snapshotCallback = emitterCallbackFactory.createSnapshotCallback(executionContext);
 
         final EventEmitter eventEmitter = new EventEmitter.Builder()
                 .onData(dataCallback)
@@ -79,7 +79,6 @@ public class MessageProcessorImpl implements MessageProcessor {
 
         executor.execute(params);
 
-
-        //TODO:processor.processEnd();
+        return new ExecutionStats(dataCallback.getCount(), errorCallback.getCount(), reboundCallback.getCount());
     }
 }

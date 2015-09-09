@@ -8,7 +8,6 @@ import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import io.elastic.api.EventEmitter;
 import io.elastic.sailor.impl.MessageProcessorImpl;
 
 public class SailorModule extends AbstractModule {
@@ -19,10 +18,10 @@ public class SailorModule extends AbstractModule {
         bind(MessageProcessor.class).to(MessageProcessorImpl.class);
 
         install(new FactoryModuleBuilder()
-                .implement(EventEmitter.Callback.class, Names.named("data"), DataCallback.class)
-                .implement(EventEmitter.Callback.class, Names.named("error"), ErrorCallback.class)
-                .implement(EventEmitter.Callback.class, Names.named("snapshot"), SnapshotCallback.class)
-                .implement(EventEmitter.Callback.class, Names.named("rebound"), ReboundCallback.class)
+                .implement(CountingCallback.class, Names.named("data"), DataCallback.class)
+                .implement(CountingCallback.class, Names.named("error"), ErrorCallback.class)
+                .implement(CountingCallback.class, Names.named("snapshot"), SnapshotCallback.class)
+                .implement(CountingCallback.class, Names.named("rebound"), ReboundCallback.class)
                 .build(EmitterCallbackFactory.class));
     }
 

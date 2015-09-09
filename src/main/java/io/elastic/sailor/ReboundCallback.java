@@ -4,12 +4,12 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
-import io.elastic.api.EventEmitter;
 import io.elastic.api.Message;
+import io.elastic.sailor.impl.CountingCallbackImpl;
 
 import java.util.Map;
 
-public class ReboundCallback implements EventEmitter.Callback {
+public class ReboundCallback extends CountingCallbackImpl {
 
     private ExecutionContext executionContext;
     private AMQPWrapperInterface amqp;
@@ -31,7 +31,7 @@ public class ReboundCallback implements EventEmitter.Callback {
         this.reboundInitialExpiration = reboundInitialExpiration;
     }
 
-    public void receive(Object data) {
+    public void receiveData(Object data) {
 
         int reboundIteration = getReboundIteration();
 

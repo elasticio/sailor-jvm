@@ -26,25 +26,41 @@ public class MessageConsumer extends DefaultConsumer {
             throws IOException {
 
         Message message;
+        long deliveryTag = envelope.getDeliveryTag();
 
-        logger.info("Consumer {} received message {}", consumerTag, envelope.getDeliveryTag());
+        logger.info("Consumer {} received message {}", consumerTag, deliveryTag);
 
         try {
             // decrypt message
             String bodyString = new String(body, "UTF-8");
             message = cipher.decryptMessage(bodyString);
         } catch (Exception e) {
-            logger.info("Failed to decrypt message {}: {}", envelope.getDeliveryTag(), e.getMessage());
-            this.getChannel().basicReject(envelope.getDeliveryTag(), false);
+            logger.info("Failed to decrypt message {}: {}", deliveryTag, e.getMessage());
+            this.getChannel().basicReject(deliveryTag, false);
             return;
         }
 
+        ExecutionStats stats = null;
+
         try {
-            processor.processMessage(message, properties.getHeaders(), envelope.getDeliveryTag());
+            stats = processor.processMessage(message, properties.getHeaders(), deliveryTag);
         } catch (Exception e) {
-            logger.info("Failed to process message {}: {}", envelope.getDeliveryTag(), e.getMessage());
-            this.getChannel().basicReject(envelope.getDeliveryTag(), false);
+            logger.info("Failed to process message {}: {}", deliveryTag, e.getMessage());
+        } finally {
+            ackOrReject(stats, deliveryTag);
         }
+    }
+
+    private void ackOrReject(ExecutionStats stats, long deliveryTag) throws IOException {
+        if (stats == null || stats.getErrorCount() > 0) {
+            logger.info("Reject received messages {}", deliveryTag);
+            this.getChannel().basicReject(deliveryTag, false);
+
+            return;
+        }
+
+        logger.info("Acknowledging received messages {}", deliveryTag);
+        this.getChannel().basicAck(deliveryTag, true);
     }
 
 }

@@ -6,7 +6,7 @@ import java.util.Map;
 
 public interface MessageProcessor {
 
-    void processMessage(final Message incomingMessage,
+    ExecutionStats processMessage(final Message incomingMessage,
                         final Map<String, Object> incomingHeaders,
                         final Long deliveryTag);
 }

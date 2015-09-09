@@ -2,12 +2,12 @@ package io.elastic.sailor;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import io.elastic.api.EventEmitter;
 import io.elastic.api.Message;
+import io.elastic.sailor.impl.CountingCallbackImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DataCallback implements EventEmitter.Callback {
+public class DataCallback extends CountingCallbackImpl {
 
     private static final Logger logger = LoggerFactory.getLogger(DataCallback.class);
 
@@ -26,7 +26,7 @@ public class DataCallback implements EventEmitter.Callback {
     }
 
     @Override
-    public void receive(Object data) {
+    public void receiveData(Object data) {
         logger.info("Step produced data to be published");
 
         // payload

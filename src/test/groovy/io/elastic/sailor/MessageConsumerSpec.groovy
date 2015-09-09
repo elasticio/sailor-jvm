@@ -52,6 +52,7 @@ class MessageConsumerSpec extends Specification {
         consumer = new MessageConsumer(channel, cipher, processor);
     }
 
+
     def "should decrypt and process message successfully"() {
 
         when:
@@ -60,7 +61,23 @@ class MessageConsumerSpec extends Specification {
         then:
         1 * processor.processMessage({
             it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, headers, 123456)
+        }, headers, 123456) >> new ExecutionStats(1, 0, 0)
+        1 * channel.basicAck(123456, true)
+        0 * _
+
+    }
+
+
+    def "should reject message if error callback has count > 0"() {
+
+        when:
+        consumer.handleDelivery(consumerTag, envelope, options, encryptedMessage.getBytes());
+
+        then:
+        1 * processor.processMessage({
+            it.getBody().toString() == "{\"content\":\"Hello world!\"}"
+        }, headers, 123456) >> new ExecutionStats(0, 1, 0)
+        1 * channel.basicReject(123456, false)
         0 * _
 
     }

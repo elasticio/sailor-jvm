@@ -3,12 +3,12 @@ package io.elastic.sailor;
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import io.elastic.api.EventEmitter;
+import io.elastic.sailor.impl.CountingCallbackImpl;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
-public class ErrorCallback implements EventEmitter.Callback {
+public class ErrorCallback extends CountingCallbackImpl {
 
     private ExecutionContext executionContext;
     private AMQPWrapperInterface amqp;
@@ -25,7 +25,7 @@ public class ErrorCallback implements EventEmitter.Callback {
     }
 
     @Override
-    public void receive(Object data) {
+    public void receiveData(Object data) {
         Throwable t = (Throwable) data;
 
         final StringWriter writer = new StringWriter();
