@@ -194,8 +194,9 @@ public class AMQPWrapper implements AMQPWrapperInterface {
 
     private void sendToExchange(String routingKey, byte[] payload, AMQP.BasicProperties options) {
 
-        logger.info("Pushing to exchange={}, routingKey={}, data={}, options={}",
-                this.publishExchangeName, routingKey, new String(payload), options);
+        logger.info("Pushing to exchange={}, routingKey={}",this.publishExchangeName, routingKey);
+
+        logger.info("Message headers: {}",options.getHeaders());
         try {
             publishChannel.basicPublish(this.publishExchangeName, routingKey, options, payload);
         } catch (IOException e) {
