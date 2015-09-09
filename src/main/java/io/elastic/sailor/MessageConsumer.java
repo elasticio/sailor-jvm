@@ -52,6 +52,8 @@ public class MessageConsumer extends DefaultConsumer {
     }
 
     private void ackOrReject(ExecutionStats stats, long deliveryTag) throws IOException {
+        logger.info("Execution stats: {}", stats);
+
         if (stats == null || stats.getErrorCount() > 0) {
             logger.info("Reject received messages {}", deliveryTag);
             this.getChannel().basicReject(deliveryTag, false);
