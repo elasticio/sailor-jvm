@@ -122,12 +122,10 @@ task wrapper(type: Wrapper) {
     gradleVersion = '2.0'
 }
 
-task fatJar(type: Jar) {
+jar {
     manifest {
-        attributes 'Implementation-Title': 'elastic.io Sailor for JVM',
-                'Implementation-Version': version
+        attributes("Implementation-Vendor" : "elastic.io Gmbh",
+                "Implementation-Title": "elastic.io Sailor form JVM",
+                "Implementation-Version": version)
     }
-    baseName = project.name + '-all'
-    from { configurations.compile.collect { it.isDirectory() ? it : zipTree(it) } }
-    with jar
 }
