@@ -18,10 +18,22 @@ public class SailorModule extends AbstractModule {
         bind(MessageProcessor.class).to(MessageProcessorImpl.class);
 
         install(new FactoryModuleBuilder()
-                .implement(CountingCallback.class, Names.named("data"), DataCallback.class)
-                .implement(CountingCallback.class, Names.named("error"), ErrorCallback.class)
-                .implement(CountingCallback.class, Names.named("snapshot"), SnapshotCallback.class)
-                .implement(CountingCallback.class, Names.named("rebound"), ReboundCallback.class)
+                .implement(
+                        CountingCallback.class,
+                        Names.named(Constants.NAME_CALLBACK_DATA),
+                        DataCallback.class)
+                .implement(
+                        CountingCallback.class,
+                        Names.named(Constants.NAME_CALLBACK_ERROR),
+                        ErrorCallback.class)
+                .implement(
+                        CountingCallback.class,
+                        Names.named(Constants.NAME_CALLBACK_SNAPSHOT),
+                        SnapshotCallback.class)
+                .implement(
+                        CountingCallback.class,
+                        Names.named(Constants.NAME_CALLBACK_REBOUND),
+                        ReboundCallback.class)
                 .build(EmitterCallbackFactory.class));
     }
 

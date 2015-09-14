@@ -5,15 +5,15 @@ import com.google.inject.name.Named;
 
 public interface EmitterCallbackFactory {
 
-    @Named("data")
+    @Named(Constants.NAME_CALLBACK_DATA)
     CountingCallback createDataCallback(ExecutionContext context);
 
-    @Named("rebound")
+    @Named(Constants.NAME_CALLBACK_REBOUND)
     CountingCallback createReboundCallback(ExecutionContext context);
 
-    @Named("error")
+    @Named(Constants.NAME_CALLBACK_ERROR)
     CountingCallback createErrorCallback(ExecutionContext context);
 
-    @Named("snapshot")
+    @Named(Constants.NAME_CALLBACK_SNAPSHOT)
     CountingCallback createSnapshotCallback(ExecutionContext context);
 }

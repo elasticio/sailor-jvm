@@ -4,6 +4,10 @@ public final class Constants {
 
     public static final String NAME_TASK_JSON = "TaskJson";
     public static final String NAME_CFG_JSON = "ConfigurationJson";
+    public static final String NAME_CALLBACK_DATA = "dataCallback";
+    public static final String NAME_CALLBACK_REBOUND = "reboundCallback";
+    public static final String NAME_CALLBACK_ERROR = "errorCallback";
+    public static final String NAME_CALLBACK_SNAPSHOT = "snapshotCallback";
 
     public static final int DEFAULT_REBOUND_LIMIT = 20;
     public static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;
