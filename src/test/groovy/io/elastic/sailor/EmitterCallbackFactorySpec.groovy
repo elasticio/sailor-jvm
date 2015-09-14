@@ -4,6 +4,10 @@ import com.google.gson.JsonObject
 import com.google.inject.Guice
 import com.google.inject.Injector
 import io.elastic.api.Message
+import io.elastic.sailor.impl.DataCallback
+import io.elastic.sailor.impl.ErrorCallback
+import io.elastic.sailor.impl.ReboundCallback
+import io.elastic.sailor.impl.SnapshotCallback
 import spock.lang.Shared
 import spock.lang.Specification
 

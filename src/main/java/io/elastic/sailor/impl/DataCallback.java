@@ -1,9 +1,11 @@
-package io.elastic.sailor;
+package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import io.elastic.api.Message;
-import io.elastic.sailor.impl.CountingCallbackImpl;
+import io.elastic.sailor.AMQPWrapperInterface;
+import io.elastic.sailor.CipherWrapper;
+import io.elastic.sailor.ExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

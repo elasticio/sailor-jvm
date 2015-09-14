@@ -1,10 +1,14 @@
-package io.elastic.sailor;
+package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
+import io.elastic.sailor.AMQPWrapperInterface;
+import io.elastic.sailor.CipherWrapper;
+import io.elastic.sailor.Constants;
+import io.elastic.sailor.ExecutionContext;
 import io.elastic.sailor.impl.CountingCallbackImpl;
 
 import java.util.Map;

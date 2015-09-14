@@ -8,7 +8,7 @@ import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import io.elastic.sailor.impl.MessageProcessorImpl;
+import io.elastic.sailor.impl.*;
 
 public class SailorModule extends AbstractModule {
 

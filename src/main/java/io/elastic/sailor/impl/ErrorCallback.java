@@ -1,8 +1,11 @@
-package io.elastic.sailor;
+package io.elastic.sailor.impl;
 
 import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import io.elastic.sailor.AMQPWrapperInterface;
+import io.elastic.sailor.CipherWrapper;
+import io.elastic.sailor.ExecutionContext;
 import io.elastic.sailor.impl.CountingCallbackImpl;
 
 import java.io.PrintWriter;
