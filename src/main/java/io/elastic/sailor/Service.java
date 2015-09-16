@@ -46,31 +46,54 @@ public class Service {
 
 
     public static void main(String[] args) throws IOException {
-        if (args.length < 1) {
-            throw new IllegalArgumentException("1 argument is required, but were passed " + args.length);
+
+        try {
+
+            if (args.length < 1) {
+                throw new IllegalArgumentException("1 argument is required, but were passed " + args.length);
+            }
+
+            Injector injector = Guice.createInjector(new ServiceModule(), new ServiceEnvironmentModule());
+
+            final Service service = injector.getInstance(Service.class);
+
+            final String methodName = args[0];
+
+            logger.info("Starting execution of {}", methodName);
+
+            final ServiceMethods method = ServiceMethods.parse(methodName);
+
+            service.start(method);
+
+        } catch (Exception e) {
+
+            JsonObject payload = new JsonObject();
+            payload.addProperty("status", "success");
+
+            JsonObject data = new JsonObject();
+            data.addProperty("message", e.getMessage());
+
+            payload.add("data", data);
+
+            sendResponse(Utils.getOptionalEnvVar(Constants.ENV_VAR_POST_RESULT_URL), payload);
         }
-
-        Injector injector = Guice.createInjector(new ServiceModule(), new ServiceEnvironmentModule());
-
-        final Service service = injector.getInstance(Service.class);
-
-        final String methodName = args[0];
-
-        logger.info("Starting execution of {}", methodName);
-
-        final ServiceMethods method = ServiceMethods.parse(methodName);
-
-        service.start(method);
-
     }
 
     public void start(final ServiceMethods method) throws IOException {
+        final JsonObject data = method.execute(this.params);
 
-        final JsonObject result = method.execute(this.params);
+        JsonObject payload = new JsonObject();
+        payload.addProperty("status", "success");
+        payload.add("data", data);
+
+        sendResponse(this.postResultUrl, payload);
+    }
+
+    private static void sendResponse(String url, JsonObject payload) throws IOException {
 
         logger.info("Sending response");
 
-        String response = Utils.postJson(this.postResultUrl, result);
+        String response = Utils.postJson(url, payload);
 
         logger.info("Received response from server: {}", response.toString());
     }
