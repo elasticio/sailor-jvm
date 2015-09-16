@@ -23,7 +23,6 @@ repositories {
 
 
 dependencies {
-    compile "com.google.code.gson:gson:2.2.4"
     compile "io.elastic:java-api:0.0.6"
     compile "com.rabbitmq:amqp-client:3.5.1"
     compile "commons-codec:commons-codec:1.10"
