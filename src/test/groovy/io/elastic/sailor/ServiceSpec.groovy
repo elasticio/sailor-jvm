@@ -55,12 +55,12 @@ class ServiceSpec extends SetupServerHelper {
         e.message == '1 argument is required, but were passed 0'
     }
 
+    // @TODO provide env var POST_RESULT_URI
+    // and test that exception data is sent there
     def "it should post exception back to API"() {
         setup:
 
         def args = [] as String[]
-        // @TODO provide env var POST_RESULT_URI
-        // and test that exception data is sent there
 
         when:
         Service.main(args);
