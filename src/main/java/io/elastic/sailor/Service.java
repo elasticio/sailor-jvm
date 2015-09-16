@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class Service {
     private static final Logger logger = LoggerFactory.getLogger(Service.class.getName());
@@ -28,7 +30,7 @@ public class Service {
         final String triggerOrAction = triggerOrActionProvider.get();
 
 
-        JsonObject triggerOrActionObj  = null;
+        JsonObject triggerOrActionObj = null;
 
         if (triggerOrAction != null) {
             triggerOrActionObj = resolver
@@ -44,63 +46,65 @@ public class Service {
                 .build();
     }
 
-
     public static void main(String[] args) throws IOException {
+        if (args.length < 1) {
+            throw new IllegalArgumentException("1 argument is required, but were passed " + args.length);
+        }
+
+        Injector injector = Guice.createInjector(new ServiceModule(), new ServiceEnvironmentModule());
+
+        final String methodName = args[0];
+
+        logger.info("Starting execution of {}", methodName);
+
+        final ServiceMethods method = ServiceMethods.parse(methodName);
+
+        getServiceInstanceAndExecute(method, injector);
+
+    }
+
+    public static void getServiceInstanceAndExecute(
+            final ServiceMethods method, final Injector injector) {
+
+        final Service service = injector.getInstance(Service.class);
 
         try {
-
-            if (args.length < 1) {
-                throw new IllegalArgumentException("1 argument is required, but were passed " + args.length);
-            }
-
-            Injector injector = Guice.createInjector(new ServiceModule(), new ServiceEnvironmentModule());
-
-            final Service service = injector.getInstance(Service.class);
-
-            final String methodName = args[0];
-
-            logger.info("Starting execution of {}", methodName);
-
-            final ServiceMethods method = ServiceMethods.parse(methodName);
-
             service.executeMethod(method);
-
         } catch (Exception e) {
-
-            processException(e);
+            service.processException(e);
         }
     }
 
-    public void executeMethod(final ServiceMethods method) {
-        final JsonObject data = method.execute(this.params);
+    private void createResponseAndSend(final String status,
+                                       final JsonObject data) {
 
         JsonObject payload = new JsonObject();
-        payload.addProperty("status", "success");
+        payload.addProperty("status", status);
         payload.add("data", data);
 
         sendData(this.postResultUrl, payload);
     }
 
-    private static void processException(Exception e) {
+    public void executeMethod(final ServiceMethods method) {
+        final JsonObject data = method.execute(this.params);
+
+        createResponseAndSend("success", data);
+    }
+
+    private void processException(Exception e) {
+
+        StringWriter writer = new StringWriter();
+        e.printStackTrace(new PrintWriter(writer));
 
         JsonObject data = new JsonObject();
-        data.addProperty("message", e.getMessage());
+        data.addProperty("message", writer.toString());
 
-        JsonObject payload = new JsonObject();
-        payload.addProperty("status", "success");
-        payload.add("data", data);
-
-        sendData(Utils.getOptionalEnvVar(Constants.ENV_VAR_POST_RESULT_URL), payload);
+        createResponseAndSend("error", data);
     }
 
     private static void sendData(String url, JsonObject payload) {
 
         logger.info("Sending response");
-
-        if (url == null) {
-            logger.info("URL is not provided");
-            return;
-        }
 
         try {
             String response = Utils.postJson(url, payload);

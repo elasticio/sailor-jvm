@@ -1,7 +1,10 @@
 package io.elastic.sailor
 
+import com.google.gson.Gson
 import com.google.inject.Guice
 import com.google.inject.Injector
+import io.elastic.api.JSON
+import io.elastic.sailor.component.SimpleSelectModelProvider
 
 class ServiceSpec extends SetupServerHelper {
 
@@ -10,12 +13,17 @@ class ServiceSpec extends SetupServerHelper {
     }
 
 
+    def injector
     def service;
 
     def setup() {
-        Injector injector = Guice.createInjector(new ServiceModule(), new TestServiceEnvironmentModule())
+        injector = Guice.createInjector(new ServiceModule(), new TestServiceEnvironmentModule())
 
         service = injector.getInstance(Service.class)
+    }
+
+    def cleanup() {
+        SimpleSelectModelProvider.SHOULD_FAIL = false
     }
 
     def "it should verify credentials"() {
@@ -42,16 +50,31 @@ class ServiceSpec extends SetupServerHelper {
         SimpleRequestHandler.lastMessage == '{"status":"success","data":{"de":"Germany","us":"United States","cfg":{"key":0}}}'
     }
 
+    def "it should get select model s"() {
+        setup:
+        SimpleSelectModelProvider.SHOULD_FAIL = true
+
+        when:
+        Service.getServiceInstanceAndExecute(ServiceMethods.selectModel, injector);
+
+        then:
+        def response = JSON.parse(SimpleRequestHandler.lastMessage)
+        response.get("status").getAsString() == 'error'
+        response.get("data").getAsJsonObject()
+                .get('message').getAsString()
+                .startsWith('java.lang.RuntimeException: Spec author told me to fail')
+    }
+
     def "it throw IllegalArgumentException if too few arguments"() {
         setup:
 
-        // @TODO provide POST_RESULT_URL so that error is sent there
         def args = [] as String[]
 
         when:
         Service.main(args);
 
         then:
-        SimpleRequestHandler.lastMessage == '{"status":"error","data":{"message":"1 argument is required, but were passed 0"}}'
+        def e = thrown(IllegalArgumentException)
+        e.message == '1 argument is required, but were passed 0'
     }
 }
