@@ -10,6 +10,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 public class Service {
     private static final Logger logger = LoggerFactory.getLogger(Service.class.getName());
@@ -28,7 +30,7 @@ public class Service {
         final String triggerOrAction = triggerOrActionProvider.get();
 
 
-        JsonObject triggerOrActionObj  = null;
+        JsonObject triggerOrActionObj = null;
 
         if (triggerOrAction != null) {
             triggerOrActionObj = resolver
@@ -44,7 +46,6 @@ public class Service {
                 .build();
     }
 
-
     public static void main(String[] args) throws IOException {
         if (args.length < 1) {
             throw new IllegalArgumentException("1 argument is required, but were passed " + args.length);
@@ -52,26 +53,64 @@ public class Service {
 
         Injector injector = Guice.createInjector(new ServiceModule(), new ServiceEnvironmentModule());
 
-        final Service service = injector.getInstance(Service.class);
-
         final String methodName = args[0];
 
         logger.info("Starting execution of {}", methodName);
 
         final ServiceMethods method = ServiceMethods.parse(methodName);
 
-        service.start(method);
+        getServiceInstanceAndExecute(method, injector);
 
     }
 
-    public void start(final ServiceMethods method) throws IOException {
+    public static void getServiceInstanceAndExecute(
+            final ServiceMethods method, final Injector injector) {
 
-        final JsonObject result = method.execute(this.params);
+        final Service service = injector.getInstance(Service.class);
+
+        try {
+            service.executeMethod(method);
+        } catch (Exception e) {
+            service.processException(e);
+        }
+    }
+
+    private void createResponseAndSend(final String status,
+                                       final JsonObject data) {
+
+        JsonObject payload = new JsonObject();
+        payload.addProperty("status", status);
+        payload.add("data", data);
+
+        sendData(this.postResultUrl, payload);
+    }
+
+    public void executeMethod(final ServiceMethods method) {
+        final JsonObject data = method.execute(this.params);
+
+        createResponseAndSend("success", data);
+    }
+
+    private void processException(Exception e) {
+
+        StringWriter writer = new StringWriter();
+        e.printStackTrace(new PrintWriter(writer));
+
+        JsonObject data = new JsonObject();
+        data.addProperty("message", writer.toString());
+
+        createResponseAndSend("error", data);
+    }
+
+    private static void sendData(String url, JsonObject payload) {
 
         logger.info("Sending response");
 
-        String response = Utils.postJson(this.postResultUrl, result);
-
-        logger.info("Received response from server: {}", response.toString());
+        try {
+            String response = Utils.postJson(url, payload);
+            logger.info("Received response from server: {}", response.toString());
+        } catch (IOException e) {
+            logger.info("Failed to send response: {}", e.getMessage());
+        }
     }
 }
