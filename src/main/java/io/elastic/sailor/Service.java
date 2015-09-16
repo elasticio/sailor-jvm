@@ -67,15 +67,7 @@ public class Service {
 
         } catch (Exception e) {
 
-            JsonObject payload = new JsonObject();
-            payload.addProperty("status", "success");
-
-            JsonObject data = new JsonObject();
-            data.addProperty("message", e.getMessage());
-
-            payload.add("data", data);
-
-            sendResponse(Utils.getOptionalEnvVar(Constants.ENV_VAR_POST_RESULT_URL), payload);
+            sendError(e);
         }
     }
 
@@ -86,10 +78,22 @@ public class Service {
         payload.addProperty("status", "success");
         payload.add("data", data);
 
-        sendResponse(this.postResultUrl, payload);
+        sendData(this.postResultUrl, payload);
     }
 
-    private static void sendResponse(String url, JsonObject payload) throws IOException {
+    private static void sendError(Exception e) throws IOException{
+
+        JsonObject data = new JsonObject();
+        data.addProperty("message", e.getMessage());
+
+        JsonObject payload = new JsonObject();
+        payload.addProperty("status", "success");
+        payload.add("data", data);
+
+        sendData(Utils.getOptionalEnvVar(Constants.ENV_VAR_POST_RESULT_URL), payload);
+    }
+
+    private static void sendData(String url, JsonObject payload) throws IOException {
 
         logger.info("Sending response");
 
