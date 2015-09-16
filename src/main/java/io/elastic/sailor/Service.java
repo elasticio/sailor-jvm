@@ -63,15 +63,15 @@ public class Service {
 
             final ServiceMethods method = ServiceMethods.parse(methodName);
 
-            service.start(method);
+            service.executeMethod(method);
 
         } catch (Exception e) {
 
-            sendError(e);
+            processException(e);
         }
     }
 
-    public void start(final ServiceMethods method) throws IOException {
+    public void executeMethod(final ServiceMethods method) {
         final JsonObject data = method.execute(this.params);
 
         JsonObject payload = new JsonObject();
@@ -81,7 +81,7 @@ public class Service {
         sendData(this.postResultUrl, payload);
     }
 
-    private static void sendError(Exception e) throws IOException{
+    private static void processException(Exception e) {
 
         JsonObject data = new JsonObject();
         data.addProperty("message", e.getMessage());
@@ -93,12 +93,20 @@ public class Service {
         sendData(Utils.getOptionalEnvVar(Constants.ENV_VAR_POST_RESULT_URL), payload);
     }
 
-    private static void sendData(String url, JsonObject payload) throws IOException {
+    private static void sendData(String url, JsonObject payload) {
 
         logger.info("Sending response");
 
-        String response = Utils.postJson(url, payload);
+        if (url == null) {
+            logger.info("URL is not provided");
+            return;
+        }
 
-        logger.info("Received response from server: {}", response.toString());
+        try {
+            String response = Utils.postJson(url, payload);
+            logger.info("Received response from server: {}", response.toString());
+        } catch (IOException e) {
+            logger.info("Failed to send response: {}", e.getMessage());
+        }
     }
 }

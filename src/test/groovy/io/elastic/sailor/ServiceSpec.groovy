@@ -20,7 +20,7 @@ class ServiceSpec extends SetupServerHelper {
 
     def "it should verify credentials"() {
         when:
-        service.start(ServiceMethods.verifyCredentials)
+        service.executeMethod(ServiceMethods.verifyCredentials)
 
         then:
         SimpleRequestHandler.lastMessage == '{"status":"success","data":{"verified":true}}'
@@ -28,7 +28,7 @@ class ServiceSpec extends SetupServerHelper {
 
     def "it should get meta model"() {
         when:
-        service.start(ServiceMethods.getMetaModel);
+        service.executeMethod(ServiceMethods.getMetaModel);
 
         then:
         SimpleRequestHandler.lastMessage == '{"status":"success","data":{"in":{"type":"object"},"out":{}}}'
@@ -36,7 +36,7 @@ class ServiceSpec extends SetupServerHelper {
 
     def "it should get select model"() {
         when:
-        service.start(ServiceMethods.selectModel)
+        service.executeMethod(ServiceMethods.selectModel)
 
         then:
         SimpleRequestHandler.lastMessage == '{"status":"success","data":{"de":"Germany","us":"United States","cfg":{"key":0}}}'
@@ -45,27 +45,13 @@ class ServiceSpec extends SetupServerHelper {
     def "it throw IllegalArgumentException if too few arguments"() {
         setup:
 
+        // @TODO provide POST_RESULT_URL so that error is sent there
         def args = [] as String[]
 
         when:
         Service.main(args);
 
         then:
-        def e = thrown(IllegalArgumentException)
-        e.message == '1 argument is required, but were passed 0'
-    }
-
-    // @TODO provide env var POST_RESULT_URI
-    // and test that exception data is sent there
-    def "it should post exception back to API"() {
-        setup:
-
-        def args = [] as String[]
-
-        when:
-        Service.main(args);
-
-        then:
-        SimpleRequestHandler.lastMessage == '{"status":"error","data":{"message":"Env var \'CFG\' is required"}}'
+        SimpleRequestHandler.lastMessage == '{"status":"error","data":{"message":"1 argument is required, but were passed 0"}}'
     }
 }
