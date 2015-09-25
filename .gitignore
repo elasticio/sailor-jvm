@@ -1,5 +1,6 @@
 lib/*.jar.sha1
 .gradle
+gradle.properties
 .idea
 build
 out
