@@ -11,6 +11,7 @@ public final class Constants {
 
     public static final int DEFAULT_REBOUND_LIMIT = 20;
     public static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;
+    public static final int DEFAULT_RABBITMQ_PREFETCH_SAILOR = 1;
 
     public static final String ENV_VAR_POST_RESULT_URL = "POST_RESULT_URL";
     public static final String ENV_VAR_CFG = "CFG";
@@ -30,5 +31,6 @@ public final class Constants {
     public static final String ENV_VAR_REBOUND_INITIAL_EXPIRATION = "REBOUND_INITIAL_EXPIRATION";
     public static final String ENV_VAR_TASK = "TASK";
     public static final String ENV_VAR_STEP_ID = "STEP_ID";
+    public static final String ENV_VAR_RABBITMQ_PREFETCH_SAILOR = "RABBITMQ_PREFETCH_SAILOR";
 
 }

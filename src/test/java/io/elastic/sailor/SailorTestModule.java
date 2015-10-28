@@ -32,6 +32,7 @@ public class SailorTestModule extends AbstractModule {
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_CFG, "{\"key\":0}");
 
+        bindRequiredIntegerEnvVar(Constants.ENV_VAR_RABBITMQ_PREFETCH_SAILOR, 1);
         bindRequiredIntegerEnvVar(Constants.ENV_VAR_REBOUND_LIMIT, 5);
         bindRequiredIntegerEnvVar(Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION, 10000);
 

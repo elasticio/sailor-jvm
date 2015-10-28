@@ -27,6 +27,7 @@ public class AMQPWrapper implements AMQPWrapperInterface {
     private String errorRoutingKey;
     private String reboundRoutingKey;
     private String snapshotRoutingKey;
+    private Integer prefetchCount;
     private CipherWrapper cipher;
     private MessageProcessor messageProcessor;
 
@@ -80,6 +81,12 @@ public class AMQPWrapper implements AMQPWrapperInterface {
     @Inject
     public void setMessageProcessor(MessageProcessor messageProcessor) {
         this.messageProcessor = messageProcessor;
+    }
+
+    @Inject
+    public void setPrefetchCount(
+            @Named(Constants.ENV_VAR_RABBITMQ_PREFETCH_SAILOR) Integer prefetchCount) {
+        this.prefetchCount = prefetchCount;
     }
 
     public void connect() {
@@ -184,6 +191,7 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         try {
             if (subscribeChannel == null) {
                 subscribeChannel = amqp.createChannel();
+                subscribeChannel.basicQos(this.prefetchCount);
                 logger.info("Opened subscribe channel");
             }
             return this;

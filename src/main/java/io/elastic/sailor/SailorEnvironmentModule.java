@@ -34,6 +34,9 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindOptionalIntegerEnvVar(
                 Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION,
                 Constants.DEFAULT_REBOUND_INITIAL_EXPIRATION);
+        bindOptionalIntegerEnvVar(
+                Constants.ENV_VAR_RABBITMQ_PREFETCH_SAILOR,
+                Constants.DEFAULT_RABBITMQ_PREFETCH_SAILOR);
     }
 
     void bindRequiredStringEnvVar(final String name) {
