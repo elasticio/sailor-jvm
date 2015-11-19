@@ -1,0 +1,5 @@
+test:
+  override:
+    - ./gradlew build uploadArchives -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
+  post:
+    - cp ./build/reports $CIRCLE_ARTIFACTS
