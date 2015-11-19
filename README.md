@@ -4,4 +4,4 @@ The official elastic.io library for bootstrapping and executing for connectors b
 ### Building:
 In terminal run 
 
-    ./gradlew elastic
+    ./gradlew build
