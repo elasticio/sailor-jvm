@@ -7,6 +7,6 @@ general:
     - "build/reports"
 test:
   pre:
-    - sudo cp jce/* $JAVA_HOME/jre/lib/security/
+    - sudo cp jce_policy-6/* $JAVA_HOME/jre/lib/security/
   override:
     - ./gradlew build uploadArchives -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
