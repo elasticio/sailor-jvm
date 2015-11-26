@@ -11,8 +11,6 @@ import org.apache.commons.codec.binary.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import java.net.URLDecoder;
-import java.net.URLEncoder;
 import java.security.Key;
 import java.security.MessageDigest;
 
@@ -85,15 +83,10 @@ public final class CipherWrapper {
 
     private String encrypt(String message) {
         try {
-            String urlEncodedMessage = URLEncoder.encode(message, "UTF-8");
-            if (encryptionKey == null) {
-                return urlEncodedMessage;
-            }
-
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, encryptionKey, encryptionIV);
 
-            byte[] a = cipher.doFinal(urlEncodedMessage.getBytes());
+            byte[] a = cipher.doFinal(message.getBytes());
 
             return new String(Base64.encodeBase64(a));
         } catch (Exception e) {
@@ -109,7 +102,7 @@ public final class CipherWrapper {
 
             byte[] a = cipher.doFinal(Base64.decodeBase64(message.getBytes()));
 
-            return URLDecoder.decode(new String(a), "UTF-8");
+            return new String(a, "UTF-8");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
