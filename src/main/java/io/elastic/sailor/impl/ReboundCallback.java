@@ -5,15 +5,14 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
-import io.elastic.sailor.AMQPWrapperInterface;
-import io.elastic.sailor.CipherWrapper;
-import io.elastic.sailor.Constants;
-import io.elastic.sailor.ExecutionContext;
-import io.elastic.sailor.impl.CountingCallbackImpl;
+import io.elastic.sailor.*;
 
 import java.util.Map;
 
 public class ReboundCallback extends CountingCallbackImpl {
+
+    private static final String HEADER_REBOUND_REASON = "reboundReason";
+    private static final String HEADER_REBOUND_ITERATION = "reboundIteration";
 
     private ExecutionContext executionContext;
     private AMQPWrapperInterface amqp;
@@ -46,8 +45,9 @@ public class ReboundCallback extends CountingCallbackImpl {
         final Message message = executionContext.getMessage();
         byte[] payload = cipher.encryptMessage(message).getBytes();
         Map<String, Object> headers = executionContext.buildDefaultHeaders();
-        headers.put("reboundReason", data.toString());
-        headers.put("reboundIteration", reboundIteration);
+        headers.put(HEADER_REBOUND_REASON, data.toString());
+        headers.put(HEADER_REBOUND_ITERATION, reboundIteration);
+
         double expiration = getReboundExpiration(reboundIteration);
         amqp.sendRebound(payload, makeReboundOptions(headers, expiration));
     }
@@ -55,7 +55,7 @@ public class ReboundCallback extends CountingCallbackImpl {
     private int getReboundIteration() {
         final Map<String, Object> headers = executionContext.getHeaders();
 
-        final Object reboundIteration = headers.get("reboundIteration");
+        final Object reboundIteration = headers.get(HEADER_REBOUND_ITERATION);
 
         if (reboundIteration != null) {
             try {
