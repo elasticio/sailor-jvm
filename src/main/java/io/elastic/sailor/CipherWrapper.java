@@ -7,6 +7,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.elastic.api.Message;
 import org.apache.commons.codec.binary.Base64;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
@@ -15,6 +16,10 @@ import java.security.Key;
 import java.security.MessageDigest;
 
 public final class CipherWrapper {
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CipherWrapper.class);
+    public static final String MESSAGE_PROPERTY_BODY = "body";
+    public static final String MESSAGE_PROPERTY_ATTACHMENTS = "attachments";
+
     private final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private Key encryptionKey;
     private IvParameterSpec encryptionIV;
@@ -36,27 +41,26 @@ public final class CipherWrapper {
 
     public String encryptMessage(Message message) {
         JsonObject payload = new JsonObject();
-        payload.add("body", message.getBody());
-        payload.add("attachments", message.getAttachments());
+        payload.add(MESSAGE_PROPERTY_BODY, message.getBody());
+        payload.add(MESSAGE_PROPERTY_ATTACHMENTS, message.getAttachments());
         return encryptMessageContent(payload);
     }
 
     public Message decryptMessage(String encrypted) {
-        try {
-            JsonObject payload = decryptMessageContent(encrypted);
-            JsonObject body = new JsonObject();
-            JsonObject attachments = new JsonObject();
+        final JsonObject payload = decryptMessageContent(encrypted);
 
-            if (payload.has("body") && Utils.isJsonObject(payload.get("body"))) {
-                body = payload.getAsJsonObject("body");
-            }
-            if (payload.has("attachments") && Utils.isJsonObject(payload.get("attachments"))) {
-                attachments = payload.getAsJsonObject("attachments");
-            }
-            return new Message.Builder().body(body).attachments(attachments).build();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to decrypt message: " + e.getMessage());
+        JsonObject body = payload.getAsJsonObject(MESSAGE_PROPERTY_BODY);
+        JsonObject attachments = payload.getAsJsonObject(MESSAGE_PROPERTY_ATTACHMENTS);
+
+        if (body == null) {
+            body = new JsonObject();
         }
+
+        if (attachments == null) {
+            attachments = new JsonObject();
+        }
+
+        return new Message.Builder().body(body).attachments(attachments).build();
     }
 
     // converts JSON to string and encrypts
@@ -66,19 +70,20 @@ public final class CipherWrapper {
 
     // decrypts string and returns JSON object
     public JsonObject decryptMessageContent(String message) {
-        if (message == null || message.length() == 0) {
+
+        if (message == null || message.isEmpty()) {
+            logger.info("Message is null or empty. Returning empty JSON object");
             return new JsonObject();
         }
-        try {
-            message = decrypt(message);
-            if (Utils.isJsonObject(message)) {
-                return new JsonParser().parse(message).getAsJsonObject();
-            } else {
-                throw new RuntimeException("Message '" + message + "' is not Json");
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to decrypt message: " + e);
+
+        final String decryptedMessage = decrypt(message);
+
+        if (Utils.isJsonObject(decryptedMessage)) {
+            logger.info("Parsing message JSON");
+            return new JsonParser().parse(decryptedMessage).getAsJsonObject();
         }
+
+        throw new RuntimeException("Message is not a JSON object: " + decryptedMessage);
     }
 
     private String encrypt(String message) {
