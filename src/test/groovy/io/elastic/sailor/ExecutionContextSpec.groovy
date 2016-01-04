@@ -7,7 +7,7 @@ import spock.lang.Specification
 class ExecutionContextSpec extends Specification {
 
 
-    def "should create data callback"() {
+    def "should build default headers properly"() {
         given:
         def task = new JsonParser().parse("{\"_id\":\"5559edd38968ec0736000003\",\"userId\":\"010101\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}")
         def originalHeaders = [
