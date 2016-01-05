@@ -53,9 +53,7 @@ class UtilsSpec extends SetupServerHelper {
                 body)
         then:
 
-        println SimpleRequestHandler.headers
         SimpleRequestHandler.lastMessage == '{"foo":"barbaz"}'
-        SimpleRequestHandler.headers.containsKey("Content-Type")
         SimpleRequestHandler.headers.get("Content-Type") == 'application/json'
         SimpleRequestHandler.headers.get("Authorization") == 'Basic aG9tZXIrc2ltcHNvbkBleGFtcGxlLm9yZzpzZWNyZXQ='
     }
