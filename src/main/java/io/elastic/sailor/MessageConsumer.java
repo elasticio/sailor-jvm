@@ -33,9 +33,9 @@ public class MessageConsumer extends DefaultConsumer {
         try {
             // decrypt message
             String bodyString = new String(body, "UTF-8");
-            message = cipher.decryptMessage(bodyString);
+            message = cipher.decryptMessage(bodyString, properties);
         } catch (Exception e) {
-            logger.info("Failed to decrypt message {}: {}", deliveryTag, e.getMessage());
+            logger.info("Failed to decrypt message {}", deliveryTag, e);
             this.getChannel().basicReject(deliveryTag, false);
             return;
         }

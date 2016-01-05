@@ -41,6 +41,8 @@ public class SimpleRequestHandler extends AbstractHandler {
             headers.put(headerName, request.getHeader(headerName));
         }
 
+        System.err.println(headers)
+
         //pipe(this.getClass().getResourceAsStream(this.mockResponsePaths.pop()),response.getOutputStream());
     }
 

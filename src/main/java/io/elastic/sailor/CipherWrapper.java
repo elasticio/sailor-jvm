@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.LoggerFactory;
@@ -12,8 +13,10 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import java.net.URLDecoder;
 import java.security.Key;
 import java.security.MessageDigest;
+import java.util.Map;
 
 public final class CipherWrapper {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CipherWrapper.class);
@@ -46,8 +49,8 @@ public final class CipherWrapper {
         return encryptMessageContent(payload);
     }
 
-    public Message decryptMessage(String encrypted) {
-        final JsonObject payload = decryptMessageContent(encrypted);
+    public Message decryptMessage(String encrypted, AMQP.BasicProperties properties) {
+        final JsonObject payload = decryptMessageContent(encrypted, properties);
 
         JsonObject body = payload.getAsJsonObject(MESSAGE_PROPERTY_BODY);
         JsonObject attachments = payload.getAsJsonObject(MESSAGE_PROPERTY_ATTACHMENTS);
@@ -69,14 +72,14 @@ public final class CipherWrapper {
     }
 
     // decrypts string and returns JSON object
-    public JsonObject decryptMessageContent(String message) {
+    public JsonObject decryptMessageContent(final String message, final AMQP.BasicProperties properties) {
 
         if (message == null || message.isEmpty()) {
             logger.info("Message is null or empty. Returning empty JSON object");
             return new JsonObject();
         }
 
-        final String decryptedMessage = decrypt(message);
+        final String decryptedMessage = decrypt(message, properties);
 
         if (Utils.isJsonObject(decryptedMessage)) {
             logger.info("Parsing message JSON");
@@ -99,7 +102,7 @@ public final class CipherWrapper {
         }
     }
 
-    private String decrypt(String message) {
+    private String decrypt(final String message, final AMQP.BasicProperties properties) {
         try {
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
@@ -107,10 +110,36 @@ public final class CipherWrapper {
 
             byte[] a = cipher.doFinal(Base64.decodeBase64(message.getBytes()));
 
-            return new String(a, "UTF-8");
+            boolean skipDecoding = shouldSkipMessageDecoding(properties);
+
+            if (skipDecoding) {
+                return new String(a, "UTF-8");
+            }
+
+            return URLDecoder.decode(new String(a), "UTF-8");
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private boolean shouldSkipMessageDecoding(final AMQP.BasicProperties properties) {
+        final Map<String,Object> headers = properties.getHeaders();
+
+        if (headers == null) {
+            return false;
+        }
+
+        final Object flagValue = headers.get(FeatureFlags.SKIP_MESSAGE_URL_DECODING);
+
+        logger.info("{}={}", FeatureFlags.SKIP_MESSAGE_URL_DECODING, flagValue);
+
+        if ("1".equals(flagValue)) {
+            logger.info("Message url decoding skipped");
+            return true;
+        }
+
+        return false;
     }
 
     private Key generateKey(String encryptionKey) {

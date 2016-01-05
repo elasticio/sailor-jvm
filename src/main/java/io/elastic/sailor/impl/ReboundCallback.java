@@ -5,15 +5,14 @@ import com.google.inject.assistedinject.Assisted;
 import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
-import io.elastic.sailor.AMQPWrapperInterface;
-import io.elastic.sailor.CipherWrapper;
-import io.elastic.sailor.Constants;
-import io.elastic.sailor.ExecutionContext;
-import io.elastic.sailor.impl.CountingCallbackImpl;
+import io.elastic.sailor.*;
 
 import java.util.Map;
 
 public class ReboundCallback extends CountingCallbackImpl {
+
+    private static final String HEADER_REBOUND_REASON = "reboundReason";
+    private static final String HEADER_REBOUND_ITERATION = "reboundIteration";
 
     private ExecutionContext executionContext;
     private AMQPWrapperInterface amqp;
@@ -46,16 +45,17 @@ public class ReboundCallback extends CountingCallbackImpl {
         final Message message = executionContext.getMessage();
         byte[] payload = cipher.encryptMessage(message).getBytes();
         Map<String, Object> headers = executionContext.buildDefaultHeaders();
-        headers.put("reboundReason", data.toString());
-        headers.put("reboundIteration", reboundIteration);
-        double expiration = getReboundExpiration(reboundIteration);
+        headers.put(HEADER_REBOUND_REASON, data.toString());
+        headers.put(HEADER_REBOUND_ITERATION, reboundIteration);
+
+        final Integer expiration = getReboundExpiration(reboundIteration);
         amqp.sendRebound(payload, makeReboundOptions(headers, expiration));
     }
 
     private int getReboundIteration() {
         final Map<String, Object> headers = executionContext.getHeaders();
 
-        final Object reboundIteration = headers.get("reboundIteration");
+        final Object reboundIteration = headers.get(HEADER_REBOUND_ITERATION);
 
         if (reboundIteration != null) {
             try {
@@ -68,15 +68,16 @@ public class ReboundCallback extends CountingCallbackImpl {
         }
     }
 
-    private double getReboundExpiration(int reboundIteration) {
-        return Math.pow(2, reboundIteration - 1) * this.reboundInitialExpiration;
+    protected Integer getReboundExpiration(int reboundIteration) {
+        return Double.valueOf(Math.pow(2, reboundIteration - 1)).intValue()
+                * this.reboundInitialExpiration;
     }
 
-    private AMQP.BasicProperties makeReboundOptions(Map<String, Object> headers, double expiration) {
+    protected AMQP.BasicProperties makeReboundOptions(Map<String, Object> headers, Integer expiration) {
         return new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
-                .expiration(Double.toString(expiration))
+                .expiration(Integer.toString(expiration))
                 .headers(headers)
                         //TODO: .mandatory(true)
                 .build();
