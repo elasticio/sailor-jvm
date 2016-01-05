@@ -54,8 +54,8 @@ class UtilsSpec extends SetupServerHelper {
         then:
 
         SimpleRequestHandler.lastMessage == '{"foo":"barbaz"}'
-        SimpleRequestHandler.headers.get('Authorization') == 'Basic aG9tZXIrc2ltcHNvbkBleGFtcGxlLm9yZzpzZWNyZXQ='
         SimpleRequestHandler.headers.get('Content-Type') == 'application/json'
+        SimpleRequestHandler.headers.get('Authorization') == 'Basic aG9tZXIrc2ltcHNvbkBleGFtcGxlLm9yZzpzZWNyZXQ='
     }
 
     def "should fail to post json if user info not present in the url"() {
