@@ -48,7 +48,7 @@ public class ReboundCallback extends CountingCallbackImpl {
         headers.put(HEADER_REBOUND_REASON, data.toString());
         headers.put(HEADER_REBOUND_ITERATION, reboundIteration);
 
-        double expiration = getReboundExpiration(reboundIteration);
+        final Integer expiration = getReboundExpiration(reboundIteration);
         amqp.sendRebound(payload, makeReboundOptions(headers, expiration));
     }
 
@@ -68,15 +68,16 @@ public class ReboundCallback extends CountingCallbackImpl {
         }
     }
 
-    private double getReboundExpiration(int reboundIteration) {
-        return Math.pow(2, reboundIteration - 1) * this.reboundInitialExpiration;
+    protected Integer getReboundExpiration(int reboundIteration) {
+        return Double.valueOf(Math.pow(2, reboundIteration - 1)).intValue()
+                * this.reboundInitialExpiration;
     }
 
-    private AMQP.BasicProperties makeReboundOptions(Map<String, Object> headers, double expiration) {
+    protected AMQP.BasicProperties makeReboundOptions(Map<String, Object> headers, Integer expiration) {
         return new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
-                .expiration(Double.toString(expiration))
+                .expiration(Integer.toString(expiration))
                 .headers(headers)
                         //TODO: .mandatory(true)
                 .build();
