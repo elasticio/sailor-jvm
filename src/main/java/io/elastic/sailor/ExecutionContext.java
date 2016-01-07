@@ -96,7 +96,6 @@ public class ExecutionContext {
         result.put("compId", getCompId());
         result.put("function", getFunction());
         result.put("start", System.currentTimeMillis());
-        result.put(FeatureFlags.SKIP_MESSAGE_URL_DECODING, "1");
 
         return result;
     }

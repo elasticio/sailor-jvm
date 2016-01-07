@@ -30,6 +30,5 @@ class ExecutionContextSpec extends Specification {
         headers.taskId == '5559edd38968ec0736000003'
         headers.userId == '010101'
         headers.execId == '_exec_01'
-        headers.elasticio_feature_flag_skip_message_url_decoding == '1'
     }
 }
