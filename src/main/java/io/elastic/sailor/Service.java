@@ -72,6 +72,9 @@ public class Service {
             service.executeMethod(method);
         } catch (Exception e) {
             service.processException(e);
+        } finally {
+            logger.info("Java exiting with 0");
+            System.exit(0);
         }
     }
 
