@@ -50,7 +50,7 @@ class ServiceSpec extends SetupServerHelper {
         SimpleRequestHandler.lastMessage == '{"status":"success","data":{"de":"Germany","us":"United States","cfg":{"key":0}}}'
     }
 
-    def "it should get select model s"() {
+    def "it should post failure details and rethrow exception"() {
         setup:
         SimpleSelectModelProvider.SHOULD_FAIL = true
 
@@ -63,6 +63,11 @@ class ServiceSpec extends SetupServerHelper {
         response.get("data").getAsJsonObject()
                 .get('message').getAsString()
                 .startsWith('java.lang.RuntimeException: Spec author told me to fail')
+
+        then:
+
+        def e = thrown(RuntimeException)
+        e.message == 'java.lang.RuntimeException: Spec author told me to fail'
     }
 
     def "it throw IllegalArgumentException if too few arguments"() {

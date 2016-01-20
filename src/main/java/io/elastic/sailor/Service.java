@@ -61,6 +61,10 @@ public class Service {
 
         getServiceInstanceAndExecute(method, injector);
 
+        logger.info("Java exiting with 0");
+
+        System.exit(0);
+
     }
 
     public static void getServiceInstanceAndExecute(
@@ -72,9 +76,8 @@ public class Service {
             service.executeMethod(method);
         } catch (Exception e) {
             service.processException(e);
-        } finally {
-            logger.info("Java exiting with 0");
-            System.exit(0);
+
+            throw new RuntimeException(e);
         }
     }
 
@@ -95,6 +98,8 @@ public class Service {
     }
 
     private void processException(Exception e) {
+
+        e.printStackTrace();
 
         StringWriter writer = new StringWriter();
         e.printStackTrace(new PrintWriter(writer));
