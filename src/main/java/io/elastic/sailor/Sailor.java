@@ -36,5 +36,12 @@ public class Sailor {
 
         logger.info("Subscribing to queues");
         amqp.subscribeConsumer();
+
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                logger.info("Shutdown hook called");
+            }
+        });
     }
 }
