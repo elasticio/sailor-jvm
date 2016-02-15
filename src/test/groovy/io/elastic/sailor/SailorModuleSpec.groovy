@@ -16,11 +16,11 @@ class SailorModuleSpec extends ApiAwareSpecification {
 
 
 
-    def "it should provide configuration"() {
+    def "it should provide step JSON"() {
         when:
-        def cfg = injector.getInstance(Key.get(JsonObject.class, Names.named(Constants.NAME_CFG_JSON)));
+        def cfg = injector.getInstance(Key.get(JsonObject.class, Names.named(Constants.NAME_STEP_JSON)));
 
         then:
-        cfg.toString() == '{"uri":"546456456456456"}'
+        cfg.toString() == '{"id":"step_1","compId":"testcomponent","function":"test"}'
     }
 }

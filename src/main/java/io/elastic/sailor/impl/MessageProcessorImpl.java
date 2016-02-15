@@ -19,17 +19,17 @@ public class MessageProcessorImpl implements MessageProcessor {
 
     private final ComponentResolver componentResolver;
     private final EmitterCallbackFactory emitterCallbackFactory;
-    private final JsonObject task;
+    private final JsonObject step;
     private final String stepId;
 
     @Inject
     public MessageProcessorImpl(ComponentResolver componentResolver,
                                 EmitterCallbackFactory emitterCallbackFactory,
-                                @Named(Constants.NAME_TASK_JSON) JsonObject task,
+                                @Named(Constants.NAME_STEP_JSON) JsonObject step,
                                 @Named(Constants.ENV_VAR_STEP_ID) String stepId) {
         this.componentResolver = componentResolver;
         this.emitterCallbackFactory = emitterCallbackFactory;
-        this.task = task;
+        this.step = step;
         this.stepId = stepId;
     }
 
@@ -38,7 +38,7 @@ public class MessageProcessorImpl implements MessageProcessor {
                                          final Long deliveryTag) {
 
         final ExecutionContext executionContext = new ExecutionContext(
-                this.stepId, this.task, incomingMessage, incomingHeaders);
+                this.stepId, this.step, incomingMessage, incomingHeaders);
 
         logger.info("Processing step '{}' of a task", executionContext.getStepId());
 
@@ -48,7 +48,7 @@ public class MessageProcessorImpl implements MessageProcessor {
         final JsonObject snapshot = executionContext.getSnapshot();
 
         logger.info("Component to be executed: {}", executionContext.getCompId());
-        logger.info("Trigger/action to be executed: {}", executionContext.getTriggerOrAction());
+        logger.info("Trigger/action to be executed: {}", executionContext.getFunction());
         logger.info("Component Java class to be instantiated: {}", className);
 
         final ExecutionParameters params = new ExecutionParameters.Builder(incomingMessage)

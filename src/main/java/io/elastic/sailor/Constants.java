@@ -2,12 +2,17 @@ package io.elastic.sailor;
 
 public final class Constants {
 
-    public static final String NAME_TASK_JSON = "TaskJson";
+    public static final String NAME_STEP_JSON = "StepJson";
     public static final String NAME_CFG_JSON = "ConfigurationJson";
     public static final String NAME_CALLBACK_DATA = "dataCallback";
     public static final String NAME_CALLBACK_REBOUND = "reboundCallback";
     public static final String NAME_CALLBACK_ERROR = "errorCallback";
     public static final String NAME_CALLBACK_SNAPSHOT = "snapshotCallback";
+
+    public static final String STEP_PROPERTY_FUNCTION = "function";
+    public static final String STEP_PROPERTY_COMP_ID = "compId";
+    public static final String STEP_PROPERTY_CFG = "config";
+    public static final String STEP_PROPERTY_SNAPSHOT = "snapshot";
 
     public static final int DEFAULT_REBOUND_LIMIT = 20;
     public static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;

@@ -1,6 +1,5 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.rabbitmq.client.AMQP;
@@ -12,18 +11,18 @@ import java.util.Map;
 public class ExecutionContext {
 
     private final String stepId;
-    private final JsonObject task;
+    private final JsonObject step;
     private final Message message;
     private final Map<String, Object> headers;
 
 
     public ExecutionContext(
             final String stepId,
-            final JsonObject task,
+            final JsonObject step,
             final Message message,
             final Map<String, Object> headers) {
         this.stepId = stepId;
-        this.task = task;
+        this.step = step;
         this.message = message;
         this.headers = headers;
     }
@@ -33,54 +32,29 @@ public class ExecutionContext {
     }
 
     public String getCompId() {
-        return getTriggerOrAction().get("compId").getAsString();
+        return this.step.get(Constants.STEP_PROPERTY_COMP_ID).getAsString();
     }
 
     public String getFunction() {
-        return getTriggerOrAction().get("function").getAsString();
-    }
-
-    public JsonObject getTriggerOrAction() {
-
-        final String stepId = getStepId();
-
-        JsonArray nodes = task.getAsJsonObject("recipe").getAsJsonArray("nodes");
-
-        JsonObject thisStepNode = null;
-        for (JsonElement node : nodes) {
-            if (node.getAsJsonObject().get("id").getAsString().equals(stepId)) {
-                thisStepNode = node.getAsJsonObject();
-            }
-        }
-
-        if (thisStepNode == null) {
-            throw new RuntimeException("Step " + stepId + " is not found in task recipe");
-        }
-
-        if (thisStepNode.get("function") == null) {
-            throw new RuntimeException("Step " + stepId + " has no function specified");
-        }
-
-        return thisStepNode;
+        return this.step.get(Constants.STEP_PROPERTY_FUNCTION).getAsString();
     }
 
     public JsonObject getCfg() {
 
-        final String stepId = getStepId();
-
-        if (task.get("data") != null && task.getAsJsonObject("data").get(stepId) != null) {
-            return task.getAsJsonObject("data").getAsJsonObject(stepId);
-        } else {
-            return new JsonObject();
-        }
+        return getAsNullSafeObject(Constants.STEP_PROPERTY_CFG);
     }
 
     public JsonObject getSnapshot() {
 
-        final String stepId = getStepId();
+        return getAsNullSafeObject(Constants.STEP_PROPERTY_SNAPSHOT);
+    }
 
-        if (task.get("snapshot") != null && task.getAsJsonObject("snapshot").get(stepId) != null) {
-            return task.getAsJsonObject("snapshot").getAsJsonObject(stepId);
+    private JsonObject getAsNullSafeObject(final String name) {
+
+        final JsonElement value = this.step.get(name);
+
+        if (value != null) {
+            return value.getAsJsonObject();
         } else {
             return new JsonObject();
         }

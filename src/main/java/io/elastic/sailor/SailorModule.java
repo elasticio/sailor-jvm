@@ -43,7 +43,7 @@ public class SailorModule extends AbstractModule {
 
 
     @Provides
-    @Named(Constants.NAME_TASK_JSON)
+    @Named(Constants.NAME_STEP_JSON)
     JsonObject provideTask(
             @Named(Constants.ENV_VAR_API_URI) String apiUri,
             @Named(Constants.ENV_VAR_API_USERNAME) String apiUser,
@@ -61,27 +61,5 @@ public class SailorModule extends AbstractModule {
         final JsonElement task = Utils.getJson(uri, credentials);
 
         return task.getAsJsonObject();
-    }
-
-    @Provides
-    @Named(Constants.NAME_CFG_JSON)
-    JsonObject provideConfiguration(
-            @Named(Constants.ENV_VAR_STEP_ID) String stepId,
-            @Named(Constants.NAME_TASK_JSON) JsonObject task) {
-
-        final JsonElement data = task.get("data");
-
-        if (data == null) {
-            throw new IllegalStateException("Property 'data' is missing in task's JSON");
-        }
-
-        final JsonElement stepData = data.getAsJsonObject().get(stepId);
-
-
-        if (stepData == null) {
-            throw new IllegalStateException("No configuration provided for step:" + stepId);
-        }
-
-        return stepData.getAsJsonObject();
     }
 }
