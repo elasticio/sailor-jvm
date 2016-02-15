@@ -1,13 +1,19 @@
 package io.elastic.sailor
 
+import com.github.restdriver.clientdriver.ClientDriverRequest
+import com.github.restdriver.clientdriver.ClientDriverRule
 import com.google.gson.JsonObject
+import org.junit.Rule
 import spock.lang.Specification
 
-class UtilsSpec extends SetupServerHelper {
+import static com.github.restdriver.clientdriver.RestClientDriver.giveResponse
+import static com.github.restdriver.clientdriver.RestClientDriver.onRequestTo
+import static org.hamcrest.Matchers.equalToIgnoringCase
 
-    def getHandler() {
-        new SimpleRequestHandler()
-    }
+class UtilsSpec extends Specification {
+
+    @Rule
+    public ClientDriverRule driver = new ClientDriverRule(12345);
 
     def "should detect json object in a string"() {
         when:
@@ -47,15 +53,40 @@ class UtilsSpec extends SetupServerHelper {
         def body = new JsonObject()
         body.addProperty('foo', 'barbaz')
 
+        driver.addExpectation(
+                onRequestTo("/v1/exec/result/55e5eeb460a8e2070000001e")
+                        .withMethod(ClientDriverRequest.Method.POST)
+                        .withBasicAuth("homer.simpson@example.org", "secret")
+                        .withBody(equalToIgnoringCase('{"foo":"barbaz"}'), "application/json"),
+                giveResponse('{"status":"done"}', 'application/json')
+                        .withStatus(200));
+
         when:
-        Utils.postJson(
-                "http://homer%2Bsimpson%40example.org:secret@localhost:10000/v1/exec/result/55e5eeb460a8e2070000001e",
+        def result =Utils.postJson(
+                "http://homer.simpson%40example.org:secret@localhost:12345/v1/exec/result/55e5eeb460a8e2070000001e",
                 body)
+
         then:
 
-        SimpleRequestHandler.lastMessage == '{"foo":"barbaz"}'
-        SimpleRequestHandler.headers.get("Content-Type") == 'application/json'
-        SimpleRequestHandler.headers.get("Authorization") == 'Basic aG9tZXIrc2ltcHNvbkBleGFtcGxlLm9yZzpzZWNyZXQ='
+        result == '{"status":"done"}'
+    }
+
+    def "should get json successfully"() {
+
+        setup:
+        driver.addExpectation(
+                onRequestTo("/v1/users")
+                        .withBasicAuth("homer.simpson@example.org", "secret"),
+                giveResponse('{"id":"1","email":"homer.simpson@example.org"}', 'application/json')
+                        .withStatus(200));
+
+        when:
+        def result = Utils.getJson(
+                "http://homer.simpson%40example.org:secret@localhost:12345/v1/users")
+
+        then:
+
+        result.toString() == '{"id":"1","email":"homer.simpson@example.org"}'
     }
 
     def "should fail to post json if user info not present in the url"() {

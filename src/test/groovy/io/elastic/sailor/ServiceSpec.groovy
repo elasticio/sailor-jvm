@@ -1,16 +1,22 @@
 package io.elastic.sailor
 
-import com.google.gson.Gson
+import com.github.restdriver.clientdriver.ClientDriverRequest
+import com.github.restdriver.clientdriver.ClientDriverRule
 import com.google.inject.Guice
-import com.google.inject.Injector
-import io.elastic.api.JSON
 import io.elastic.sailor.component.SimpleSelectModelProvider
+import org.junit.Rule
+import spock.lang.Specification
 
-class ServiceSpec extends SetupServerHelper {
+import static com.github.restdriver.clientdriver.RestClientDriver.giveResponse
+import static com.github.restdriver.clientdriver.RestClientDriver.onRequestTo
+import static org.hamcrest.Matchers.containsString
+import static org.hamcrest.Matchers.equalToIgnoringCase
 
-    def getHandler() {
-        new SimpleRequestHandler()
-    }
+class ServiceSpec extends Specification {
+
+
+    @Rule
+    public ClientDriverRule driver = new ClientDriverRule(10000);
 
 
     def injector
@@ -27,42 +33,68 @@ class ServiceSpec extends SetupServerHelper {
     }
 
     def "it should verify credentials"() {
-        when:
-        service.executeMethod(ServiceMethods.verifyCredentials)
+        setup:
 
-        then:
-        SimpleRequestHandler.lastMessage == '{"status":"success","data":{"verified":true}}'
+        driver.addExpectation(
+                onRequestTo("/")
+                        .withMethod(ClientDriverRequest.Method.POST)
+                        .withBasicAuth("admin", "secret")
+                        .withBody(equalToIgnoringCase('{"status":"success","data":{"verified":true}}'), "application/json"),
+                giveResponse('{"message":"ok"}', 'application/json')
+                        .withStatus(200));
+        expect:
+        service.executeMethod(ServiceMethods.verifyCredentials)
     }
 
     def "it should get meta model"() {
-        when:
-        service.executeMethod(ServiceMethods.getMetaModel);
+        setup:
 
-        then:
-        SimpleRequestHandler.lastMessage == '{"status":"success","data":{"in":{"type":"object"},"out":{}}}'
+        driver.addExpectation(
+                onRequestTo("/")
+                        .withMethod(ClientDriverRequest.Method.POST)
+                        .withBasicAuth("admin", "secret")
+                        .withBody(equalToIgnoringCase(
+                        '{"status":"success","data":{"in":{"type":"object"},"out":{}}}'),
+                        "application/json"),
+                giveResponse('{"message":"ok"}', 'application/json')
+                        .withStatus(200));
+
+
+        expect:
+        service.executeMethod(ServiceMethods.getMetaModel);
     }
 
     def "it should get select model"() {
-        when:
-        service.executeMethod(ServiceMethods.selectModel)
+        setup:
 
-        then:
-        SimpleRequestHandler.lastMessage == '{"status":"success","data":{"de":"Germany","us":"United States","cfg":{"key":0}}}'
+        driver.addExpectation(
+                onRequestTo("/")
+                        .withMethod(ClientDriverRequest.Method.POST)
+                        .withBasicAuth("admin", "secret")
+                        .withBody(equalToIgnoringCase(
+                        '{"status":"success","data":{"de":"Germany","us":"United States","cfg":{"key":0}}}'),
+                        "application/json"),
+                giveResponse('{"message":"ok"}', 'application/json')
+                        .withStatus(200));
+        expect:
+        service.executeMethod(ServiceMethods.selectModel)
     }
 
     def "it should post failure details and rethrow exception"() {
         setup:
         SimpleSelectModelProvider.SHOULD_FAIL = true
 
+        driver.addExpectation(
+                onRequestTo("/")
+                        .withMethod(ClientDriverRequest.Method.POST)
+                        .withBasicAuth("admin", "secret")
+                        .withBody(containsString('{"status":"error","data":{"message":"java.lang.RuntimeException: Spec author told me to fail\\n\\tat io.elastic.sailor.component.SimpleSelectModelProvider.getSelectModel(SimpleSelectModelProvider.java:14)'),
+                        "application/json"),
+                giveResponse('{"message":"ok"}', 'application/json')
+                        .withStatus(200));
+
         when:
         Service.getServiceInstanceAndExecute(ServiceMethods.selectModel, injector);
-
-        then:
-        def response = JSON.parse(SimpleRequestHandler.lastMessage)
-        response.get("status").getAsString() == 'error'
-        response.get("data").getAsJsonObject()
-                .get('message').getAsString()
-                .startsWith('java.lang.RuntimeException: Spec author told me to fail')
 
         then:
 
