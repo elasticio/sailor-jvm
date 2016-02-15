@@ -20,6 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 
@@ -48,26 +49,30 @@ class Utils {
 
         logger.info("Successfully posted json {} bytes length", body.toString().length());
 
-        return sendHttpRequest(httpPost);
+        return sendHttpRequest(httpPost, null);
     }
 
-    public static JsonElement getJson(String url) throws IOException {
+    public static JsonElement getJson(String url) {
 
         final HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader(HTTP.CONTENT_TYPE, "application/json");
 
-        final String content = sendHttpRequest(httpGet);
+        final UsernamePasswordCredentials credentials
+                = new UsernamePasswordCredentials("admin", "secret");
+
+        final String content = sendHttpRequest(httpGet, credentials);
 
         return new JsonParser().parse(content);
     }
 
-    public static String sendHttpRequest(final HttpUriRequest request) throws IOException {
+    public static String sendHttpRequest(final HttpUriRequest request,
+                                         final UsernamePasswordCredentials credentials) {
 
         CloseableHttpClient httpClient = HttpClients.createDefault();
 
 
         try {
-            auth(request, request.getURI().toURL());
+            auth(request, request.getURI().toURL(), credentials);
             CloseableHttpResponse response = httpClient.execute(request);
             HttpEntity responseEntity = response.getEntity();
             if (responseEntity == null) {
@@ -77,30 +82,24 @@ class Utils {
                 EntityUtils.consume(responseEntity);
                 return result;
             }
+        } catch (Exception e) {
+            throw new RuntimeException(e);
         } finally {
-            httpClient.close();
+            try {
+                httpClient.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
-    private static void auth(final HttpRequest request, final URL url) throws IOException {
+    private static void auth(final HttpRequest request,
+                             final URL url,
+                             UsernamePasswordCredentials credentials) {
 
-        final String userInfo = url.getUserInfo();
-
-        if (userInfo == null) {
-            throw new IllegalArgumentException("User info is missing in the given url: " + url);
+        if (credentials == null) {
+            credentials = retrieveCredentialsFromUrl(url);
         }
-
-
-        String decodedUserInfo = URLDecoder.decode(userInfo, "UTF-8");
-
-        final String[] userAndPassword = decodedUserInfo.split(":");
-
-        if (userAndPassword.length != 2) {
-            throw new IllegalArgumentException("Either username or password is missing");
-        }
-
-        final UsernamePasswordCredentials credentials
-                = new UsernamePasswordCredentials(userAndPassword[0], userAndPassword[1]);
 
         try {
             final Header header = new BasicScheme()
@@ -110,6 +109,33 @@ class Utils {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private static UsernamePasswordCredentials retrieveCredentialsFromUrl(final URL url) {
+        final String userInfo = url.getUserInfo();
+
+        if (userInfo == null) {
+            throw new IllegalArgumentException("User info is missing in the given url: " + url);
+        }
+
+
+        String decodedUserInfo = urlDecode(userInfo);
+
+        final String[] userAndPassword = decodedUserInfo.split(":");
+
+        if (userAndPassword.length != 2) {
+            throw new IllegalArgumentException("Either username or password is missing");
+        }
+
+        return new UsernamePasswordCredentials(userAndPassword[0], userAndPassword[1]);
+    }
+
+    private static String urlDecode(final String input) {
+        try {
+            return URLDecoder.decode(input, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String getEnvVar(final String key) {

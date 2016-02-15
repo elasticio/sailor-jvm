@@ -12,6 +12,8 @@ public class SailorTestModule extends AbstractModule {
     }
 
     void bindEnvVars() {
+
+        bindRequiredStringEnvVar(Constants.ENV_VAR_API_URI, "http://localhost:11111");
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD, "testCryptoPassword");
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_IV, "iv=any16_symbols");
 

@@ -41,9 +41,11 @@ public class SailorModule extends AbstractModule {
     @Provides
     @Named(Constants.NAME_TASK_JSON)
     JsonObject provideTask(
-            @Named(Constants.ENV_VAR_TASK) String task) {
+            @Named(Constants.ENV_VAR_API_URI) String apiUri) {
 
-        return new JsonParser().parse(task).getAsJsonObject();
+        final JsonElement task = Utils.getJson(apiUri);
+
+        return task.getAsJsonObject();
     }
 
     @Provides

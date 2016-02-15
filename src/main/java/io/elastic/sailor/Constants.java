@@ -13,6 +13,9 @@ public final class Constants {
     public static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;
     public static final int DEFAULT_RABBITMQ_PREFETCH_SAILOR = 1;
 
+    public static final String ENV_VAR_API_URI = "ELASTICIO_API_URI";
+    public static final String ENV_VAR_API_USERNAME = "ELASTICIO_API_USERNAME";
+    public static final String ENV_VAR_API_KEY = "ELASTICIO_API_KEY";
     public static final String ENV_VAR_POST_RESULT_URL = "ELASTICIO_POST_RESULT_URL";
     public static final String ENV_VAR_CFG = "ELASTICIO_CFG";
     public static final String ENV_VAR_ACTION_OR_TRIGGER = "ELASTICIO_ACTION_OR_TRIGGER";

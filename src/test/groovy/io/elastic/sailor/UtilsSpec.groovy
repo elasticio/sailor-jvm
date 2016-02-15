@@ -76,13 +76,13 @@ class UtilsSpec extends Specification {
         setup:
         driver.addExpectation(
                 onRequestTo("/v1/users")
-                        .withBasicAuth("homer.simpson@example.org", "secret"),
+                        .withBasicAuth("admin", "secret"),
                 giveResponse('{"id":"1","email":"homer.simpson@example.org"}', 'application/json')
                         .withStatus(200));
 
         when:
         def result = Utils.getJson(
-                "http://homer.simpson%40example.org:secret@localhost:12345/v1/users")
+                "http://admin:secret@localhost:12345/v1/users")
 
         then:
 
@@ -97,6 +97,6 @@ class UtilsSpec extends Specification {
                 new JsonObject())
         then:
         def e = thrown(RuntimeException)
-        e.message == 'User info is missing in the given url: http://localhost:10000/v1/exec/result/55e5eeb460a8e2070000001e'
+        e.message.contains 'User info is missing in the given url: http://localhost:10000/v1/exec/result/55e5eeb460a8e2070000001e'
     }
 }

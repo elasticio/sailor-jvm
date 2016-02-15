@@ -9,9 +9,8 @@ import io.elastic.sailor.impl.ErrorCallback
 import io.elastic.sailor.impl.ReboundCallback
 import io.elastic.sailor.impl.SnapshotCallback
 import spock.lang.Shared
-import spock.lang.Specification
 
-class EmitterCallbackFactorySpec extends Specification {
+class EmitterCallbackFactorySpec extends ApiAwareSpecification {
 
 
     @Shared

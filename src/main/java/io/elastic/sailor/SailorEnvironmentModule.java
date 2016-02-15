@@ -12,6 +12,7 @@ public class SailorEnvironmentModule extends AbstractModule {
 
     void bindEnvVars() {
         // required env vars
+        bindRequiredStringEnvVar(Constants.ENV_VAR_API_URI);
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD);
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_IV);
         bindRequiredStringEnvVar(Constants.ENV_VAR_TASK);

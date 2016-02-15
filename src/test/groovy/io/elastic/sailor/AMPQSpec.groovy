@@ -5,9 +5,8 @@ import com.google.inject.Injector
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import spock.lang.Shared
-import spock.lang.Specification
 
-class AMPQSpec extends Specification {
+class AMPQSpec extends ApiAwareSpecification {
 
     def exchange = "5527f0ea43238e5d5f000002_exchange"
     def dataRoutingKey = "5559edd38968ec0736000003.test_exec.step_1.message"
@@ -21,10 +20,13 @@ class AMPQSpec extends Specification {
     @Shared
     def amqp;
 
-    def setup() {
+    def setupSpec() {
         Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule())
 
         amqp = injector.getInstance(AMQPWrapper.class)
+    }
+
+    def setup() {
         amqp.setSubscribeChannel(subscribeChannel)
         amqp.setPublishChannel(publishChannel)
     }
