@@ -18,7 +18,7 @@ abstract class ApiAwareSpecification extends Specification {
     def setupSpec() {
 
         driver.addExpectation(
-                onRequestTo("/")
+                onRequestTo("/v1/tasks/5559edd38968ec0736000003/steps/step_1")
                         .withMethod(ClientDriverRequest.Method.GET)
                         .withBasicAuth("admin", "secret"),
                 giveResponse(

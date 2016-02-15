@@ -2,15 +2,19 @@ package io.elastic.sailor;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.elastic.sailor.impl.*;
+import org.apache.http.auth.UsernamePasswordCredentials;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SailorModule extends AbstractModule {
+
+    private static final Logger logger = LoggerFactory.getLogger(SailorModule.class.getName());
 
     @Override
     protected void configure() {
@@ -41,9 +45,20 @@ public class SailorModule extends AbstractModule {
     @Provides
     @Named(Constants.NAME_TASK_JSON)
     JsonObject provideTask(
-            @Named(Constants.ENV_VAR_API_URI) String apiUri) {
+            @Named(Constants.ENV_VAR_API_URI) String apiUri,
+            @Named(Constants.ENV_VAR_API_USERNAME) String apiUser,
+            @Named(Constants.ENV_VAR_API_KEY) String apiKey,
+            @Named(Constants.ENV_VAR_TASK_ID) String taskId,
+            @Named(Constants.ENV_VAR_STEP_ID) String stepId) {
 
-        final JsonElement task = Utils.getJson(apiUri);
+        final String uri = String.format("%s/v1/tasks/%s/steps/%s", apiUri, taskId, stepId);
+
+        logger.info("Retrieving step data for user {} at: {}", apiUser, uri);
+
+        final UsernamePasswordCredentials credentials
+                = new UsernamePasswordCredentials(apiUser, apiKey);
+
+        final JsonElement task = Utils.getJson(uri, credentials);
 
         return task.getAsJsonObject();
     }

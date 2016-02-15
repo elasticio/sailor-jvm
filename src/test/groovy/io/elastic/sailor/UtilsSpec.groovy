@@ -3,6 +3,7 @@ package io.elastic.sailor
 import com.github.restdriver.clientdriver.ClientDriverRequest
 import com.github.restdriver.clientdriver.ClientDriverRule
 import com.google.gson.JsonObject
+import org.apache.http.auth.UsernamePasswordCredentials
 import org.junit.Rule
 import spock.lang.Specification
 
@@ -82,7 +83,8 @@ class UtilsSpec extends Specification {
 
         when:
         def result = Utils.getJson(
-                "http://admin:secret@localhost:12345/v1/users")
+                "http://admin:secret@localhost:12345/v1/users",
+                new UsernamePasswordCredentials("admin", "secret"))
 
         then:
 

@@ -52,13 +52,11 @@ class Utils {
         return sendHttpRequest(httpPost, null);
     }
 
-    public static JsonElement getJson(String url) {
+    public static JsonElement getJson(final String url,
+                                      final UsernamePasswordCredentials credentials) {
 
         final HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader(HTTP.CONTENT_TYPE, "application/json");
-
-        final UsernamePasswordCredentials credentials
-                = new UsernamePasswordCredentials("admin", "secret");
 
         final String content = sendHttpRequest(httpGet, credentials);
 
