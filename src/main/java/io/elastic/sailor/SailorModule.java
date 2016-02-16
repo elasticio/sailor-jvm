@@ -58,7 +58,7 @@ public class SailorModule extends AbstractModule {
         final UsernamePasswordCredentials credentials
                 = new UsernamePasswordCredentials(apiUser, apiKey);
 
-        final JsonElement task = Utils.getJson(uri, credentials);
+        final JsonElement task = HttpUtils.getJson(uri, credentials);
 
         return task.getAsJsonObject();
     }

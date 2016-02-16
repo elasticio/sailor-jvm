@@ -115,7 +115,7 @@ public class Service {
         logger.info("Sending response");
 
         try {
-            String response = Utils.postJson(url, payload);
+            String response = HttpUtils.postJson(url, payload);
             logger.info("Received response from server: {}", response.toString());
         } catch (IOException e) {
             logger.info("Failed to send response: {}", e.getMessage());
