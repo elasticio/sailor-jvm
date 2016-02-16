@@ -42,8 +42,6 @@ public class SailorTestModule extends AbstractModule {
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID, "step_1");
         bindRequiredStringEnvVar(Constants.ENV_VAR_TASK_ID, "5559edd38968ec0736000003");
-        bindRequiredStringEnvVar(Constants.ENV_VAR_TASK,
-                "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}");
 
     }
 
