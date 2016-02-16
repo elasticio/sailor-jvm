@@ -3,9 +3,8 @@ package io.elastic.sailor
 import com.google.inject.Guice
 import com.google.inject.Injector
 import spock.lang.Shared
-import spock.lang.Specification
 
-class MessageProcessorSpec extends Specification {
+class MessageProcessorSpec extends ApiAwareSpecification {
 
 
     @Shared

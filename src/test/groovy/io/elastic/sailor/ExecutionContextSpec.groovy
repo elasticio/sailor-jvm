@@ -9,7 +9,11 @@ class ExecutionContextSpec extends Specification {
 
     def "should build default headers properly"() {
         given:
-        def task = new JsonParser().parse("{\"_id\":\"5559edd38968ec0736000003\",\"userId\":\"010101\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}")
+        def step = new JsonParser().parse("{" +
+                "\"id\":\"step_1\"," +
+                "\"comp_id\":\"testcomponent\"," +
+                "\"function\":\"test\"," +
+                "\"snapshot\":{\"timestamp\":\"19700101\"}}")
         def originalHeaders = [
                 execId: "_exec_01",
                 taskId: "5559edd38968ec0736000003",
@@ -17,10 +21,11 @@ class ExecutionContextSpec extends Specification {
         ] as Map
 
         ExecutionContext ctx = new ExecutionContext(
-                "step_1", task, new Message.Builder().build(), originalHeaders);
+                new Step(step), new Message.Builder().build(), originalHeaders);
 
         when:
         def headers = ctx.buildDefaultHeaders()
+
         then:
         print headers
         headers.compId == 'testcomponent'

@@ -1,17 +1,23 @@
 package io.elastic.sailor.impl
 
-import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import io.elastic.api.Message
 import io.elastic.sailor.AMQPWrapperInterface
 import io.elastic.sailor.CipherWrapper
 import io.elastic.sailor.ExecutionContext
+import io.elastic.sailor.Step
 import spock.lang.Specification
 import spock.lang.Unroll
 
 class ReboundCallbackSpec extends Specification{
 
+    def step = new JsonParser().parse("{" +
+            "\"id\":\"step_1\"," +
+            "\"comp_id\":\"testcomponent\"," +
+            "\"function\":\"test\"," +
+            "\"snapshot\":{\"timestamp\":\"19700101\"}}")
     ExecutionContext ctx = new ExecutionContext(
-            "step_1", new JsonObject(), new Message.Builder().build(), Collections.emptyMap())
+            new Step(step), new Message.Builder().build(), Collections.emptyMap())
 
     CipherWrapper cipher = new CipherWrapper("testCryptoPassword", "iv=any16_symbols")
 

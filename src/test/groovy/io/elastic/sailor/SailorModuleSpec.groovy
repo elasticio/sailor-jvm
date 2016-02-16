@@ -1,13 +1,11 @@
 package io.elastic.sailor
 
-import com.google.gson.JsonObject
 import com.google.inject.Guice
 import com.google.inject.Injector
 import com.google.inject.Key
 import com.google.inject.name.Names
-import spock.lang.Specification
 
-class SailorModuleSpec extends Specification {
+class SailorModuleSpec extends ApiAwareSpecification {
 
     Injector injector;
 
@@ -17,11 +15,15 @@ class SailorModuleSpec extends Specification {
 
 
 
-    def "it should provide configuration"() {
+    def "it should provide step JSON"() {
         when:
-        def cfg = injector.getInstance(Key.get(JsonObject.class, Names.named(Constants.NAME_CFG_JSON)));
+        def step = injector.getInstance(Key.get(Step.class, Names.named(Constants.NAME_STEP_JSON)));
 
         then:
-        cfg.toString() == '{"uri":"546456456456456"}'
+        step.id == 'step_1'
+        step.compId == 'testcomponent'
+        step.function == 'test'
+        step.cfg.toString() == '{"apiKey":"secret"}'
+        step.snapshot.toString() == '{"timestamp":"19700101"}'
     }
 }

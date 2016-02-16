@@ -12,6 +12,10 @@ public class SailorTestModule extends AbstractModule {
     }
 
     void bindEnvVars() {
+
+        bindRequiredStringEnvVar(Constants.ENV_VAR_API_URI, "http://localhost:11111");
+        bindRequiredStringEnvVar(Constants.ENV_VAR_API_USERNAME, "admin");
+        bindRequiredStringEnvVar(Constants.ENV_VAR_API_KEY, "secret");
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD, "testCryptoPassword");
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_IV, "iv=any16_symbols");
 
@@ -37,8 +41,7 @@ public class SailorTestModule extends AbstractModule {
         bindRequiredIntegerEnvVar(Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION, 10000);
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID, "step_1");
-        bindRequiredStringEnvVar(Constants.ENV_VAR_TASK,
-                "{\"_id\":\"5559edd38968ec0736000003\",\"data\":{\"step_1\":{\"uri\":\"546456456456456\"}},\"recipe\":{\"nodes\":[{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}]}}");
+        bindRequiredStringEnvVar(Constants.ENV_VAR_TASK_ID, "5559edd38968ec0736000003");
 
     }
 

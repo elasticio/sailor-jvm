@@ -2,15 +2,15 @@ package io.elastic.sailor
 
 import com.google.inject.Guice
 import com.google.inject.Injector
-import spock.lang.Specification
 
-class SailorSpec extends Specification {
+class SailorSpec extends ApiAwareSpecification {
 
     def amqp = Mock(AMQPWrapperInterface)
 
     def sailor;
 
     def setup() {
+
         Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule())
 
         sailor = injector.getInstance(Sailor.class)

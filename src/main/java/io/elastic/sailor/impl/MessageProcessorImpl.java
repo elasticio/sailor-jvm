@@ -19,18 +19,15 @@ public class MessageProcessorImpl implements MessageProcessor {
 
     private final ComponentResolver componentResolver;
     private final EmitterCallbackFactory emitterCallbackFactory;
-    private final JsonObject task;
-    private final String stepId;
+    private final Step step;
 
     @Inject
     public MessageProcessorImpl(ComponentResolver componentResolver,
                                 EmitterCallbackFactory emitterCallbackFactory,
-                                @Named(Constants.NAME_TASK_JSON) JsonObject task,
-                                @Named(Constants.ENV_VAR_STEP_ID) String stepId) {
+                                @Named(Constants.NAME_STEP_JSON) Step step) {
         this.componentResolver = componentResolver;
         this.emitterCallbackFactory = emitterCallbackFactory;
-        this.task = task;
-        this.stepId = stepId;
+        this.step = step;
     }
 
     public ExecutionStats processMessage(final Message incomingMessage,
@@ -38,17 +35,17 @@ public class MessageProcessorImpl implements MessageProcessor {
                                          final Long deliveryTag) {
 
         final ExecutionContext executionContext = new ExecutionContext(
-                this.stepId, this.task, incomingMessage, incomingHeaders);
+                this.step, incomingMessage, incomingHeaders);
 
-        logger.info("Processing step '{}' of a task", executionContext.getStepId());
+        logger.info("Processing step '{}' of a task", this.step.getId());
 
-        final String triggerOrAction = executionContext.getFunction();
+        final String triggerOrAction = this.step.getFunction();
         final String className = componentResolver.findTriggerOrAction(triggerOrAction);
-        final JsonObject cfg = executionContext.getCfg();
-        final JsonObject snapshot = executionContext.getSnapshot();
+        final JsonObject cfg = this.step.getCfg();
+        final JsonObject snapshot = this.step.getSnapshot();
 
-        logger.info("Component to be executed: {}", executionContext.getCompId());
-        logger.info("Trigger/action to be executed: {}", executionContext.getTriggerOrAction());
+        logger.info("Component to be executed: {}", this.step.getCompId());
+        logger.info("Trigger/action to be executed: {}", this.step.getFunction());
         logger.info("Component Java class to be instantiated: {}", className);
 
         final ExecutionParameters params = new ExecutionParameters.Builder(incomingMessage)
