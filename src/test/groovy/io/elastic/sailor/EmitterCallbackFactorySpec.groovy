@@ -18,7 +18,7 @@ class EmitterCallbackFactorySpec extends ApiAwareSpecification {
 
     def step = new JsonParser().parse("{" +
             "\"id\":\"step_1\"," +
-            "\"compId\":\"testcomponent\"," +
+            "\"comp_id\":\"testcomponent\"," +
             "\"function\":\"test\"," +
             "\"snapshot\":{\"timestamp\":\"19700101\"}}")
 

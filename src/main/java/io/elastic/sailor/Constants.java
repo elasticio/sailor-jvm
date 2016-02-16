@@ -11,7 +11,7 @@ public final class Constants {
 
     public static final String STEP_PROPERTY_ID = "id";
     public static final String STEP_PROPERTY_FUNCTION = "function";
-    public static final String STEP_PROPERTY_COMP_ID = "compId";
+    public static final String STEP_PROPERTY_COMP_ID = "comp_id";
     public static final String STEP_PROPERTY_CFG = "config";
     public static final String STEP_PROPERTY_SNAPSHOT = "snapshot";
 

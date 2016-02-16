@@ -24,7 +24,7 @@ abstract class ApiAwareSpecification extends Specification {
                 giveResponse(
                         "{" +
                                 "\"id\":\"step_1\"," +
-                                "\"compId\":\"testcomponent\"," +
+                                "\"comp_id\":\"testcomponent\"," +
                                 "\"function\":\"test\", " +
                                 "\"config\":{\"apiKey\":\"secret\"}, " +
                                 "\"snapshot\":{\"timestamp\":\"19700101\"}}",
