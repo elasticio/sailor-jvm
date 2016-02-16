@@ -1,6 +1,6 @@
 package io.elastic.sailor
 
-import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.google.inject.Guice
 import com.google.inject.Injector
 import io.elastic.api.Message
@@ -15,8 +15,15 @@ class EmitterCallbackFactorySpec extends ApiAwareSpecification {
 
     @Shared
     EmitterCallbackFactory factory;
+
+    def step = new JsonParser().parse("{" +
+            "\"id\":\"step_1\"," +
+            "\"compId\":\"testcomponent\"," +
+            "\"function\":\"test\"," +
+            "\"snapshot\":{\"timestamp\":\"19700101\"}}")
+
     ExecutionContext ctx = new ExecutionContext(
-            "step_1", new JsonObject(), new Message.Builder().build(), Collections.emptyMap());
+            new Step(step), new Message.Builder().build(), Collections.emptyMap());
 
     def setupSpec() {
         Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule());

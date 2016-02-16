@@ -9,7 +9,7 @@ class ExecutionContextSpec extends Specification {
 
     def "should build default headers properly"() {
         given:
-        def cfg = new JsonParser().parse("{" +
+        def step = new JsonParser().parse("{" +
                 "\"id\":\"step_1\"," +
                 "\"compId\":\"testcomponent\"," +
                 "\"function\":\"test\"," +
@@ -21,13 +21,10 @@ class ExecutionContextSpec extends Specification {
         ] as Map
 
         ExecutionContext ctx = new ExecutionContext(
-                "step_1", cfg, new Message.Builder().build(), originalHeaders);
+                new Step(step), new Message.Builder().build(), originalHeaders);
 
         when:
         def headers = ctx.buildDefaultHeaders()
-
-        then:
-        ctx.getSnapshot().toString() == '{"timestamp":"19700101"}'
 
         then:
         print headers

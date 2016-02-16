@@ -22,7 +22,12 @@ abstract class ApiAwareSpecification extends Specification {
                         .withMethod(ClientDriverRequest.Method.GET)
                         .withBasicAuth("admin", "secret"),
                 giveResponse(
-                        "{\"id\":\"step_1\",\"compId\":\"testcomponent\",\"function\":\"test\"}",
+                        "{" +
+                                "\"id\":\"step_1\"," +
+                                "\"compId\":\"testcomponent\"," +
+                                "\"function\":\"test\", " +
+                                "\"config\":{\"apiKey\":\"secret\"}, " +
+                                "\"snapshot\":{\"timestamp\":\"19700101\"}}",
                         'application/json')
                         .withStatus(200));
     }

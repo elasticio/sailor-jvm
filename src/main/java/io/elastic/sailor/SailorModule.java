@@ -44,7 +44,7 @@ public class SailorModule extends AbstractModule {
 
     @Provides
     @Named(Constants.NAME_STEP_JSON)
-    JsonObject provideTask(
+    Step provideTask(
             @Named(Constants.ENV_VAR_API_URI) String apiUri,
             @Named(Constants.ENV_VAR_API_USERNAME) String apiUser,
             @Named(Constants.ENV_VAR_API_KEY) String apiKey,
@@ -58,8 +58,8 @@ public class SailorModule extends AbstractModule {
         final UsernamePasswordCredentials credentials
                 = new UsernamePasswordCredentials(apiUser, apiKey);
 
-        final JsonElement task = HttpUtils.getJson(uri, credentials);
+        final JsonElement step = HttpUtils.getJson(uri, credentials);
 
-        return task.getAsJsonObject();
+        return new Step(step.getAsJsonObject());
     }
 }
