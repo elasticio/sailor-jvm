@@ -65,11 +65,15 @@ public class MessageProcessorImpl implements MessageProcessor {
         // snapshot callback
         CountingCallback snapshotCallback = emitterCallbackFactory.createSnapshotCallback(executionContext);
 
+        // updateKeys callback
+        EventEmitter.Callback updateKeysCallback = emitterCallbackFactory.createUpdateKeysCallback(executionContext);
+
         final EventEmitter eventEmitter = new EventEmitter.Builder()
                 .onData(dataCallback)
                 .onError(errorCallback)
                 .onRebound(reboundCallback)
                 .onSnapshot(snapshotCallback)
+                .onUpdateKeys(updateKeysCallback)
                 .build();
 
         final Executor executor = new Executor(className, eventEmitter);

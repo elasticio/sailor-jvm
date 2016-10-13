@@ -2,6 +2,7 @@ package io.elastic.sailor;
 
 
 import com.google.inject.name.Named;
+import io.elastic.api.EventEmitter;
 
 public interface EmitterCallbackFactory {
 
@@ -16,4 +17,7 @@ public interface EmitterCallbackFactory {
 
     @Named(Constants.NAME_CALLBACK_SNAPSHOT)
     CountingCallback createSnapshotCallback(ExecutionContext context);
+
+    @Named(Constants.NAME_CALLBACK_UPDATE_KEYS)
+    EventEmitter.Callback createUpdateKeysCallback(ExecutionContext context);
 }

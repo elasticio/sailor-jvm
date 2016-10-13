@@ -8,6 +8,7 @@ import io.elastic.sailor.impl.DataCallback
 import io.elastic.sailor.impl.ErrorCallback
 import io.elastic.sailor.impl.ReboundCallback
 import io.elastic.sailor.impl.SnapshotCallback
+import io.elastic.sailor.impl.UpdateKeysCallback
 import spock.lang.Shared
 
 class EmitterCallbackFactorySpec extends ApiAwareSpecification {
@@ -61,5 +62,13 @@ class EmitterCallbackFactorySpec extends ApiAwareSpecification {
         then:
         callback != null
         callback instanceof ReboundCallback
+    }
+
+    def "should create updateKeys callback"() {
+        when:
+        def callback = factory.createUpdateKeysCallback(ctx)
+        then:
+        callback != null
+        callback instanceof UpdateKeysCallback
     }
 }

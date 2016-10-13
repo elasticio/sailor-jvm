@@ -19,11 +19,13 @@ signing {
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots"
+    }
 }
 
-
 dependencies {
-    compile "io.elastic:java-api:0.0.6"
+    compile "io.elastic:java-api:0.0.7-SNAPSHOT"
     compile "com.rabbitmq:amqp-client:3.5.1"
     compile "commons-codec:commons-codec:1.10"
     compile "org.apache.httpcomponents:httpclient:4.3.5"

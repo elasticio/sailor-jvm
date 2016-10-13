@@ -8,10 +8,7 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -51,6 +48,30 @@ class HttpUtils {
         final String content = sendHttpRequest(httpGet, credentials);
 
         return new JsonParser().parse(content);
+    }
+
+
+    public static JsonElement putJson(final String url,
+                                      final JsonObject body,
+                                      final UsernamePasswordCredentials credentials) {
+
+        final HttpPut httpPut = new HttpPut(url);
+        httpPut.addHeader(HTTP.CONTENT_TYPE, "application/json");
+        httpPut.setEntity(createStringEntity(body));
+
+        logger.info("Successfully put json {} bytes length", body.toString().length());
+
+        final String content = sendHttpRequest(httpPut, credentials);
+
+        return new JsonParser().parse(content);
+    }
+
+    private static StringEntity createStringEntity(final JsonObject body) {
+        try {
+            return new StringEntity(body.toString());
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String sendHttpRequest(final HttpUriRequest request,

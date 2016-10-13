@@ -1,12 +1,12 @@
 package io.elastic.sailor;
 
 import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import io.elastic.api.EventEmitter;
 import io.elastic.sailor.impl.*;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
@@ -20,6 +20,8 @@ public class SailorModule extends AbstractModule {
     protected void configure() {
         bind(AMQPWrapperInterface.class).to(AMQPWrapper.class);
         bind(MessageProcessor.class).to(MessageProcessorImpl.class);
+
+        bind(ApiClient.class).to(ApiClientImpl.class);
 
         install(new FactoryModuleBuilder()
                 .implement(
@@ -38,6 +40,10 @@ public class SailorModule extends AbstractModule {
                         CountingCallback.class,
                         Names.named(Constants.NAME_CALLBACK_REBOUND),
                         ReboundCallback.class)
+                .implement(
+                        EventEmitter.Callback.class,
+                        Names.named(Constants.NAME_CALLBACK_UPDATE_KEYS),
+                        UpdateKeysCallback.class)
                 .build(EmitterCallbackFactory.class));
     }
 
@@ -45,21 +51,10 @@ public class SailorModule extends AbstractModule {
     @Provides
     @Named(Constants.NAME_STEP_JSON)
     Step provideTask(
-            @Named(Constants.ENV_VAR_API_URI) String apiUri,
-            @Named(Constants.ENV_VAR_API_USERNAME) String apiUser,
-            @Named(Constants.ENV_VAR_API_KEY) String apiKey,
+            ApiClient apiClient,
             @Named(Constants.ENV_VAR_TASK_ID) String taskId,
             @Named(Constants.ENV_VAR_STEP_ID) String stepId) {
 
-        final String uri = String.format("%s/v1/tasks/%s/steps/%s", apiUri, taskId, stepId);
-
-        logger.info("Retrieving step data for user {} at: {}", apiUser, uri);
-
-        final UsernamePasswordCredentials credentials
-                = new UsernamePasswordCredentials(apiUser, apiKey);
-
-        final JsonElement step = HttpUtils.getJson(uri, credentials);
-
-        return new Step(step.getAsJsonObject());
+        return apiClient.retrieveTaskStep(taskId, stepId);
     }
 }
