@@ -6,12 +6,10 @@ import com.google.gson.JsonParser;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
+import org.apache.http.StatusLine;
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -53,23 +51,56 @@ class HttpUtils {
         return new JsonParser().parse(content);
     }
 
+
+    public static JsonElement putJson(final String url,
+                                      final JsonObject body,
+                                      final UsernamePasswordCredentials credentials) {
+
+        final HttpPut httpPut = new HttpPut(url);
+        httpPut.addHeader(HTTP.CONTENT_TYPE, "application/json");
+        httpPut.setEntity(createStringEntity(body));
+
+        final String content = sendHttpRequest(httpPut, credentials);
+
+        logger.info("Successfully put json {} bytes length", body.toString().length());
+
+        return new JsonParser().parse(content);
+    }
+
+    private static StringEntity createStringEntity(final JsonObject body) {
+        try {
+            return new StringEntity(body.toString());
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static String sendHttpRequest(final HttpUriRequest request,
                                          final UsernamePasswordCredentials credentials) {
 
         CloseableHttpClient httpClient = HttpClients.createDefault();
 
-
+        logger.info("Sending {} request to {}", request.getMethod(), request.getURI());
         try {
             auth(request, request.getURI().toURL(), credentials);
-            CloseableHttpResponse response = httpClient.execute(request);
-            HttpEntity responseEntity = response.getEntity();
+            final CloseableHttpResponse response = httpClient.execute(request);
+            final StatusLine statusLine = response.getStatusLine();
+            final int statusCode = statusLine.getStatusCode();
+            logger.info("Got {} response", statusCode);
+            if (statusCode >= 400) {
+                throw new RuntimeException(String.format("Got %s response", statusCode));
+            }
+
+            final HttpEntity responseEntity = response.getEntity();
             if (responseEntity == null) {
                 throw new RuntimeException("Null response received");
-            } else {
-                String result = EntityUtils.toString(responseEntity);
-                EntityUtils.consume(responseEntity);
-                return result;
             }
+
+            final String result = EntityUtils.toString(responseEntity);
+            EntityUtils.consume(responseEntity);
+            logger.info("Successfully consumed response entity");
+            return result;
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {

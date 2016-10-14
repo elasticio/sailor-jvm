@@ -29,6 +29,6 @@ abstract class ApiAwareSpecification extends Specification {
                                 "\"config\":{\"apiKey\":\"secret\"}, " +
                                 "\"snapshot\":{\"timestamp\":\"19700101\"}}",
                         'application/json')
-                        .withStatus(200));
+                        .withStatus(200)).anyTimes();
     }
 }

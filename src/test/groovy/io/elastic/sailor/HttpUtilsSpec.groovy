@@ -40,6 +40,31 @@ class HttpUtilsSpec extends Specification {
         result == '{"status":"done"}'
     }
 
+    def "should put json successfully"() {
+
+        setup:
+        def body = new JsonObject()
+        body.addProperty('foo', 'barbaz')
+
+        driver.addExpectation(
+                onRequestTo("/v1/accounts/55e5eeb460a8e2070000001e")
+                        .withMethod(ClientDriverRequest.Method.PUT)
+                        .withBasicAuth("homer.simpson@example.org", "secret")
+                        .withBody(equalToIgnoringCase('{"foo":"barbaz"}'), "application/json"),
+                giveResponse('{"id":"55e5eeb460a8e2070000001e"}', 'application/json')
+                        .withStatus(200));
+
+        when:
+        def result = HttpUtils.putJson(
+                "http://localhost:12345/v1/accounts/55e5eeb460a8e2070000001e",
+                body,
+                new UsernamePasswordCredentials("homer.simpson@example.org", "secret"))
+
+        then:
+
+        result.toString() == '{"id":"55e5eeb460a8e2070000001e"}'
+    }
+
     def "should get json successfully"() {
 
         setup:
@@ -51,7 +76,7 @@ class HttpUtilsSpec extends Specification {
 
         when:
         def result = HttpUtils.getJson(
-                "http://admin:secret@localhost:12345/v1/users",
+                "http://localhost:12345/v1/users",
                 new UsernamePasswordCredentials("admin", "secret"))
 
         then:
