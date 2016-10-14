@@ -56,7 +56,7 @@ class HttpUtilsSpec extends Specification {
 
         when:
         def result = HttpUtils.putJson(
-                "http://homer.simpson%40example.org:secret@localhost:12345/v1/accounts/55e5eeb460a8e2070000001e",
+                "http://localhost:12345/v1/accounts/55e5eeb460a8e2070000001e",
                 body,
                 new UsernamePasswordCredentials("homer.simpson@example.org", "secret"))
 
@@ -76,7 +76,7 @@ class HttpUtilsSpec extends Specification {
 
         when:
         def result = HttpUtils.getJson(
-                "http://admin:secret@localhost:12345/v1/users",
+                "http://localhost:12345/v1/users",
                 new UsernamePasswordCredentials("admin", "secret"))
 
         then:

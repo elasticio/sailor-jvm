@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
+import org.apache.http.StatusLine;
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.methods.*;
@@ -59,9 +60,9 @@ class HttpUtils {
         httpPut.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpPut.setEntity(createStringEntity(body));
 
-        logger.info("Successfully put json {} bytes length", body.toString().length());
-
         final String content = sendHttpRequest(httpPut, credentials);
+
+        logger.info("Successfully put json {} bytes length", body.toString().length());
 
         return new JsonParser().parse(content);
     }
@@ -79,18 +80,26 @@ class HttpUtils {
 
         CloseableHttpClient httpClient = HttpClients.createDefault();
 
-
+        logger.info("Sending {} request to {}", request.getMethod(), request.getURI());
         try {
             auth(request, request.getURI().toURL(), credentials);
-            CloseableHttpResponse response = httpClient.execute(request);
-            HttpEntity responseEntity = response.getEntity();
+            final CloseableHttpResponse response = httpClient.execute(request);
+            final StatusLine statusLine = response.getStatusLine();
+            final int statusCode = statusLine.getStatusCode();
+            if (statusCode >= 400) {
+                throw new RuntimeException(String.format("Got %s response", statusCode));
+            }
+
+            final HttpEntity responseEntity = response.getEntity();
             if (responseEntity == null) {
                 throw new RuntimeException("Null response received");
-            } else {
-                String result = EntityUtils.toString(responseEntity);
-                EntityUtils.consume(responseEntity);
-                return result;
             }
+
+            final String result = EntityUtils.toString(responseEntity);
+            EntityUtils.consume(responseEntity);
+            logger.info("Successfully consumed response entity");
+            return result;
+
         } catch (Exception e) {
             throw new RuntimeException(e);
         } finally {
