@@ -44,7 +44,9 @@ public class UpdateKeysCallback implements EventEmitter.Callback {
                     "Component emitted 'updateKeys' event but no account is configured for step " + stepId);
         }
 
-        apiClient.updateAccount(accountId.getAsString(), body);
+        final JsonElement response =  apiClient.updateAccount(accountId.getAsString(), body);
+
+        logger.info("Updated account: {}", response);
 
         logger.info("Successfully updated keys for step {}", stepId);
     }
