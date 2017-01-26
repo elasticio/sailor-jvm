@@ -1,7 +1,8 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonString;
 
 public final class Step {
 
@@ -42,25 +43,25 @@ public final class Step {
     private static String getAsRequiredString(
             final JsonObject data, final String name) {
 
-        final JsonElement value = data.get(name);
+        final JsonString value = data.getJsonString(name);
 
         if (value == null) {
             throw new IllegalArgumentException(
                     String.format("Step's %s is required", name));
         }
 
-        return value.getAsString();
+        return value.getString();
     }
 
     private static JsonObject getAsNullSafeObject(
             final JsonObject data, final String name) {
 
-        final JsonElement value = data.get(name);
+        final JsonObject value = data.getJsonObject(name);
 
         if (value != null) {
-            return value.getAsJsonObject();
+            return value;
         } else {
-            return new JsonObject();
+            return Json.createObjectBuilder().build();
         }
     }
 }

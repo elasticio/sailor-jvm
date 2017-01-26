@@ -1,6 +1,6 @@
 package io.elastic.sailor
 
-import com.google.gson.JsonParser
+import io.elastic.api.JSON
 import io.elastic.api.Message
 import spock.lang.Specification
 
@@ -9,7 +9,7 @@ class ExecutionContextSpec extends Specification {
 
     def "should build default headers properly"() {
         given:
-        def step = new JsonParser().parse("{" +
+        def step = JSON.parse("{" +
                 "\"id\":\"step_1\"," +
                 "\"comp_id\":\"testcomponent\"," +
                 "\"function\":\"test\"," +

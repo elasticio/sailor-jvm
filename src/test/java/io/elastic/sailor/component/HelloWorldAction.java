@@ -1,10 +1,12 @@
 package io.elastic.sailor.component;
 
-import com.google.gson.JsonObject;
 import io.elastic.api.Component;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
+
+import javax.json.Json;
+import javax.json.JsonObject;
 
 public class HelloWorldAction extends Component {
 
@@ -14,9 +16,10 @@ public class HelloWorldAction extends Component {
 
     public void execute(ExecutionParameters parameters) {
 
-        JsonObject body = new JsonObject();
-        body.addProperty("de", "Hallo, Welt!");
-        body.addProperty("en", "Hello, world!");
+        final JsonObject body = Json.createObjectBuilder()
+                .add("de", "Hallo, Welt!")
+                .add("en", "Hello, world!")
+                .build();
 
         new Message.Builder().body(body).build();
 

@@ -1,11 +1,12 @@
 package io.elastic.sailor.impl;
 
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import io.elastic.sailor.AMQPWrapperInterface;
 import io.elastic.sailor.ExecutionContext;
 import io.elastic.sailor.impl.CountingCallbackImpl;
+
+import javax.json.JsonObject;
 
 public class SnapshotCallback extends CountingCallbackImpl {
 

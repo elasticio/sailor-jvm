@@ -1,6 +1,5 @@
 package io.elastic.sailor.impl;
 
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.elastic.api.EventEmitter;
@@ -10,6 +9,7 @@ import io.elastic.api.Message;
 import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 
+import javax.json.JsonObject;
 import java.util.Map;
 
 public class MessageProcessorImpl implements MessageProcessor {

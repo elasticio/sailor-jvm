@@ -1,6 +1,6 @@
 package io.elastic.sailor.impl
 
-import com.google.gson.JsonParser
+import io.elastic.api.JSON
 import io.elastic.api.Message
 import io.elastic.sailor.AMQPWrapperInterface
 import io.elastic.sailor.CipherWrapper
@@ -11,7 +11,7 @@ import spock.lang.Unroll
 
 class ReboundCallbackSpec extends Specification{
 
-    def step = new JsonParser().parse("{" +
+    def step = JSON.parse("{" +
             "\"id\":\"step_1\"," +
             "\"comp_id\":\"testcomponent\"," +
             "\"function\":\"test\"," +

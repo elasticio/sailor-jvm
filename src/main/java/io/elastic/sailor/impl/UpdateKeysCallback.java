@@ -1,7 +1,5 @@
 package io.elastic.sailor.impl;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.elastic.api.EventEmitter;
@@ -10,6 +8,10 @@ import io.elastic.sailor.Constants;
 import io.elastic.sailor.Step;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonString;
 
 public class UpdateKeysCallback implements EventEmitter.Callback {
 
@@ -33,18 +35,19 @@ public class UpdateKeysCallback implements EventEmitter.Callback {
 
         final JsonObject keys = (JsonObject) object;
 
-        final JsonObject body = new JsonObject();
-        body.add("keys", keys);
+        final JsonObject body = Json.createObjectBuilder()
+                .add("keys", keys)
+                .build();
 
         final JsonObject config = step.getCfg();
-        final JsonElement accountId = config.get("_account");
+        final JsonString accountId = config.getJsonString("_account");
 
         if (accountId == null) {
             throw new IllegalStateException(
                     "Component emitted 'updateKeys' event but no account is configured for step " + stepId);
         }
 
-        final JsonElement response =  apiClient.updateAccount(accountId.getAsString(), body);
+        final JsonObject response =  apiClient.updateAccount(accountId.getString(), body);
 
         logger.info("Updated account: {}", response);
 

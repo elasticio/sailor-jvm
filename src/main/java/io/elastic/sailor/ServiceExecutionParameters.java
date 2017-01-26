@@ -1,6 +1,8 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonObject;
+
+import javax.json.Json;
+import javax.json.JsonObject;
 
 public class ServiceExecutionParameters {
 
@@ -50,7 +52,7 @@ public class ServiceExecutionParameters {
         private String credentialsVerifierClassName;
 
         public Builder() {
-            this.configuration = new JsonObject();
+            this.configuration = Json.createObjectBuilder().build();
         }
 
         public Builder className(String value) {

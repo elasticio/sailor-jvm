@@ -1,12 +1,13 @@
 package io.elastic.sailor
 
-import com.google.gson.JsonObject
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Envelope
 import io.elastic.api.Message
 import spock.lang.Shared
 import spock.lang.Specification
+
+import javax.json.Json
 
 class MessageConsumerSpec extends Specification {
 
@@ -41,8 +42,9 @@ class MessageConsumerSpec extends Specification {
                 .headers(headers)
                 .build();
 
-        def body = new JsonObject();
-        body.addProperty("content", "Hello world!");
+        def body = Json.createObjectBuilder()
+                .add("content", "Hello world!")
+                .build()
 
         def msg = new Message.Builder().body(body).build();
         encryptedMessage = cipher.encryptMessage(msg)

@@ -1,6 +1,5 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonElement;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
@@ -8,7 +7,6 @@ import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.elastic.api.EventEmitter;
 import io.elastic.sailor.impl.*;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

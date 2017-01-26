@@ -1,7 +1,9 @@
 package io.elastic.sailor
 
-import com.google.gson.JsonObject
 import spock.lang.Specification
+
+import javax.json.Json
+import javax.json.JsonObject
 
 class UtilsSpec extends Specification {
 
@@ -15,14 +17,16 @@ class UtilsSpec extends Specification {
 
     def "should detect json object property"() {
 
-        JsonObject body = new JsonObject();
-        body.addProperty("somekey", "somevalue");
+        JsonObject body = Json.createObjectBuilder()
+                .add("somekey", "somevalue")
+                .build()
 
-        JsonObject message = new JsonObject();
-        message.add("body", body);
+        JsonObject message = Json.createObjectBuilder()
+                .add("body", body)
+                .build()
 
         when:
-        def result = Utils.isJsonObject(message.get("body"))
+        def result = Utils.isJsonObject(message.get("body").toString())
         then:
         notThrown(RuntimeException)
         result == true

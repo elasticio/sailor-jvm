@@ -1,11 +1,11 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonString;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -43,8 +43,7 @@ public final class ComponentResolver {
 
         try {
             reader = new InputStreamReader(stream);
-            JsonParser parser = new JsonParser();
-            return parser.parse(reader).getAsJsonObject();
+            return Json.createReader(reader).readObject();
         } finally {
             if (reader != null) {
                 try {
@@ -58,19 +57,19 @@ public final class ComponentResolver {
 
     public String findCredentialsVerifier() {
 
-        final JsonObject credentials = componentJson.getAsJsonObject("credentials");
+        final JsonObject credentials = componentJson.getJsonObject("credentials");
 
         if (credentials == null) {
             return null;
         }
 
-        final JsonElement verifier = credentials.get("verifier");
+        final JsonString verifier = credentials.getJsonString("verifier");
 
         if (verifier == null) {
             return null;
         }
 
-        return verifier.getAsString();
+        return verifier.getString();
     }
 
     /**
@@ -79,28 +78,28 @@ public final class ComponentResolver {
      */
     public String findTriggerOrAction(String name) {
 
-        final JsonObject object = findTriggerOrActionObject(name).getAsJsonObject();
+        final JsonObject object = findTriggerOrActionObject(name);
 
-        final JsonElement main = object.get("main");
+        final JsonString main = object.getJsonString("main");
 
         if (main == null) {
             throw new RuntimeException("Main class of '" + name + "' trigger/action is not specified");
         }
 
-        return main.getAsString();
+        return main.getString();
     }
 
-    public JsonElement findTriggerOrActionObject(String name) {
+    public JsonObject findTriggerOrActionObject(String name) {
         JsonObject result = null;
 
-        final JsonObject triggers = componentJson.getAsJsonObject("triggers");
-        final JsonObject actions = componentJson.getAsJsonObject("actions");
+        final JsonObject triggers = componentJson.getJsonObject("triggers");
+        final JsonObject actions = componentJson.getJsonObject("actions");
 
         if (triggers != null && triggers.get(name) != null) {
-            result = triggers.getAsJsonObject(name);
+            result = triggers.getJsonObject(name);
         }
         if (actions != null && actions.get(name) != null) {
-            result = actions.getAsJsonObject(name);
+            result = actions.getJsonObject(name);
         }
 
         if (result == null) {

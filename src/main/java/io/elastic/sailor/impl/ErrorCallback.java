@@ -1,13 +1,13 @@
 package io.elastic.sailor.impl;
 
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import io.elastic.sailor.AMQPWrapperInterface;
 import io.elastic.sailor.CipherWrapper;
 import io.elastic.sailor.ExecutionContext;
-import io.elastic.sailor.impl.CountingCallbackImpl;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 
@@ -34,14 +34,16 @@ public class ErrorCallback extends CountingCallbackImpl {
         final StringWriter writer = new StringWriter();
         t.printStackTrace(new PrintWriter(writer));
 
-        JsonObject error = new JsonObject();
-        error.addProperty("name", "Error");
-        error.addProperty("message", t.getMessage());
-        error.addProperty("stack", writer.toString());
+        final JsonObject error = Json.createObjectBuilder()
+                .add("name", "Error")
+                .add("message", t.getMessage())
+                .add("stack", writer.toString())
+                .build();
 
-        JsonObject payload = new JsonObject();
-        payload.addProperty("error", cipher.encryptMessageContent(error));
-        payload.addProperty("errorInput", cipher.encryptMessage(executionContext.getMessage()));
+        final JsonObject payload = Json.createObjectBuilder()
+                .add("error", cipher.encryptMessageContent(error))
+                .add("errorInput", cipher.encryptMessage(executionContext.getMessage()))
+                .build();
 
         byte[] errorPayload = payload.toString().getBytes();
 

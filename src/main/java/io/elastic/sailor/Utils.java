@@ -1,24 +1,21 @@
 package io.elastic.sailor;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonSyntaxException;
+import io.elastic.api.JSON;
 
 class Utils {
 
-    public static boolean isJsonObject(String input) {
+    public static boolean isJsonObject(final String input) {
+        if (input == null) {
+            return false;
+        }
+
         try {
-            new Gson().fromJson(input, Object.class);
+            JSON.parse(input);
             return true;
-        } catch (JsonSyntaxException e) {
+        } catch (Exception e) {
             return false;
         }
     }
-
-    public static boolean isJsonObject(JsonElement element) {
-        return element != null && element.isJsonObject();
-    }
-
 
     public static String getEnvVar(final String key) {
         final String value = getOptionalEnvVar(key);

@@ -1,11 +1,12 @@
 package io.elastic.sailor
 
-import com.google.gson.JsonObject
 import com.google.inject.Guice
 import com.google.inject.Injector
 import io.elastic.api.Message
 import spock.lang.Shared
 import spock.lang.Specification
+
+import javax.json.Json
 
 class CipherSpec extends Specification {
 
@@ -28,8 +29,9 @@ class CipherSpec extends Specification {
 
     def "should encrypt & decrypt objects"() {
         given:
-        def content = new JsonObject()
-        content.addProperty("property1", "Hello world!")
+        def content = Json.createObjectBuilder()
+                .add("property1", "Hello world!")
+                .build()
         when:
         def result = cipher.encryptMessageContent(content)
         def decryptedResult = cipher.decryptMessageContent(result)
@@ -60,13 +62,15 @@ class CipherSpec extends Specification {
     }
 
     def getMessage() {
-        def body = new JsonObject()
-        body.addProperty("incomingProperty1", "incomingValue1")
-        body.addProperty("incomingProperty2", "incomingValue2")
+        def body = Json.createObjectBuilder()
+                .add("incomingProperty1", "incomingValue1")
+                .add("incomingProperty2", "incomingValue2")
+                .build()
 
-        def attachments = new JsonObject()
-        attachments.addProperty("incomingAttachment1", "incomingAttachment1Content")
-        attachments.addProperty("incomingAttachment2", "incomingAttachment2Content")
+        def attachments = Json.createObjectBuilder()
+                .add("incomingAttachment1", "incomingAttachment1Content")
+                .add("incomingAttachment2", "incomingAttachment2Content")
+                .build()
 
         return new Message(body, attachments);
     }

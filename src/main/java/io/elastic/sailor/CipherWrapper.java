@@ -1,10 +1,9 @@
 package io.elastic.sailor;
 
 import com.google.common.base.Preconditions;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import io.elastic.api.JSON;
 import io.elastic.api.Message;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.LoggerFactory;
@@ -12,6 +11,8 @@ import org.slf4j.LoggerFactory;
 import javax.crypto.Cipher;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.security.Key;
 import java.security.MessageDigest;
 
@@ -40,24 +41,25 @@ public final class CipherWrapper {
     }
 
     public String encryptMessage(Message message) {
-        JsonObject payload = new JsonObject();
-        payload.add(MESSAGE_PROPERTY_BODY, message.getBody());
-        payload.add(MESSAGE_PROPERTY_ATTACHMENTS, message.getAttachments());
+        final JsonObject payload = Json.createObjectBuilder()
+                .add(MESSAGE_PROPERTY_BODY, message.getBody())
+                .add(MESSAGE_PROPERTY_ATTACHMENTS, message.getAttachments())
+                .build();
         return encryptMessageContent(payload);
     }
 
     public Message decryptMessage(String encrypted) {
         final JsonObject payload = decryptMessageContent(encrypted);
 
-        JsonObject body = payload.getAsJsonObject(MESSAGE_PROPERTY_BODY);
-        JsonObject attachments = payload.getAsJsonObject(MESSAGE_PROPERTY_ATTACHMENTS);
+        JsonObject body = payload.getJsonObject(MESSAGE_PROPERTY_BODY);
+        JsonObject attachments = payload.getJsonObject(MESSAGE_PROPERTY_ATTACHMENTS);
 
         if (body == null) {
-            body = new JsonObject();
+            body = Json.createObjectBuilder().build();
         }
 
         if (attachments == null) {
-            attachments = new JsonObject();
+            attachments = Json.createObjectBuilder().build();
         }
 
         return new Message.Builder().body(body).attachments(attachments).build();
@@ -73,14 +75,14 @@ public final class CipherWrapper {
 
         if (message == null || message.isEmpty()) {
             logger.info("Message is null or empty. Returning empty JSON object");
-            return new JsonObject();
+            return Json.createObjectBuilder().build();
         }
 
         final String decryptedMessage = decrypt(message);
 
         if (Utils.isJsonObject(decryptedMessage)) {
             logger.info("Parsing message JSON");
-            return new JsonParser().parse(decryptedMessage).getAsJsonObject();
+            return JSON.parse(decryptedMessage);
         }
 
         throw new RuntimeException("Message is not a JSON object: " + decryptedMessage);

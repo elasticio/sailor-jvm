@@ -1,16 +1,17 @@
 package io.elastic.sailor.impl
 
-import com.google.gson.JsonObject
-import com.google.gson.JsonParser
+import io.elastic.api.JSON
 import io.elastic.sailor.ApiClient
 import io.elastic.sailor.Step
 import spock.lang.Specification
+
+import javax.json.Json
 
 class UpdateKeysCallbackSpec extends Specification {
 
     def apiClient = Mock(ApiClient)
 
-    def step = new JsonParser().parse("{" +
+    def step = JSON.parse("{" +
             "\"id\":\"step_1\"," +
             "\"comp_id\":\"testcomponent\"," +
             "\"function\":\"test\"," +
@@ -22,8 +23,9 @@ class UpdateKeysCallbackSpec extends Specification {
     def "should updateAccount successfully"() {
 
         setup:
-        def keys = new JsonObject()
-        keys.addProperty('apiSecret', 'barbaz')
+        def keys = Json.createObjectBuilder()
+                .add('apiSecret', 'barbaz')
+                .build()
 
         when:
         callback.receive(keys)

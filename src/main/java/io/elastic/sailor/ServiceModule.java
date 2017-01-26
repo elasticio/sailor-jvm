@@ -1,10 +1,11 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.name.Named;
+import io.elastic.api.JSON;
+
+import javax.json.JsonObject;
 
 
 public class ServiceModule extends AbstractModule {
@@ -18,6 +19,6 @@ public class ServiceModule extends AbstractModule {
     JsonObject provideConfiguration(
             @Named(Constants.ENV_VAR_CFG) String cfg) {
 
-        return new JsonParser().parse(cfg).getAsJsonObject();
+        return JSON.parse(cfg);
     }
 }

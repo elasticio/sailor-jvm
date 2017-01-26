@@ -1,6 +1,5 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonObject;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -9,6 +8,8 @@ import com.google.inject.name.Named;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
+import javax.json.JsonObject;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -34,8 +35,7 @@ public class Service {
 
         if (triggerOrAction != null) {
             triggerOrActionObj = resolver
-                    .findTriggerOrActionObject(triggerOrAction)
-                    .getAsJsonObject();
+                    .findTriggerOrActionObject(triggerOrAction);
         }
 
         params = new ServiceExecutionParameters.Builder()
@@ -84,9 +84,10 @@ public class Service {
     private void createResponseAndSend(final String status,
                                        final JsonObject data) {
 
-        JsonObject payload = new JsonObject();
-        payload.addProperty("status", status);
-        payload.add("data", data);
+        final JsonObject payload = Json.createObjectBuilder()
+                .add("status", status)
+                .add("data", data)
+                .build();
 
         sendData(this.postResultUrl, payload);
     }
@@ -104,8 +105,9 @@ public class Service {
         StringWriter writer = new StringWriter();
         e.printStackTrace(new PrintWriter(writer));
 
-        JsonObject data = new JsonObject();
-        data.addProperty("message", writer.toString());
+        final JsonObject data = Json.createObjectBuilder()
+                .add("message", writer.toString())
+                .build();
 
         createResponseAndSend("error", data);
     }

@@ -1,12 +1,12 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.json.JsonObject;
 
 public class ApiClientImpl implements ApiClient {
 
@@ -34,13 +34,13 @@ public class ApiClientImpl implements ApiClient {
         final UsernamePasswordCredentials credentials
                 = new UsernamePasswordCredentials(this.apiUser, this.apiKey);
 
-        final JsonElement step = HttpUtils.getJson(uri, credentials);
+        final JsonObject step = HttpUtils.getJson(uri, credentials);
 
-        return new Step(step.getAsJsonObject());
+        return new Step(step);
     }
 
     @Override
-    public JsonElement updateAccount(final String accountId, final JsonObject body) {
+    public JsonObject updateAccount(final String accountId, final JsonObject body) {
         final String uri = String.format("%s/accounts/%s", this.apiBaseUri, accountId);
 
         logger.info("Updating account for user {} at: {}", this.apiUser, uri);
