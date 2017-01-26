@@ -50,7 +50,7 @@ class HttpUtils {
 
         final String content = sendHttpRequest(httpGet, credentials);
 
-        return JSON.parse(content);
+        return JSON.parseObject(content);
     }
 
 
@@ -66,7 +66,7 @@ class HttpUtils {
 
         logger.info("Successfully put json {} bytes length", body.toString().length());
 
-        return JSON.parse(content);
+        return JSON.parseObject(content);
     }
 
     private static StringEntity createStringEntity(final JsonObject body) {

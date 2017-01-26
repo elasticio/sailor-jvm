@@ -82,7 +82,7 @@ public final class CipherWrapper {
 
         if (Utils.isJsonObject(decryptedMessage)) {
             logger.info("Parsing message JSON");
-            return JSON.parse(decryptedMessage);
+            return JSON.parseObject(decryptedMessage);
         }
 
         throw new RuntimeException("Message is not a JSON object: " + decryptedMessage);

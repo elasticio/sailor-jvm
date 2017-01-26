@@ -17,7 +17,7 @@ class EmitterCallbackFactorySpec extends ApiAwareSpecification {
     @Shared
     EmitterCallbackFactory factory;
 
-    def step = JSON.parse("{" +
+    def step = JSON.parseObject("{" +
             "\"id\":\"step_1\"," +
             "\"comp_id\":\"testcomponent\"," +
             "\"function\":\"test\"," +

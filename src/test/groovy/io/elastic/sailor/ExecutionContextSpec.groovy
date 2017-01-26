@@ -9,7 +9,7 @@ class ExecutionContextSpec extends Specification {
 
     def "should build default headers properly"() {
         given:
-        def step = JSON.parse("{" +
+        def step = JSON.parseObject("{" +
                 "\"id\":\"step_1\"," +
                 "\"comp_id\":\"testcomponent\"," +
                 "\"function\":\"test\"," +

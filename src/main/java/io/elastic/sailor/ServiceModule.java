@@ -19,6 +19,6 @@ public class ServiceModule extends AbstractModule {
     JsonObject provideConfiguration(
             @Named(Constants.ENV_VAR_CFG) String cfg) {
 
-        return JSON.parse(cfg);
+        return JSON.parseObject(cfg);
     }
 }

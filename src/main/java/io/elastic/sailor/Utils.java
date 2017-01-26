@@ -10,7 +10,7 @@ class Utils {
         }
 
         try {
-            JSON.parse(input);
+            JSON.parseObject(input);
             return true;
         } catch (Exception e) {
             return false;
