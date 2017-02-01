@@ -50,9 +50,9 @@ public class SailorModule extends AbstractModule {
     @Named(Constants.NAME_STEP_JSON)
     Step provideTask(
             ApiClient apiClient,
-            @Named(Constants.ENV_VAR_TASK_ID) String taskId,
+            @Named(Constants.ENV_VAR_FLOW_ID) String taskId,
             @Named(Constants.ENV_VAR_STEP_ID) String stepId) {
 
-        return apiClient.retrieveTaskStep(taskId, stepId);
+        return apiClient.retrieveFlowStep(taskId, stepId);
     }
 }

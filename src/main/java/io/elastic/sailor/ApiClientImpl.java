@@ -26,7 +26,7 @@ public class ApiClientImpl implements ApiClient {
     }
 
     @Override
-    public Step retrieveTaskStep(final String taskId, final String stepId) {
+    public Step retrieveFlowStep(final String taskId, final String stepId) {
         final String uri = String.format("%s/tasks/%s/steps/%s", this.apiBaseUri, taskId, stepId);
 
         logger.info("Retrieving step data for user {} at: {}", this.apiUser, uri);

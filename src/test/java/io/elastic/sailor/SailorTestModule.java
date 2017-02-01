@@ -41,7 +41,7 @@ public class SailorTestModule extends AbstractModule {
         bindRequiredIntegerEnvVar(Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION, 10000);
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID, "step_1");
-        bindRequiredStringEnvVar(Constants.ENV_VAR_TASK_ID, "5559edd38968ec0736000003");
+        bindRequiredStringEnvVar(Constants.ENV_VAR_FLOW_ID, "5559edd38968ec0736000003");
 
     }
 

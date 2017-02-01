@@ -5,7 +5,7 @@ import javax.json.JsonObject;
 
 public interface ApiClient {
 
-    Step retrieveTaskStep(String taskId, String stepId);
+    Step retrieveFlowStep(String taskId, String stepId);
 
     JsonObject updateAccount(String accountId, JsonObject body);
 }

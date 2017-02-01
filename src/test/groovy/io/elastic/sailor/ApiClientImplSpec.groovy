@@ -31,7 +31,7 @@ class ApiClientImplSpec extends Specification {
                         .withStatus(200));
 
         when:
-        def step = client.retrieveTaskStep("55e5eeb460a8e2070000001e", "step_1");
+        def step = client.retrieveFlowStep("55e5eeb460a8e2070000001e", "step_1");
 
         then:
 

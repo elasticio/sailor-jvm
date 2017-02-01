@@ -39,7 +39,7 @@ public final class Constants {
     public static final String ENV_VAR_SNAPSHOT_ROUTING_KEY = "ELASTICIO_SNAPSHOT_ROUTING_KEY";
     public static final String ENV_VAR_REBOUND_LIMIT = "ELASTICIO_REBOUND_LIMIT";
     public static final String ENV_VAR_REBOUND_INITIAL_EXPIRATION = "ELASTICIO_REBOUND_INITIAL_EXPIRATION";
-    public static final String ENV_VAR_TASK_ID = "ELASTICIO_TASK_ID";
+    public static final String ENV_VAR_FLOW_ID = "ELASTICIO_FLOW_ID";
     public static final String ENV_VAR_STEP_ID = "ELASTICIO_STEP_ID";
     public static final String ENV_VAR_RABBITMQ_PREFETCH_SAILOR = "ELASTICIO_RABBITMQ_PREFETCH_SAILOR";
 
