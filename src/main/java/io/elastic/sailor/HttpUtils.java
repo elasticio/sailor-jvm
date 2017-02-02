@@ -47,6 +47,7 @@ class HttpUtils {
 
         final HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader(HTTP.CONTENT_TYPE, "application/json");
+        httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
 
         final String content = sendHttpRequest(httpGet, credentials);
 

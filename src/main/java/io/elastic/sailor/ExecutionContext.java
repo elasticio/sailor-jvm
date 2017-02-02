@@ -37,6 +37,12 @@ public class ExecutionContext {
         result.put("function", this.step.getFunction());
         result.put("start", System.currentTimeMillis());
 
+        final Object replyTo = headers.get("reply_to");
+
+        if (replyTo != null) {
+            result.put("reply_to", replyTo);
+        }
+
         return result;
     }
 
