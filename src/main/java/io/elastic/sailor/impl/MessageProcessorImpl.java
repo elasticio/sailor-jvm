@@ -68,12 +68,16 @@ public class MessageProcessorImpl implements MessageProcessor {
         // updateKeys callback
         EventEmitter.Callback updateKeysCallback = emitterCallbackFactory.createUpdateKeysCallback(executionContext);
 
+        // httpReplyCallback callback
+        EventEmitter.Callback httpReplyCallback = emitterCallbackFactory.createHttpReplyCallback(executionContext);
+
         final EventEmitter eventEmitter = new EventEmitter.Builder()
                 .onData(dataCallback)
                 .onError(errorCallback)
                 .onRebound(reboundCallback)
                 .onSnapshot(snapshotCallback)
                 .onUpdateKeys(updateKeysCallback)
+                .onHttpReplyCallback(httpReplyCallback)
                 .build();
 
         final Executor executor = new Executor(className, eventEmitter);
