@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
 
 @Singleton
 public class AMQPWrapper implements AMQPWrapperInterface {
@@ -147,6 +148,17 @@ public class AMQPWrapper implements AMQPWrapperInterface {
 
     public void sendData(byte[] payload, AMQP.BasicProperties options) {
         sendToExchange(this.dataRoutingKey, payload, options);
+    }
+
+    public void sendHttpReply(byte[] payload, AMQP.BasicProperties options) {
+        final Map<String, Object> headers = options.getHeaders();
+        final Object routingKey = headers.get("reply_to");
+
+        if (routingKey == null) {
+            throw new RuntimeException(
+                    "Component emitted 'httpReply' event but 'reply_to' was not found in AMQP headers");
+        }
+        sendToExchange(routingKey.toString(), payload, options);
     }
 
     public void sendSnapshot(byte[] payload, AMQP.BasicProperties options) {

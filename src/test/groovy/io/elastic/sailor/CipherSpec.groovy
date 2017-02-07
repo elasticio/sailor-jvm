@@ -33,7 +33,7 @@ class CipherSpec extends Specification {
                 .add("property1", "Hello world!")
                 .build()
         when:
-        def result = cipher.encryptMessageContent(content)
+        def result = cipher.encryptJsonObject(content)
         def decryptedResult = cipher.decryptMessageContent(result)
         then:
         decryptedResult.toString() == '{"property1":"Hello world!"}'

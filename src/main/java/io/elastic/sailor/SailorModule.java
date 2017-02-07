@@ -42,6 +42,10 @@ public class SailorModule extends AbstractModule {
                         EventEmitter.Callback.class,
                         Names.named(Constants.NAME_CALLBACK_UPDATE_KEYS),
                         UpdateKeysCallback.class)
+                .implement(
+                        EventEmitter.Callback.class,
+                        Names.named(Constants.NAME_HTTP_REPLY_KEYS),
+                        HttpReplyCallback.class)
                 .build(EmitterCallbackFactory.class));
     }
 

@@ -9,6 +9,7 @@ public final class Constants {
     public static final String NAME_CALLBACK_ERROR = "errorCallback";
     public static final String NAME_CALLBACK_SNAPSHOT = "snapshotCallback";
     public static final String NAME_CALLBACK_UPDATE_KEYS = "updateKeys";
+    public static final String NAME_HTTP_REPLY_KEYS = "httpReply";
 
     public static final String STEP_PROPERTY_ID = "id";
     public static final String STEP_PROPERTY_FUNCTION = "function";

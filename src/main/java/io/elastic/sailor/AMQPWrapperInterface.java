@@ -10,6 +10,8 @@ public interface AMQPWrapperInterface {
 
     void sendData(byte[] payload, AMQP.BasicProperties options);
 
+    void sendHttpReply(byte[] payload, AMQP.BasicProperties options);
+
     void sendError(byte[] payload, AMQP.BasicProperties options);
 
     void sendRebound(byte[] payload, AMQP.BasicProperties options);

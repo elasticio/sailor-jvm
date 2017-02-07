@@ -41,7 +41,7 @@ public class ErrorCallback extends CountingCallbackImpl {
                 .build();
 
         final JsonObject payload = Json.createObjectBuilder()
-                .add("error", cipher.encryptMessageContent(error))
+                .add("error", cipher.encryptJsonObject(error))
                 .add("errorInput", cipher.encryptMessage(executionContext.getMessage()))
                 .build();
 

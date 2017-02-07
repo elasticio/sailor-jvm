@@ -20,4 +20,7 @@ public interface EmitterCallbackFactory {
 
     @Named(Constants.NAME_CALLBACK_UPDATE_KEYS)
     EventEmitter.Callback createUpdateKeysCallback(ExecutionContext context);
+
+    @Named(Constants.NAME_HTTP_REPLY_KEYS)
+    EventEmitter.Callback createHttpReplyCallback(ExecutionContext context);
 }

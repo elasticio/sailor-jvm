@@ -81,7 +81,7 @@ public final class CipherWrapper {
     }
 
     // converts JSON to string and encrypts
-    public String encryptMessageContent(JsonObject message) {
+    public String encryptJsonObject(JsonObject message) {
         return encrypt(message.toString());
     }
 
