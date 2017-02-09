@@ -45,7 +45,7 @@ public class MessageConsumer extends DefaultConsumer {
         try {
             stats = processor.processMessage(message, properties.getHeaders(), deliveryTag);
         } catch (Exception e) {
-            logger.info("Failed to process message {}: {}", deliveryTag, e.getMessage());
+            logger.error("Failed to process message for delivery tag:" + deliveryTag, e);
         } finally {
             ackOrReject(stats, deliveryTag);
         }
