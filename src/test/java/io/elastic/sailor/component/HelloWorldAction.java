@@ -15,14 +15,12 @@ public class HelloWorldAction extends Component {
     }
 
     public void execute(ExecutionParameters parameters) {
-
         final JsonObject body = Json.createObjectBuilder()
-                .add("de", "Hallo, Welt!")
-                .add("en", "Hello, world!")
+                .add("echo", parameters.getMessage().getBody())
                 .build();
 
-        new Message.Builder().body(body).build();
+        final Message msg = new Message.Builder().body(body).build();
 
-        this.getEventEmitter().emitData(parameters.getMessage());
+        this.getEventEmitter().emitData(msg);
     }
 }

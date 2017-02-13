@@ -8,6 +8,8 @@ public interface AMQPWrapperInterface {
 
     void subscribeConsumer();
 
+    void cancelConsumer();
+
     void sendData(byte[] payload, AMQP.BasicProperties options);
 
     void sendHttpReply(byte[] payload, AMQP.BasicProperties options);

@@ -10,6 +10,7 @@ import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 import spock.lang.Shared
 import spock.lang.Specification
+import spock.lang.Stepwise
 import spock.util.concurrent.BlockingVariable
 
 import javax.json.Json
@@ -17,6 +18,7 @@ import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
+@Stepwise
 class IntegrationSpec extends Specification {
 
     @Shared
@@ -33,8 +35,12 @@ class IntegrationSpec extends Specification {
 
     @Shared
     def errorsQueue = prefix + '_queue_errors'
+
     @Shared
-    def blockingVar = new BlockingVariable<Message>(5)
+    def blockingVar
+
+    @Shared
+    def sailor;
 
     def setupSpec() {
         System.setProperty(Constants.ENV_VAR_API_URI, 'http://localhost:8182')
@@ -44,7 +50,6 @@ class IntegrationSpec extends Specification {
         System.setProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_IV, 'iv=any16_symbols')
         System.setProperty(Constants.ENV_VAR_FLOW_ID, '5559edd38968ec0736000003')
         System.setProperty(Constants.ENV_VAR_STEP_ID, 'step_1')
-        System.setProperty(Constants.ENV_VAR_FUNCTION, 'helloworldaction')
         System.setProperty('ELASTICIO_USER_ID', '5559edd38968ec0736000002')
         System.setProperty('ELASTICIO_COMP_ID', '5559edd38968ec0736000456')
 
@@ -63,7 +68,8 @@ class IntegrationSpec extends Specification {
         amqp = new AMQPWrapper(cipher)
 
         amqp.setAmqpUri(System.getProperty(Constants.ENV_VAR_AMQP_URI))
-        amqp.setPublishExchangeName(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
+        amqp.setPublishExchangeName(System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO))
+        amqp.setSubscribeExchangeName(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
         amqp.setPrefetchCount(1)
 
         amqp.connect()
@@ -102,7 +108,7 @@ class IntegrationSpec extends Specification {
                                HttpServletRequest request,
                                HttpServletResponse response)
                     throws IOException, ServletException {
-                
+
                 def stepData = Json.createObjectBuilder()
                         .add(Constants.STEP_PROPERTY_ID, System.getProperty(Constants.ENV_VAR_STEP_ID))
                         .add(Constants.STEP_PROPERTY_COMP_ID, System.getProperty('ELASTICIO_COMP_ID'))
@@ -121,6 +127,8 @@ class IntegrationSpec extends Specification {
 
     def "run sailor successfully"() {
         setup:
+        blockingVar = new BlockingVariable(5)
+        System.setProperty(Constants.ENV_VAR_FUNCTION, 'helloworldaction')
 
         def headers = [
                 'execId'  : 'some-exec-id',
@@ -167,14 +175,77 @@ class IntegrationSpec extends Specification {
 
         amqp.publishChannel.basicConsume(dataQueue, consumer)
 
-
         when:
 
-        Sailor.main();
+        sailor = Sailor.createAndStartSailor()
 
         then:
         def result = blockingVar.get()
         result.headers.isEmpty()
-        JSON.stringify(result.body) == '{"message":"Just do it!"}'
+        JSON.stringify(result.body) == '{"echo":{"message":"Just do it!"}}'
+        sailor.amqp.cancelConsumer()
+    }
+
+    def "publish init errors to RabbitMQ"() {
+        setup:
+        blockingVar = new BlockingVariable(5)
+        System.setProperty(Constants.ENV_VAR_FUNCTION, 'erroneousAction')
+
+        def headers = [
+                'execId'  : 'some-exec-id',
+                'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
+                'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
+                'userId'  : System.getProperty('ELASTICIO_USER_ID'),
+                start     : System.currentTimeMillis()
+        ]
+
+        def options = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .priority(1)
+                .deliveryMode(2)
+                .build()
+
+        def msg = new Message.Builder()
+                .body(Json.createObjectBuilder().add('message', 'Just do it 2!').build())
+                .build()
+
+        byte[] payload = cipher.encryptMessage(msg).getBytes();
+
+        amqp.publishChannel.basicPublish(
+                System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
+                System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
+                options,
+                payload);
+
+        def consumer = new DefaultConsumer(amqp.publishChannel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body)
+                    throws IOException {
+
+                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                def errorJson = JSON.parseObject(new String(body, "UTF-8"))
+                def error = IntegrationSpec.this.cipher.decrypt(errorJson.getString('error'));
+                IntegrationSpec.this.blockingVar.set(error);
+            }
+        }
+
+        amqp.publishChannel.basicConsume(errorsQueue, consumer)
+
+        when:
+
+        sailor = Sailor.createAndStartSailor()
+
+        then:
+        def result = blockingVar.get()
+        println(result)
+        def errorJson = JSON.parseObject(result);
+        errorJson.getString('name') == 'java.lang.RuntimeException'
+        errorJson.getString('message') == 'Ouch. Something went wrong'
+        errorJson.getString('stack').startsWith('java.lang.RuntimeException: Ouch. Something went wrong')
     }
 }

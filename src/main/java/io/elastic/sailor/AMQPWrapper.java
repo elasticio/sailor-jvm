@@ -31,6 +31,7 @@ public class AMQPWrapper implements AMQPWrapperInterface {
     private Integer prefetchCount;
     private CipherWrapper cipher;
     private MessageProcessor messageProcessor;
+    private String consumerTag;
 
     @Inject
     public AMQPWrapper(CipherWrapper cipher) {
@@ -120,12 +121,23 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, this.messageProcessor);
 
         try {
-            subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
+            consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
         logger.info("Subscribed consumer. Waiting for messages to arrive ...");
+    }
+
+    public void cancelConsumer() {
+        if (consumerTag != null) {
+            logger.info("Canceling consumer {}", consumerTag);
+            try {
+                subscribeChannel.basicCancel(consumerTag);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public void ack(Long deliveryTag) {

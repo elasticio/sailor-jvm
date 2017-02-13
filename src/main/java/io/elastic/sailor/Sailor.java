@@ -15,14 +15,20 @@ public class Sailor {
     private AMQPWrapperInterface amqp;
 
     public static void main(String[] args) throws IOException {
-        logger.info("Sailor started");
+        createAndStartSailor();
+    }
 
+    static Sailor createAndStartSailor() throws IOException {
         Injector injector = Guice.createInjector(
                 new SailorModule(), new SailorEnvironmentModule());
 
-        Sailor sailor = injector.getInstance(Sailor.class);
+        final Sailor sailor =  injector.getInstance(Sailor.class);
 
         sailor.start();
+
+        logger.info("Sailor started");
+
+        return sailor;
     }
 
     @Inject

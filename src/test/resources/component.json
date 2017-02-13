@@ -23,6 +23,10 @@
         }
     },
     "actions": {
+        "erroneousAction": {
+            "main": "io.elastic.sailor.component.ErroneousAction",
+            "title": "Erroneous Action"
+        },
         "helloworldaction": {
             "main": "io.elastic.sailor.component.HelloWorldAction",
             "title": "Test action",
