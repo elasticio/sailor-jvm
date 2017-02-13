@@ -34,7 +34,8 @@ dependencies {
 
     testRuntime 'org.codehaus.groovy:groovy-all:2.0.5'
     testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
-    testCompile 'com.github.rest-driver:rest-client-driver:1.1.43'
+    testCompile "com.github.rest-driver:rest-client-driver:2.0.0"
+    testCompile "org.eclipse.jetty:jetty-server:9.4.1.v20170120"
 
 }
 
