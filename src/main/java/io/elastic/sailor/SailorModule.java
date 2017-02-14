@@ -21,6 +21,8 @@ public class SailorModule extends AbstractModule {
 
         bind(ApiClient.class).to(ApiClientImpl.class);
 
+        bind(ComponentBuilder.class).to(ComponentBuilderImpl.class);
+
         install(new FactoryModuleBuilder()
                 .implement(
                         CountingCallback.class,

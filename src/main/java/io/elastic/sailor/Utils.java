@@ -1,6 +1,9 @@
 package io.elastic.sailor;
 
+import com.rabbitmq.client.AMQP;
 import io.elastic.api.JSON;
+
+import java.util.Map;
 
 class Utils {
 
@@ -37,4 +40,15 @@ class Utils {
 
         return value;
     }
+
+    public static AMQP.BasicProperties buildAmqpProperties(final Map<String, Object> headers) {
+        return new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .priority(1)// this should equal to mandatory true
+                .deliveryMode(2)//TODO: check if flag .mandatory(true) was set
+                .build();
+    }
+
 }

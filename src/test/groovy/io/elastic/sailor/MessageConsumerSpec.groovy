@@ -4,6 +4,7 @@ import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Envelope
 import io.elastic.api.Message
+import io.elastic.sailor.component.HelloWorldAction
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -32,6 +33,8 @@ class MessageConsumerSpec extends Specification {
     @Shared
     def encryptedMessage
 
+    def component
+
     def setupSpec() {
 
         headers = ["execId": "exec1", "taskId": "task2", "userId": "user3"] as Map
@@ -51,7 +54,8 @@ class MessageConsumerSpec extends Specification {
     }
 
     def setup() {
-        consumer = new MessageConsumer(channel, cipher, processor);
+        component = new HelloWorldAction()
+        consumer = new MessageConsumer(channel, cipher, processor, component)
     }
 
 
@@ -63,7 +67,7 @@ class MessageConsumerSpec extends Specification {
         then:
         1 * processor.processMessage({
             it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, headers, 123456) >> new ExecutionStats(1, 0, 0)
+        }, headers, component) >> new ExecutionStats(1, 0, 0)
         1 * channel.basicAck(123456, true)
         0 * _
 
@@ -78,7 +82,7 @@ class MessageConsumerSpec extends Specification {
         then:
         1 * processor.processMessage({
             it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, headers, 123456) >> new ExecutionStats(0, 1, 0)
+        }, headers, component) >> new ExecutionStats(0, 1, 0)
         1 * channel.basicReject(123456, false)
         0 * _
 
@@ -92,7 +96,7 @@ class MessageConsumerSpec extends Specification {
         then:
         1 * processor.processMessage({
             it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, headers, 123456) >> { throw new Exception("Ouch") }
+        }, headers, component) >> { throw new Exception("Ouch") }
         1 * channel.basicReject(123456, false)
 
     }

@@ -2,6 +2,7 @@ package io.elastic.sailor
 
 import io.elastic.api.JSON
 import io.elastic.api.Message
+import junit.framework.Test
 import spock.lang.Specification
 
 class ExecutionContextSpec extends Specification {
@@ -9,11 +10,6 @@ class ExecutionContextSpec extends Specification {
 
     def "should build default headers properly"() {
         given:
-        def step = JSON.parseObject("{" +
-                "\"id\":\"step_1\"," +
-                "\"comp_id\":\"testcomponent\"," +
-                "\"function\":\"test\"," +
-                "\"snapshot\":{\"timestamp\":\"19700101\"}}")
         def originalHeaders = [
                 execId: "_exec_01",
                 taskId: "5559edd38968ec0736000003",
@@ -21,7 +17,7 @@ class ExecutionContextSpec extends Specification {
         ] as Map
 
         ExecutionContext ctx = new ExecutionContext(
-                new Step(step), new Message.Builder().build(), originalHeaders);
+                TestUtils.createStep(), new Message.Builder().build(), originalHeaders);
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -39,11 +35,6 @@ class ExecutionContextSpec extends Specification {
 
     def "should build default headers with reply_to"() {
         given:
-        def step = JSON.parseObject("{" +
-                "\"id\":\"step_1\"," +
-                "\"comp_id\":\"testcomponent\"," +
-                "\"function\":\"test\"," +
-                "\"snapshot\":{\"timestamp\":\"19700101\"}}")
         def originalHeaders = [
                 execId: "_exec_01",
                 taskId: "5559edd38968ec0736000003",
@@ -52,7 +43,7 @@ class ExecutionContextSpec extends Specification {
         ] as Map
 
         ExecutionContext ctx = new ExecutionContext(
-                new Step(step), new Message.Builder().build(), originalHeaders);
+                TestUtils.createStep(), new Message.Builder().build(), originalHeaders);
 
         when:
         def headers = ctx.buildDefaultHeaders()

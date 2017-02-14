@@ -4,6 +4,7 @@ import com.google.inject.Guice
 import com.google.inject.Injector
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
+import io.elastic.api.Message
 import spock.lang.Shared
 
 class AMPQSpec extends ApiAwareSpecification {
@@ -47,7 +48,7 @@ class AMPQSpec extends ApiAwareSpecification {
 
     def "Should send error with ERROR_ROUTING_KEY"() {
         when:
-        amqp.sendError(new String("some-content").getBytes(), getOptions());
+        amqp.sendError(new RuntimeException("Ouch"), getOptions(), new Message.Builder().build());
         then:
         1 * publishChannel.basicPublish(exchange, errorRoutingKey, _, _)
     }

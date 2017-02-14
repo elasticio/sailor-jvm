@@ -7,6 +7,7 @@ import io.elastic.sailor.AMQPWrapperInterface
 import io.elastic.sailor.CipherWrapper
 import io.elastic.sailor.ExecutionContext
 import io.elastic.sailor.Step
+import io.elastic.sailor.TestUtils
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -15,13 +16,8 @@ class HttpReplyCallbackSpec extends Specification {
     @Shared
     def cipher = new CipherWrapper("testCryptoPassword", "iv=any16_symbols")
 
-    def step = JSON.parseObject("{" +
-            "\"id\":\"step_1\"," +
-            "\"comp_id\":\"testcomponent\"," +
-            "\"function\":\"test\"," +
-            "\"snapshot\":{\"timestamp\":\"19700101\"}}")
     def ctx = new ExecutionContext(
-            new Step(step), new Message.Builder().build(), Collections.emptyMap())
+            TestUtils.createStep(), new Message.Builder().build(), Collections.emptyMap())
 
     def callback = new HttpReplyCallback(ctx, amqp, cipher)
 

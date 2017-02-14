@@ -7,9 +7,16 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import io.elastic.api.Component;
+import io.elastic.api.Message;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URI;
 import java.util.Map;
 
@@ -117,8 +124,8 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public void subscribeConsumer() {
-        final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, this.messageProcessor);
+    public void subscribeConsumer(final Component component) {
+        final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, this.messageProcessor, component);
 
         try {
             consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
@@ -177,8 +184,33 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         sendToExchange(this.snapshotRoutingKey, payload, options);
     }
 
-    public void sendError(byte[] payload, AMQP.BasicProperties options) {
-        sendToExchange(this.errorRoutingKey, payload, options);
+    public void sendError(Throwable e, AMQP.BasicProperties options, Message originalMessage) {
+
+        final StringWriter writer = new StringWriter();
+        e.printStackTrace(new PrintWriter(writer));
+
+        final JsonObjectBuilder builder = Json.createObjectBuilder()
+                .add("name", e.getClass().getName())
+                .add("stack", writer.toString());
+
+        if (e.getMessage() != null) {
+            builder.add("message", e.getMessage());
+        }
+
+        final JsonObject error = builder.build();
+
+        final JsonObjectBuilder payloadBuilder = Json.createObjectBuilder()
+                .add("error", cipher.encryptJsonObject(error));
+
+        if (originalMessage != null) {
+            payloadBuilder.add("errorInput", cipher.encryptMessage(originalMessage));
+        }
+
+        final JsonObject payload = payloadBuilder.build();
+
+        byte[] errorPayload = payload.toString().getBytes();
+
+        sendToExchange(this.errorRoutingKey, errorPayload, options);
     }
 
     public void sendRebound(byte[] payload, AMQP.BasicProperties options) {

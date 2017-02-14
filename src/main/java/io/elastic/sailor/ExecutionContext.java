@@ -47,13 +47,7 @@ public class ExecutionContext {
     }
 
     public AMQP.BasicProperties buildDefaultOptions() {
-        return new AMQP.BasicProperties.Builder()
-                .contentType("application/json")
-                .contentEncoding("utf8")
-                .headers(buildDefaultHeaders())
-                .priority(1)// this should equal to mandatory true
-                .deliveryMode(2)//TODO: check if flag .mandatory(true) was set
-                .build();
+        return Utils.buildAmqpProperties(buildDefaultHeaders());
     }
 
 

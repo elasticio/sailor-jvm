@@ -8,11 +8,7 @@ import io.elastic.api.Message;
 import javax.json.Json;
 import javax.json.JsonObject;
 
-public class HelloWorldAction extends Component {
-
-    public HelloWorldAction(EventEmitter eventEmitter) {
-        super(eventEmitter);
-    }
+public class HelloWorldAction implements Component {
 
     public void execute(ExecutionParameters parameters) {
         final JsonObject body = Json.createObjectBuilder()
@@ -21,6 +17,6 @@ public class HelloWorldAction extends Component {
 
         final Message msg = new Message.Builder().body(body).build();
 
-        this.getEventEmitter().emitData(msg);
+        parameters.getEventEmitter().emitData(msg);
     }
 }

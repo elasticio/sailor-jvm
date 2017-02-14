@@ -7,11 +7,7 @@ import io.elastic.api.ExecutionParameters;
 import javax.json.Json;
 import javax.json.JsonObject;
 
-public class TestAction extends Component {
-
-    public TestAction(EventEmitter eventEmitter) {
-        super(eventEmitter);
-    }
+public class TestAction implements Component {
 
     public void execute(ExecutionParameters parameters) {
 
@@ -20,9 +16,9 @@ public class TestAction extends Component {
                 .build();
 
         // emit received message back
-        this.getEventEmitter().emitData(parameters.getMessage());
-        this.getEventEmitter().emitSnapshot(snapshot);
-        this.getEventEmitter().emitRebound("Please retry later");
+        parameters.getEventEmitter().emitData(parameters.getMessage());
+        parameters.getEventEmitter().emitSnapshot(snapshot);
+        parameters.getEventEmitter().emitRebound("Please retry later");
         throw new RuntimeException("Error happened in TestAction!");
     }
 }
