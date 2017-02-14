@@ -73,6 +73,11 @@ public class Sailor {
 
             final Component component = componentBuilder.build();
 
+            if (containerContext.isStartupRequired()) {
+                logger.info("Starting up component");
+                component.startup(cfg);
+            }
+
             logger.info("Initializing component for execution");
             component.init(cfg);
 

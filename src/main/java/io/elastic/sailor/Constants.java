@@ -46,5 +46,6 @@ public final class Constants {
     public static final String ENV_VAR_USER_ID = "ELASTICIO_USER_ID";
     public static final String ENV_VAR_COMP_ID = "ELASTICIO_COMP_ID";
     public static final String ENV_VAR_RABBITMQ_PREFETCH_SAILOR = "ELASTICIO_RABBITMQ_PREFETCH_SAILOR";
+    public static final String ENV_VAR_STARTUP_REQUIRED = "STARTUP_REQUIRED";
 
 }

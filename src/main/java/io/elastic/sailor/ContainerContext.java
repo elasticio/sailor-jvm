@@ -11,6 +11,7 @@ public class ContainerContext {
     private String userId;
     private String compId;
     private String function;
+    private boolean isStartupRequired;
 
     public String getFlowId() {
         return flowId;
@@ -64,5 +65,14 @@ public class ContainerContext {
     @Inject
     public void setFunction(@Named(Constants.ENV_VAR_FUNCTION) String function) {
         this.function = function;
+    }
+
+    public boolean isStartupRequired() {
+        return isStartupRequired;
+    }
+
+    @Inject
+    public void setStartupRequired(@Named(Constants.ENV_VAR_STARTUP_REQUIRED)  boolean startupRequired) {
+        isStartupRequired = startupRequired;
     }
 }

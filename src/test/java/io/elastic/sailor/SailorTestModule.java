@@ -45,6 +45,9 @@ public class SailorTestModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_USER_ID, "5559edd38968ec0736000002");
         bindRequiredStringEnvVar(Constants.ENV_VAR_COMP_ID, "5559edd38968ec0736000456");
         bindRequiredStringEnvVar(Constants.ENV_VAR_FUNCTION, "myFunction");
+        bind(Boolean.class)
+                .annotatedWith(Names.named(Constants.ENV_VAR_STARTUP_REQUIRED))
+                .toInstance(false);
 
     }
 

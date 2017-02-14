@@ -43,6 +43,10 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindOptionalIntegerEnvVar(
                 Constants.ENV_VAR_RABBITMQ_PREFETCH_SAILOR,
                 Constants.DEFAULT_RABBITMQ_PREFETCH_SAILOR);
+
+        bindOptionalYesNoEnvVar(Constants.ENV_VAR_STARTUP_REQUIRED);
+
+
     }
 
     void bindRequiredStringEnvVar(final String name) {
@@ -57,6 +61,12 @@ public class SailorEnvironmentModule extends AbstractModule {
                 .toInstance(getOptionalIntegerValue(name, defaultValue));
     }
 
+    void bindOptionalYesNoEnvVar(final String name) {
+        bind(Boolean.class)
+                .annotatedWith(Names.named(name))
+                .toInstance(getOptionalYesNoValue(name));
+    }
+
     private static int getOptionalIntegerValue(final String key, int defaultValue) {
         final String value = Utils.getOptionalEnvVar(key);
 
@@ -65,5 +75,15 @@ public class SailorEnvironmentModule extends AbstractModule {
         }
 
         return defaultValue;
+    }
+
+    private static boolean getOptionalYesNoValue(final String key) {
+        final String value = Utils.getOptionalEnvVar(key);
+
+        if (value != null) {
+            return true;
+        }
+
+        return false;
     }
 }
