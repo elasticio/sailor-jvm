@@ -20,6 +20,7 @@ public class Sailor {
     private AMQPWrapperInterface amqp;
     private ComponentBuilder componentBuilder;
     private Step step;
+    private ContainerContext containerContext;
 
     public static void main(String[] args) throws IOException {
         createAndStartSailor();
@@ -51,6 +52,11 @@ public class Sailor {
     @Inject
     public void setStep(@Named(Constants.NAME_STEP_JSON) Step step) {
         this.step = step;
+    }
+
+    @Inject
+    public void setContainerContext(ContainerContext containerContext) {
+        this.containerContext = containerContext;
     }
 
     public void start() throws IOException {
@@ -86,8 +92,11 @@ public class Sailor {
 
     private void reportException(final Exception e) {
         final Map<String, Object> headers = new HashMap<String, Object>();
-        headers.put("stepId", this.step.getId());
-        headers.put("compId", this.step.getCompId());
+        headers.put("execId", containerContext.getExecId());
+        headers.put("taskId", containerContext.getFlowId());
+        headers.put("userId", containerContext.getUserId());
+        headers.put("stepId", containerContext.getStepId());
+        headers.put("compId", containerContext.getCompId());
 
         amqp.sendError(e, Utils.buildAmqpProperties(headers), null);
     }

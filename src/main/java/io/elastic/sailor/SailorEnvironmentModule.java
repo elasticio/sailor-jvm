@@ -20,6 +20,9 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_FLOW_ID);
         bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID);
         bindRequiredStringEnvVar(Constants.ENV_VAR_FUNCTION);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_EXEC_ID);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_USER_ID);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_COMP_ID);
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_AMQP_URI);
         bindRequiredStringEnvVar(Constants.ENV_VAR_LISTEN_MESSAGES_ON);

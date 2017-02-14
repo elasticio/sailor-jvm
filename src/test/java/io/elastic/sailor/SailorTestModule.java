@@ -12,7 +12,6 @@ public class SailorTestModule extends AbstractModule {
     }
 
     void bindEnvVars() {
-
         bindRequiredStringEnvVar(Constants.ENV_VAR_API_URI, "http://localhost:11111");
         bindRequiredStringEnvVar(Constants.ENV_VAR_API_USERNAME, "admin");
         bindRequiredStringEnvVar(Constants.ENV_VAR_API_KEY, "secret");
@@ -42,6 +41,10 @@ public class SailorTestModule extends AbstractModule {
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID, "step_1");
         bindRequiredStringEnvVar(Constants.ENV_VAR_FLOW_ID, "5559edd38968ec0736000003");
+        bindRequiredStringEnvVar(Constants.ENV_VAR_EXEC_ID, "some-exec-id");
+        bindRequiredStringEnvVar(Constants.ENV_VAR_USER_ID, "5559edd38968ec0736000002");
+        bindRequiredStringEnvVar(Constants.ENV_VAR_COMP_ID, "5559edd38968ec0736000456");
+        bindRequiredStringEnvVar(Constants.ENV_VAR_FUNCTION, "myFunction");
 
     }
 

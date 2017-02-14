@@ -50,8 +50,9 @@ class IntegrationSpec extends Specification {
         System.setProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_IV, 'iv=any16_symbols')
         System.setProperty(Constants.ENV_VAR_FLOW_ID, '5559edd38968ec0736000003')
         System.setProperty(Constants.ENV_VAR_STEP_ID, 'step_1')
-        System.setProperty('ELASTICIO_USER_ID', '5559edd38968ec0736000002')
-        System.setProperty('ELASTICIO_COMP_ID', '5559edd38968ec0736000456')
+        System.setProperty(Constants.ENV_VAR_USER_ID, '5559edd38968ec0736000002')
+        System.setProperty(Constants.ENV_VAR_COMP_ID, '5559edd38968ec0736000456')
+        System.setProperty(Constants.ENV_VAR_EXEC_ID, 'some-exec-id')
 
         System.setProperty(Constants.ENV_VAR_AMQP_URI, 'amqp://guest:guest@localhost:5672')
         System.setProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON, prefix + ':messages')

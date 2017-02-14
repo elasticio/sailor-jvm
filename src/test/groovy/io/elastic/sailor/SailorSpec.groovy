@@ -39,11 +39,18 @@ class SailorSpec extends ApiAwareSpecification {
         sailor.start()
 
         then:
-        1 * componentBuilder.build() >> { throw new RuntimeException("OMG. I can't build the component")}
+        1 * componentBuilder.build() >> { throw new RuntimeException("OMG. I can't build the component") }
         1 * amqp.connect()
-        1 * amqp.sendError({
-            println(it.message)
-            it.message == "OMG. I can't build the component"
-        }, _, null)
+        1 * amqp.sendError(
+                {
+
+                    it.message == "OMG. I can't build the component"
+                },
+                {
+                    it.headers == ['stepId':'step_1', 'compId':'5559edd38968ec0736000456',
+                                   'userId':'5559edd38968ec0736000002', 'taskId':'5559edd38968ec0736000003',
+                                   'execId':'some-exec-id']
+                },
+                null)
     }
 }

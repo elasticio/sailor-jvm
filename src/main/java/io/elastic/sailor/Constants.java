@@ -42,6 +42,9 @@ public final class Constants {
     public static final String ENV_VAR_REBOUND_INITIAL_EXPIRATION = "ELASTICIO_REBOUND_INITIAL_EXPIRATION";
     public static final String ENV_VAR_FLOW_ID = "ELASTICIO_FLOW_ID";
     public static final String ENV_VAR_STEP_ID = "ELASTICIO_STEP_ID";
+    public static final String ENV_VAR_EXEC_ID = "ELASTICIO_EXEC_ID";
+    public static final String ENV_VAR_USER_ID = "ELASTICIO_USER_ID";
+    public static final String ENV_VAR_COMP_ID = "ELASTICIO_COMP_ID";
     public static final String ENV_VAR_RABBITMQ_PREFETCH_SAILOR = "ELASTICIO_RABBITMQ_PREFETCH_SAILOR";
 
 }
