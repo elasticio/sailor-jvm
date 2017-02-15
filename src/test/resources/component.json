@@ -31,6 +31,10 @@
             "main": "io.elastic.sailor.component.StartupInitAction",
             "title": "Startup/Init Action"
         },
+        "httpReplyAction": {
+            "main": "io.elastic.sailor.component.HttpReplyAction",
+            "title": "HttpReply Action"
+        },
         "helloworldaction": {
             "main": "io.elastic.sailor.component.HelloWorldAction",
             "title": "Test action",

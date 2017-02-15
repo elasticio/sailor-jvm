@@ -3,6 +3,7 @@ package io.elastic.sailor
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
+import io.elastic.api.HttpReply
 import io.elastic.api.JSON
 import io.elastic.api.Message
 import org.eclipse.jetty.server.Request
@@ -250,6 +251,80 @@ class IntegrationSpec extends Specification {
         def result = blockingVar.get()
         result.headers.isEmpty()
         JSON.stringify(result.body) == '{"echo":{"message":"Show me startup/init"},"startupAndInit":{"startup":{"apiKey":"secret"},"init":{"apiKey":"secret"}}}'
+        sailor.amqp.cancelConsumer()
+    }
+
+    def "should send http reply successfully"() {
+        setup:
+
+        blockingVar = new BlockingVariable(5)
+        System.setProperty(Constants.ENV_VAR_FUNCTION, 'httpReplyAction')
+
+        def replyQueueName = prefix + 'request_reply_queue'
+        def replyQueueRoutingKey = prefix + 'request_reply_routing_key'
+
+        amqp.publishChannel.queueDeclare(replyQueueName, true, false, false, [:])
+        amqp.publishChannel.queueBind(
+                replyQueueName,
+                System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
+                replyQueueRoutingKey)
+
+
+        def headers = [
+                'execId'  : 'some-exec-id',
+                'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
+                'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
+                'userId'  : System.getProperty('ELASTICIO_USER_ID'),
+                start     : System.currentTimeMillis(),
+                'reply_to': replyQueueRoutingKey
+        ]
+
+        def options = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .priority(1)
+                .deliveryMode(2)
+                .build()
+
+        def msg = new Message.Builder()
+                .body(Json.createObjectBuilder().add('message', 'Send me a reply').build())
+                .build()
+
+        byte[] payload = cipher.encryptMessage(msg).getBytes();
+
+        amqp.publishChannel.basicPublish(
+                System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
+                System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
+                options,
+                payload);
+
+        def consumer = new DefaultConsumer(amqp.publishChannel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body)
+                    throws IOException {
+
+                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                def bodyString = new String(body, "UTF-8");
+                def message = IntegrationSpec.this.cipher.decrypt(bodyString);
+                IntegrationSpec.this.blockingVar.set(JSON.parseObject(message));
+            }
+        }
+
+        amqp.publishChannel.basicConsume(replyQueueName, consumer)
+
+        when:
+
+        sailor = Sailor.createAndStartSailor()
+
+        then:
+        def result = blockingVar.get()
+        result.statusCode.intValue() == HttpReply.Status.ACCEPTED.statusCode
+        result.getJsonString('body').getString() == '{"echo":{"message":"Send me a reply"}}'
+        JSON.stringify(result.get('headers')) == '{"Content-type":"application/json","x-custom-header":"abcdef"}'
         sailor.amqp.cancelConsumer()
     }
 
