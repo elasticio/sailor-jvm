@@ -27,6 +27,10 @@
             "main": "io.elastic.sailor.component.ErroneousAction",
             "title": "Erroneous Action"
         },
+        "startupInitAction": {
+            "main": "io.elastic.sailor.component.StartupInitAction",
+            "title": "Startup/Init Action"
+        },
         "helloworldaction": {
             "main": "io.elastic.sailor.component.HelloWorldAction",
             "title": "Test action",

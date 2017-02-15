@@ -112,7 +112,7 @@ class IntegrationSpec extends Specification {
 
                 def stepData = Json.createObjectBuilder()
                         .add(Constants.STEP_PROPERTY_ID, System.getProperty(Constants.ENV_VAR_STEP_ID))
-                        .add(Constants.STEP_PROPERTY_COMP_ID, System.getProperty('ELASTICIO_COMP_ID'))
+                        .add(Constants.STEP_PROPERTY_COMP_ID, System.getProperty(Constants.ENV_VAR_COMP_ID))
                         .add(Constants.STEP_PROPERTY_FUNCTION, System.getProperty(Constants.ENV_VAR_FUNCTION))
                         .add(Constants.STEP_PROPERTY_CFG, Json.createObjectBuilder().add('apiKey', 'secret').build())
                         .add(Constants.STEP_PROPERTY_SNAPSHOT,
@@ -124,6 +124,10 @@ class IntegrationSpec extends Specification {
             }
         });
         server.start();
+    }
+
+    def cleanup() {
+        System.clearProperty(Constants.ENV_VAR_STARTUP_REQUIRED)
     }
 
     def "run sailor successfully"() {
@@ -184,6 +188,68 @@ class IntegrationSpec extends Specification {
         def result = blockingVar.get()
         result.headers.isEmpty()
         JSON.stringify(result.body) == '{"echo":{"message":"Just do it!"}}'
+        sailor.amqp.cancelConsumer()
+    }
+
+    def "should execute startup/init successfully"() {
+        setup:
+        System.setProperty(Constants.ENV_VAR_STARTUP_REQUIRED, "1");
+        blockingVar = new BlockingVariable(5)
+        System.setProperty(Constants.ENV_VAR_FUNCTION, 'startupInitAction')
+
+        def headers = [
+                'execId'  : 'some-exec-id',
+                'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
+                'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
+                'userId'  : System.getProperty('ELASTICIO_USER_ID'),
+                start     : System.currentTimeMillis()
+        ]
+
+        def options = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .priority(1)
+                .deliveryMode(2)
+                .build()
+
+        def msg = new Message.Builder()
+                .body(Json.createObjectBuilder().add('message', 'Show me startup/init').build())
+                .build()
+
+        byte[] payload = cipher.encryptMessage(msg).getBytes();
+
+        amqp.publishChannel.basicPublish(
+                System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
+                System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
+                options,
+                payload);
+
+        def consumer = new DefaultConsumer(amqp.publishChannel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body)
+                    throws IOException {
+
+                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                def bodyString = new String(body, "UTF-8");
+                def message = IntegrationSpec.this.cipher.decryptMessage(bodyString);
+                IntegrationSpec.this.blockingVar.set(message);
+            }
+        }
+
+        amqp.publishChannel.basicConsume(dataQueue, consumer)
+
+        when:
+
+        sailor = Sailor.createAndStartSailor()
+
+        then:
+        def result = blockingVar.get()
+        result.headers.isEmpty()
+        JSON.stringify(result.body) == '{"echo":{"message":"Show me startup/init"},"startupAndInit":{"startup":{"apiKey":"secret"},"init":{"apiKey":"secret"}}}'
         sailor.amqp.cancelConsumer()
     }
 
