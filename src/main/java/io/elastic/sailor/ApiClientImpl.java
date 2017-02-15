@@ -1,6 +1,7 @@
 package io.elastic.sailor;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
@@ -8,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.json.JsonObject;
 
+@Singleton
 public class ApiClientImpl implements ApiClient {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiClientImpl.class.getName());

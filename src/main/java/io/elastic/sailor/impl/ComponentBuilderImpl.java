@@ -1,6 +1,7 @@
 package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.elastic.api.Component;
 import io.elastic.api.EventEmitter;
@@ -13,6 +14,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Constructor;
 
+@Singleton
 public class ComponentBuilderImpl implements ComponentBuilder {
     private static final Logger logger = LoggerFactory.getLogger(ComponentBuilderImpl.class);
 
