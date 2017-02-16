@@ -1,14 +1,13 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonElement;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 import io.elastic.api.EventEmitter;
 import io.elastic.sailor.impl.*;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,10 +17,12 @@ public class SailorModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(AMQPWrapperInterface.class).to(AMQPWrapper.class);
+        bind(AmqpService.class).to(AmqpServiceImpl.class);
         bind(MessageProcessor.class).to(MessageProcessorImpl.class);
 
         bind(ApiClient.class).to(ApiClientImpl.class);
+
+        bind(ModuleBuilder.class).to(ModuleBuilderImpl.class);
 
         install(new FactoryModuleBuilder()
                 .implement(
@@ -44,17 +45,19 @@ public class SailorModule extends AbstractModule {
                         EventEmitter.Callback.class,
                         Names.named(Constants.NAME_CALLBACK_UPDATE_KEYS),
                         UpdateKeysCallback.class)
+                .implement(
+                        EventEmitter.Callback.class,
+                        Names.named(Constants.NAME_HTTP_REPLY_KEYS),
+                        HttpReplyCallback.class)
                 .build(EmitterCallbackFactory.class));
     }
 
 
     @Provides
+    @Singleton
     @Named(Constants.NAME_STEP_JSON)
-    Step provideTask(
-            ApiClient apiClient,
-            @Named(Constants.ENV_VAR_TASK_ID) String taskId,
-            @Named(Constants.ENV_VAR_STEP_ID) String stepId) {
+    Step provideTask(ApiClient apiClient, ContainerContext ctx) {
 
-        return apiClient.retrieveTaskStep(taskId, stepId);
+        return apiClient.retrieveFlowStep(ctx.getFlowId(), ctx.getStepId());
     }
 }

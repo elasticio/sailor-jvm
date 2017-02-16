@@ -1,12 +1,16 @@
 package io.elastic.sailor
 
-import com.google.gson.JsonObject
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Envelope
 import io.elastic.api.Message
+import io.elastic.sailor.component.HelloWorldAction
+import io.elastic.sailor.impl.CryptoServiceImpl
+import io.elastic.sailor.impl.MessageConsumer
 import spock.lang.Shared
 import spock.lang.Specification
+
+import javax.json.Json
 
 class MessageConsumerSpec extends Specification {
 
@@ -14,7 +18,7 @@ class MessageConsumerSpec extends Specification {
     MessageProcessor processor = Mock()
 
     @Shared
-    CipherWrapper cipher = new CipherWrapper("testCryptoPassword", "iv=any16_symbols")
+    CryptoServiceImpl cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 
     def consumer
 
@@ -31,6 +35,8 @@ class MessageConsumerSpec extends Specification {
     @Shared
     def encryptedMessage
 
+    def component
+
     def setupSpec() {
 
         headers = ["execId": "exec1", "taskId": "task2", "userId": "user3"] as Map
@@ -41,15 +47,17 @@ class MessageConsumerSpec extends Specification {
                 .headers(headers)
                 .build();
 
-        def body = new JsonObject();
-        body.addProperty("content", "Hello world!");
+        def body = Json.createObjectBuilder()
+                .add("content", "Hello world!")
+                .build()
 
         def msg = new Message.Builder().body(body).build();
         encryptedMessage = cipher.encryptMessage(msg)
     }
 
     def setup() {
-        consumer = new MessageConsumer(channel, cipher, processor);
+        component = new HelloWorldAction()
+        consumer = new MessageConsumer(channel, cipher, processor, component)
     }
 
 
@@ -61,7 +69,7 @@ class MessageConsumerSpec extends Specification {
         then:
         1 * processor.processMessage({
             it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, headers, 123456) >> new ExecutionStats(1, 0, 0)
+        }, headers, component) >> new ExecutionStats(1, 0, 0)
         1 * channel.basicAck(123456, true)
         0 * _
 
@@ -76,7 +84,7 @@ class MessageConsumerSpec extends Specification {
         then:
         1 * processor.processMessage({
             it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, headers, 123456) >> new ExecutionStats(0, 1, 0)
+        }, headers, component) >> new ExecutionStats(0, 1, 0)
         1 * channel.basicReject(123456, false)
         0 * _
 
@@ -90,7 +98,7 @@ class MessageConsumerSpec extends Specification {
         then:
         1 * processor.processMessage({
             it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, headers, 123456) >> { throw new Exception("Ouch") }
+        }, headers, component) >> { throw new Exception("Ouch") }
         1 * channel.basicReject(123456, false)
 
     }

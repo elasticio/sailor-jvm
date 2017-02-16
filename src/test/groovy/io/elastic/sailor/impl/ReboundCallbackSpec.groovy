@@ -1,27 +1,20 @@
 package io.elastic.sailor.impl
 
-import com.google.gson.JsonParser
 import io.elastic.api.Message
-import io.elastic.sailor.AMQPWrapperInterface
-import io.elastic.sailor.CipherWrapper
+import io.elastic.sailor.AmqpService
 import io.elastic.sailor.ExecutionContext
-import io.elastic.sailor.Step
+import io.elastic.sailor.TestUtils
 import spock.lang.Specification
 import spock.lang.Unroll
 
 class ReboundCallbackSpec extends Specification{
 
-    def step = new JsonParser().parse("{" +
-            "\"id\":\"step_1\"," +
-            "\"comp_id\":\"testcomponent\"," +
-            "\"function\":\"test\"," +
-            "\"snapshot\":{\"timestamp\":\"19700101\"}}")
     ExecutionContext ctx = new ExecutionContext(
-            new Step(step), new Message.Builder().build(), Collections.emptyMap())
+            TestUtils.createStep(), new Message.Builder().build(), Collections.emptyMap())
 
-    CipherWrapper cipher = new CipherWrapper("testCryptoPassword", "iv=any16_symbols")
+    CryptoServiceImpl cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 
-    AMQPWrapperInterface amqp = Mock()
+    AmqpService amqp = Mock()
 
     def callback = new ReboundCallback(ctx, amqp, cipher, 5, 1500)
 

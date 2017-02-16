@@ -1,24 +1,24 @@
 package io.elastic.sailor;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonSyntaxException;
+import com.rabbitmq.client.AMQP;
+import io.elastic.api.JSON;
 
-class Utils {
+import java.util.Map;
 
-    public static boolean isJsonObject(String input) {
+public class Utils {
+
+    public static boolean isJsonObject(final String input) {
+        if (input == null) {
+            return false;
+        }
+
         try {
-            new Gson().fromJson(input, Object.class);
+            JSON.parseObject(input);
             return true;
-        } catch (JsonSyntaxException e) {
+        } catch (Exception e) {
             return false;
         }
     }
-
-    public static boolean isJsonObject(JsonElement element) {
-        return element != null && element.isJsonObject();
-    }
-
 
     public static String getEnvVar(final String key) {
         final String value = getOptionalEnvVar(key);
@@ -40,4 +40,15 @@ class Utils {
 
         return value;
     }
+
+    public static AMQP.BasicProperties buildAmqpProperties(final Map<String, Object> headers) {
+        return new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .priority(1)// this should equal to mandatory true
+                .deliveryMode(2)//TODO: check if flag .mandatory(true) was set
+                .build();
+    }
+
 }

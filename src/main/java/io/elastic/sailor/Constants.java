@@ -9,6 +9,7 @@ public final class Constants {
     public static final String NAME_CALLBACK_ERROR = "errorCallback";
     public static final String NAME_CALLBACK_SNAPSHOT = "snapshotCallback";
     public static final String NAME_CALLBACK_UPDATE_KEYS = "updateKeys";
+    public static final String NAME_HTTP_REPLY_KEYS = "httpReply";
 
     public static final String STEP_PROPERTY_ID = "id";
     public static final String STEP_PROPERTY_FUNCTION = "function";
@@ -39,8 +40,12 @@ public final class Constants {
     public static final String ENV_VAR_SNAPSHOT_ROUTING_KEY = "ELASTICIO_SNAPSHOT_ROUTING_KEY";
     public static final String ENV_VAR_REBOUND_LIMIT = "ELASTICIO_REBOUND_LIMIT";
     public static final String ENV_VAR_REBOUND_INITIAL_EXPIRATION = "ELASTICIO_REBOUND_INITIAL_EXPIRATION";
-    public static final String ENV_VAR_TASK_ID = "ELASTICIO_TASK_ID";
+    public static final String ENV_VAR_FLOW_ID = "ELASTICIO_FLOW_ID";
     public static final String ENV_VAR_STEP_ID = "ELASTICIO_STEP_ID";
+    public static final String ENV_VAR_EXEC_ID = "ELASTICIO_EXEC_ID";
+    public static final String ENV_VAR_USER_ID = "ELASTICIO_USER_ID";
+    public static final String ENV_VAR_COMP_ID = "ELASTICIO_COMP_ID";
     public static final String ENV_VAR_RABBITMQ_PREFETCH_SAILOR = "ELASTICIO_RABBITMQ_PREFETCH_SAILOR";
+    public static final String ENV_VAR_STARTUP_REQUIRED = "ELASTICIO_STARTUP_REQUIRED";
 
 }

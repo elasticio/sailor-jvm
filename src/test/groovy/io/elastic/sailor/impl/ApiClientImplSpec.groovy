@@ -1,10 +1,12 @@
-package io.elastic.sailor
+package io.elastic.sailor.impl
 
 import com.github.restdriver.clientdriver.ClientDriverRequest
 import com.github.restdriver.clientdriver.ClientDriverRule
-import com.google.gson.JsonObject
+import io.elastic.sailor.impl.ApiClientImpl
 import org.junit.Rule
 import spock.lang.Specification
+
+import javax.json.Json
 
 import static com.github.restdriver.clientdriver.RestClientDriver.giveResponse
 import static com.github.restdriver.clientdriver.RestClientDriver.onRequestTo
@@ -21,8 +23,6 @@ class ApiClientImplSpec extends Specification {
     def "should retrieveTaskStep successfully"() {
 
         setup:
-        def body = new JsonObject()
-        body.addProperty('foo', 'barbaz')
 
         driver.addExpectation(
                 onRequestTo("/v1/tasks/55e5eeb460a8e2070000001e/steps/step_1")
@@ -32,11 +32,11 @@ class ApiClientImplSpec extends Specification {
                         .withStatus(200));
 
         when:
-        def step = client.retrieveTaskStep("55e5eeb460a8e2070000001e", "step_1");
+        def step = client.retrieveFlowStep("55e5eeb460a8e2070000001e", "step_1");
 
         then:
 
-        step.id == "step_1"
+        step.id == 'step_1'
         step.compId == "comp_1"
         step.function == "my_function"
         step.cfg.toString() == "{}"
@@ -46,11 +46,13 @@ class ApiClientImplSpec extends Specification {
     def "should updateAccount successfully"() {
 
         setup:
-        def keys = new JsonObject()
-        keys.addProperty('apiSecret', 'barbaz')
+        def keys = Json.createObjectBuilder()
+                .add('apiSecret', 'barbaz')
+                .build()
 
-        def body = new JsonObject()
-        body.add('keys', keys)
+        def body = Json.createObjectBuilder()
+                .add('keys', keys)
+                .build()
 
         driver.addExpectation(
                 onRequestTo("/v1/accounts/55083c567aea6f030000001a")

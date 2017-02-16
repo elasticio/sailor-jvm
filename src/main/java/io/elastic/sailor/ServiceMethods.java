@@ -1,7 +1,5 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import io.elastic.api.CredentialsVerifier;
 import io.elastic.api.DynamicMetadataProvider;
 import io.elastic.api.InvalidCredentialsException;
@@ -9,6 +7,9 @@ import io.elastic.api.SelectModelProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonString;
 import java.lang.reflect.Constructor;
 
 public enum ServiceMethods {
@@ -41,11 +42,9 @@ public enum ServiceMethods {
         }
 
         private JsonObject createResult(boolean verified) {
-            JsonObject result = new JsonObject();
-
-            result.addProperty("verified", verified);
-
-            return result;
+            return Json.createObjectBuilder()
+                    .add("verified", verified)
+                    .build();
         }
     },
 
@@ -95,15 +94,13 @@ public enum ServiceMethods {
                     "Env var '%s' is required", Constants.ENV_VAR_ACTION_OR_TRIGGER));
         }
 
-        final JsonElement element = triggerOrAction.get(name);
+        final JsonString className = triggerOrAction.getJsonString(name);
 
-        if (element == null) {
+        if (className == null) {
             throw new IllegalStateException(name + " is required");
         }
 
-        final String className = element.getAsString();
-
-        return newInstance(className);
+        return newInstance(className.getString());
     }
 
     private static <T> T newInstance(String className) {

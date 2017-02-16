@@ -3,8 +3,7 @@ package io.elastic.sailor.impl;
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import io.elastic.api.Message;
-import io.elastic.sailor.AMQPWrapperInterface;
-import io.elastic.sailor.CipherWrapper;
+import io.elastic.sailor.AmqpService;
 import io.elastic.sailor.ExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,15 +12,15 @@ public class DataCallback extends CountingCallbackImpl {
 
     private static final Logger logger = LoggerFactory.getLogger(DataCallback.class);
 
-    private AMQPWrapperInterface amqp;
-    private CipherWrapper cipher;
+    private AmqpService amqp;
+    private CryptoServiceImpl cipher;
     private ExecutionContext executionContext;
 
     @Inject
     public DataCallback(
             @Assisted ExecutionContext executionContext,
-            AMQPWrapperInterface amqp,
-            CipherWrapper cipher) {
+            AmqpService amqp,
+            CryptoServiceImpl cipher) {
         this.executionContext = executionContext;
         this.amqp = amqp;
         this.cipher = cipher;

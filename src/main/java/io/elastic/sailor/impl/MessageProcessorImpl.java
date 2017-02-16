@@ -1,15 +1,15 @@
 package io.elastic.sailor.impl;
 
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
-import io.elastic.api.Executor;
 import io.elastic.api.Message;
+import io.elastic.api.Module;
 import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 
+import javax.json.JsonObject;
 import java.util.Map;
 
 public class MessageProcessorImpl implements MessageProcessor {
@@ -17,56 +17,45 @@ public class MessageProcessorImpl implements MessageProcessor {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageProcessorImpl.class);
 
-    private final ComponentResolver componentResolver;
     private final EmitterCallbackFactory emitterCallbackFactory;
     private final Step step;
 
     @Inject
-    public MessageProcessorImpl(ComponentResolver componentResolver,
-                                EmitterCallbackFactory emitterCallbackFactory,
+    public MessageProcessorImpl(EmitterCallbackFactory emitterCallbackFactory,
                                 @Named(Constants.NAME_STEP_JSON) Step step) {
-        this.componentResolver = componentResolver;
         this.emitterCallbackFactory = emitterCallbackFactory;
         this.step = step;
     }
 
     public ExecutionStats processMessage(final Message incomingMessage,
                                          final Map<String, Object> incomingHeaders,
-                                         final Long deliveryTag) {
+                                         final Module module) {
 
         final ExecutionContext executionContext = new ExecutionContext(
                 this.step, incomingMessage, incomingHeaders);
 
-        logger.info("Processing step '{}' of a task", this.step.getId());
-
-        final String triggerOrAction = this.step.getFunction();
-        final String className = componentResolver.findTriggerOrAction(triggerOrAction);
         final JsonObject cfg = this.step.getCfg();
         final JsonObject snapshot = this.step.getSnapshot();
 
-        logger.info("Component to be executed: {}", this.step.getCompId());
-        logger.info("Trigger/action to be executed: {}", this.step.getFunction());
-        logger.info("Component Java class to be instantiated: {}", className);
-
-        final ExecutionParameters params = new ExecutionParameters.Builder(incomingMessage)
-                .configuration(cfg)
-                .snapshot(snapshot)
-                .build();
-
         // make data callback
-        CountingCallback dataCallback = emitterCallbackFactory.createDataCallback(executionContext);
+        final CountingCallback dataCallback = emitterCallbackFactory.createDataCallback(executionContext);
 
         // make error callback
-        CountingCallback errorCallback = emitterCallbackFactory.createErrorCallback(executionContext);
+        final CountingCallback errorCallback = emitterCallbackFactory.createErrorCallback(executionContext);
 
         // make rebound callback
-        CountingCallback reboundCallback = emitterCallbackFactory.createReboundCallback(executionContext);
+        final CountingCallback reboundCallback = emitterCallbackFactory.createReboundCallback(executionContext);
 
         // snapshot callback
-        CountingCallback snapshotCallback = emitterCallbackFactory.createSnapshotCallback(executionContext);
+        final CountingCallback snapshotCallback = emitterCallbackFactory.createSnapshotCallback(executionContext);
 
         // updateKeys callback
-        EventEmitter.Callback updateKeysCallback = emitterCallbackFactory.createUpdateKeysCallback(executionContext);
+        final EventEmitter.Callback updateKeysCallback
+                = emitterCallbackFactory.createUpdateKeysCallback(executionContext);
+
+        // httpReplyCallback callback
+        final EventEmitter.Callback httpReplyCallback
+                = emitterCallbackFactory.createHttpReplyCallback(executionContext);
 
         final EventEmitter eventEmitter = new EventEmitter.Builder()
                 .onData(dataCallback)
@@ -74,11 +63,20 @@ public class MessageProcessorImpl implements MessageProcessor {
                 .onRebound(reboundCallback)
                 .onSnapshot(snapshotCallback)
                 .onUpdateKeys(updateKeysCallback)
+                .onHttpReplyCallback(httpReplyCallback)
                 .build();
 
-        final Executor executor = new Executor(className, eventEmitter);
+        final ExecutionParameters params = new ExecutionParameters.Builder(incomingMessage, eventEmitter)
+                .configuration(cfg)
+                .snapshot(snapshot)
+                .build();
 
-        executor.execute(params);
+        try {
+            module.execute(params);
+        } catch (RuntimeException e) {
+            logger.error("Component execution failed", e);
+            eventEmitter.emitException(e);
+        }
 
         return new ExecutionStats(dataCallback.getCount(), errorCallback.getCount(), reboundCallback.getCount());
     }

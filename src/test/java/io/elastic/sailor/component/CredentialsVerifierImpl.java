@@ -1,9 +1,11 @@
 package io.elastic.sailor.component;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import io.elastic.api.CredentialsVerifier;
 import io.elastic.api.InvalidCredentialsException;
+import net.minidev.json.JSONValue;
+
+import javax.json.JsonObject;
+import javax.json.JsonValue;
 
 public class CredentialsVerifierImpl implements CredentialsVerifier {
 
@@ -12,9 +14,9 @@ public class CredentialsVerifierImpl implements CredentialsVerifier {
     @Override
     public void verify(JsonObject configuration) throws InvalidCredentialsException {
 
-        final JsonElement result = configuration.get(VERIFICATION_RESULT_CFG_KEY);
+        final JsonValue value = configuration.get(VERIFICATION_RESULT_CFG_KEY);
 
-        if (result != null && !result.getAsBoolean()) {
+        if (value == JsonValue.FALSE) {
             throw new InvalidCredentialsException("Invalid credentials");
         }
     }

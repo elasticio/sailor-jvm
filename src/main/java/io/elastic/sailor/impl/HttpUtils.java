@@ -1,8 +1,6 @@
-package io.elastic.sailor;
+package io.elastic.sailor.impl;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import io.elastic.api.JSON;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
@@ -19,12 +17,13 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.JsonObject;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 
-class HttpUtils {
+public class HttpUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class.getName());
 
@@ -33,28 +32,29 @@ class HttpUtils {
 
         final HttpPost httpPost = new HttpPost(url);
         httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json");
-        httpPost.setEntity(new StringEntity(body.toString()));
+        httpPost.setEntity(createStringEntity(body));
 
         logger.info("Successfully posted json {} bytes length", body.toString().length());
 
         return sendHttpRequest(httpPost, null);
     }
 
-    public static JsonElement getJson(final String url,
-                                      final UsernamePasswordCredentials credentials) {
+    public static JsonObject getJson(final String url,
+                                     final UsernamePasswordCredentials credentials) {
 
         final HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader(HTTP.CONTENT_TYPE, "application/json");
+        httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
 
         final String content = sendHttpRequest(httpGet, credentials);
 
-        return new JsonParser().parse(content);
+        return JSON.parseObject(content);
     }
 
 
-    public static JsonElement putJson(final String url,
-                                      final JsonObject body,
-                                      final UsernamePasswordCredentials credentials) {
+    public static JsonObject putJson(final String url,
+                                     final JsonObject body,
+                                     final UsernamePasswordCredentials credentials) {
 
         final HttpPut httpPut = new HttpPut(url);
         httpPut.addHeader(HTTP.CONTENT_TYPE, "application/json");
@@ -64,12 +64,12 @@ class HttpUtils {
 
         logger.info("Successfully put json {} bytes length", body.toString().length());
 
-        return new JsonParser().parse(content);
+        return JSON.parseObject(content);
     }
 
     private static StringEntity createStringEntity(final JsonObject body) {
         try {
-            return new StringEntity(body.toString());
+            return new StringEntity(JSON.stringify(body));
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }

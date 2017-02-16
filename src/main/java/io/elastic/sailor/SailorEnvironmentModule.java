@@ -17,9 +17,12 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_API_KEY);
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD);
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_IV);
-        bindRequiredStringEnvVar(Constants.ENV_VAR_TASK_ID);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_FLOW_ID);
         bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID);
         bindRequiredStringEnvVar(Constants.ENV_VAR_FUNCTION);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_EXEC_ID);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_USER_ID);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_COMP_ID);
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_AMQP_URI);
         bindRequiredStringEnvVar(Constants.ENV_VAR_LISTEN_MESSAGES_ON);
@@ -40,6 +43,10 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindOptionalIntegerEnvVar(
                 Constants.ENV_VAR_RABBITMQ_PREFETCH_SAILOR,
                 Constants.DEFAULT_RABBITMQ_PREFETCH_SAILOR);
+
+        bindOptionalYesNoEnvVar(Constants.ENV_VAR_STARTUP_REQUIRED);
+
+
     }
 
     void bindRequiredStringEnvVar(final String name) {
@@ -54,6 +61,12 @@ public class SailorEnvironmentModule extends AbstractModule {
                 .toInstance(getOptionalIntegerValue(name, defaultValue));
     }
 
+    void bindOptionalYesNoEnvVar(final String name) {
+        bind(Boolean.class)
+                .annotatedWith(Names.named(name))
+                .toInstance(getOptionalYesNoValue(name));
+    }
+
     private static int getOptionalIntegerValue(final String key, int defaultValue) {
         final String value = Utils.getOptionalEnvVar(key);
 
@@ -62,5 +75,15 @@ public class SailorEnvironmentModule extends AbstractModule {
         }
 
         return defaultValue;
+    }
+
+    private static boolean getOptionalYesNoValue(final String key) {
+        final String value = Utils.getOptionalEnvVar(key);
+
+        if (value != null) {
+            return true;
+        }
+
+        return false;
     }
 }

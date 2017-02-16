@@ -1,25 +1,21 @@
 package io.elastic.sailor.component;
 
-import com.google.gson.JsonObject;
-import io.elastic.api.Component;
-import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
+import io.elastic.api.Module;
 
-public class HelloWorldAction extends Component {
+import javax.json.Json;
+import javax.json.JsonObject;
 
-    public HelloWorldAction(EventEmitter eventEmitter) {
-        super(eventEmitter);
-    }
+public class HelloWorldAction implements Module {
 
     public void execute(ExecutionParameters parameters) {
+        final JsonObject body = Json.createObjectBuilder()
+                .add("echo", parameters.getMessage().getBody())
+                .build();
 
-        JsonObject body = new JsonObject();
-        body.addProperty("de", "Hallo, Welt!");
-        body.addProperty("en", "Hello, world!");
+        final Message msg = new Message.Builder().body(body).build();
 
-        new Message.Builder().body(body).build();
-
-        this.getEventEmitter().emitData(parameters.getMessage());
+        parameters.getEventEmitter().emitData(msg);
     }
 }

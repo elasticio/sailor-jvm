@@ -1,25 +1,23 @@
 package io.elastic.sailor.component;
 
-import com.google.gson.JsonObject;
-import io.elastic.api.Component;
-import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
+import io.elastic.api.Module;
 
-public class TestAction extends Component {
+import javax.json.Json;
+import javax.json.JsonObject;
 
-    public TestAction(EventEmitter eventEmitter) {
-        super(eventEmitter);
-    }
+public class TestAction implements Module {
 
     public void execute(ExecutionParameters parameters) {
 
-        JsonObject snapshot = new JsonObject();
-        snapshot.addProperty("lastUpdate", "2015-07-04");
+        JsonObject snapshot = Json.createObjectBuilder()
+                .add("lastUpdate", "2015-07-04")
+                .build();
 
         // emit received message back
-        this.getEventEmitter().emitData(parameters.getMessage());
-        this.getEventEmitter().emitSnapshot(snapshot);
-        this.getEventEmitter().emitRebound("Please retry later");
+        parameters.getEventEmitter().emitData(parameters.getMessage());
+        parameters.getEventEmitter().emitSnapshot(snapshot);
+        parameters.getEventEmitter().emitRebound("Please retry later");
         throw new RuntimeException("Error happened in TestAction!");
     }
 }

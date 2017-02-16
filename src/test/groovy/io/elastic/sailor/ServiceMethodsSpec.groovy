@@ -1,17 +1,19 @@
 package io.elastic.sailor
 
-import com.google.gson.JsonObject
 import io.elastic.sailor.component.CredentialsVerifierImpl
 import io.elastic.sailor.component.SimpleMetadataProvider
 import io.elastic.sailor.component.SimpleSelectModelProvider
 import spock.lang.Specification
 
+import javax.json.Json
+
 class ServiceMethodsSpec extends Specification {
 
     def "select model"() {
         setup:
-        def cfg = new JsonObject()
-        cfg.addProperty("apiKey", "secret")
+        def cfg = Json.createObjectBuilder()
+                .add("apiKey", "secret")
+                .build()
 
         def params = new ServiceExecutionParameters.Builder()
                 .className(SimpleSelectModelProvider.class.getName())
@@ -28,11 +30,13 @@ class ServiceMethodsSpec extends Specification {
 
     def "meta model"() {
         setup:
-        def cfg = new JsonObject()
-        cfg.addProperty("apiKey", "secret")
+        def cfg = Json.createObjectBuilder()
+                .add("apiKey", "secret")
+                .build()
 
-        def triggerOrAction = new JsonObject()
-        triggerOrAction.addProperty("dynamicMetadata", SimpleMetadataProvider.class.getName())
+        def triggerOrAction = Json.createObjectBuilder()
+                .add("dynamicMetadata", SimpleMetadataProvider.class.getName())
+                .build()
 
         def params = new ServiceExecutionParameters.Builder()
                 .className(SimpleMetadataProvider.class.getName())
@@ -49,8 +53,9 @@ class ServiceMethodsSpec extends Specification {
 
     def "verify credentials when verified is not set"() {
         setup:
-        def cfg = new JsonObject()
-        cfg.addProperty("apiKey", "secret")
+        def cfg = Json.createObjectBuilder()
+                .add("apiKey", "secret")
+                .build()
 
         def params = new ServiceExecutionParameters.Builder()
                 .configuration(cfg)
@@ -65,8 +70,9 @@ class ServiceMethodsSpec extends Specification {
 
     def "verify credentials successfully with given verifier"() {
         setup:
-        def cfg = new JsonObject()
-        cfg.addProperty("apiKey", "secret")
+        def cfg = Json.createObjectBuilder()
+                .add("apiKey", "secret")
+                .build()
 
         def params = new ServiceExecutionParameters.Builder()
                 .configuration(cfg)
@@ -82,9 +88,11 @@ class ServiceMethodsSpec extends Specification {
 
     def "verify credentials with error with given verifier"() {
         setup:
-        def cfg = new JsonObject()
-        cfg.addProperty("apiKey", "secret")
-        cfg.addProperty(CredentialsVerifierImpl.VERIFICATION_RESULT_CFG_KEY, false)
+        def cfg = Json.createObjectBuilder()
+                .add("apiKey", "secret")
+                .add(CredentialsVerifierImpl.VERIFICATION_RESULT_CFG_KEY, false)
+                .build()
+        print(cfg)
 
         def params = new ServiceExecutionParameters.Builder()
                 .configuration(cfg)

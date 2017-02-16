@@ -1,11 +1,11 @@
 package io.elastic.sailor;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+
+import javax.json.JsonObject;
 
 public interface ApiClient {
 
-    Step retrieveTaskStep(String taskId, String stepId);
+    Step retrieveFlowStep(String taskId, String stepId);
 
-    JsonElement updateAccount(String accountId, JsonObject body);
+    JsonObject updateAccount(String accountId, JsonObject body);
 }

@@ -1,13 +1,18 @@
-package io.elastic.sailor;
+package io.elastic.sailor.impl;
 
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import io.elastic.sailor.ApiClient;
+import io.elastic.sailor.Constants;
+import io.elastic.sailor.Step;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.JsonObject;
+
+@Singleton
 public class ApiClientImpl implements ApiClient {
 
     private static final Logger logger = LoggerFactory.getLogger(ApiClientImpl.class.getName());
@@ -26,7 +31,7 @@ public class ApiClientImpl implements ApiClient {
     }
 
     @Override
-    public Step retrieveTaskStep(final String taskId, final String stepId) {
+    public Step retrieveFlowStep(final String taskId, final String stepId) {
         final String uri = String.format("%s/tasks/%s/steps/%s", this.apiBaseUri, taskId, stepId);
 
         logger.info("Retrieving step data for user {} at: {}", this.apiUser, uri);
@@ -34,13 +39,13 @@ public class ApiClientImpl implements ApiClient {
         final UsernamePasswordCredentials credentials
                 = new UsernamePasswordCredentials(this.apiUser, this.apiKey);
 
-        final JsonElement step = HttpUtils.getJson(uri, credentials);
+        final JsonObject step = HttpUtils.getJson(uri, credentials);
 
-        return new Step(step.getAsJsonObject());
+        return new Step(step);
     }
 
     @Override
-    public JsonElement updateAccount(final String accountId, final JsonObject body) {
+    public JsonObject updateAccount(final String accountId, final JsonObject body) {
         final String uri = String.format("%s/accounts/%s", this.apiBaseUri, accountId);
 
         logger.info("Updating account for user {} at: {}", this.apiUser, uri);

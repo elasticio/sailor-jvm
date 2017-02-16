@@ -1,4 +1,4 @@
-package io.elastic.sailor;
+package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -7,14 +7,23 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+import io.elastic.api.Message;
+import io.elastic.api.Module;
+import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URI;
+import java.util.Map;
 
 @Singleton
-public class AMQPWrapper implements AMQPWrapperInterface {
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AMQPWrapper.class);
+public class AmqpServiceImpl implements AmqpService {
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AmqpServiceImpl.class);
 
     private Connection amqp;
     private Channel subscribeChannel;
@@ -28,11 +37,12 @@ public class AMQPWrapper implements AMQPWrapperInterface {
     private String reboundRoutingKey;
     private String snapshotRoutingKey;
     private Integer prefetchCount;
-    private CipherWrapper cipher;
+    private CryptoServiceImpl cipher;
     private MessageProcessor messageProcessor;
+    private String consumerTag;
 
     @Inject
-    public AMQPWrapper(CipherWrapper cipher) {
+    public AmqpServiceImpl(CryptoServiceImpl cipher) {
         this.cipher = cipher;
     }
 
@@ -115,16 +125,27 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public void subscribeConsumer() {
-        final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, this.messageProcessor);
+    public void subscribeConsumer(final Module module) {
+        final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, this.messageProcessor, module);
 
         try {
-            subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
+            consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
         logger.info("Subscribed consumer. Waiting for messages to arrive ...");
+    }
+
+    public void cancelConsumer() {
+        if (consumerTag != null) {
+            logger.info("Canceling consumer {}", consumerTag);
+            try {
+                subscribeChannel.basicCancel(consumerTag);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
 
     public void ack(Long deliveryTag) {
@@ -149,19 +170,55 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         sendToExchange(this.dataRoutingKey, payload, options);
     }
 
+    public void sendHttpReply(byte[] payload, AMQP.BasicProperties options) {
+        final Map<String, Object> headers = options.getHeaders();
+        final Object routingKey = headers.get("reply_to");
+
+        if (routingKey == null) {
+            throw new RuntimeException(
+                    "Component emitted 'httpReply' event but 'reply_to' was not found in AMQP headers");
+        }
+        sendToExchange(routingKey.toString(), payload, options);
+    }
+
     public void sendSnapshot(byte[] payload, AMQP.BasicProperties options) {
         sendToExchange(this.snapshotRoutingKey, payload, options);
     }
 
-    public void sendError(byte[] payload, AMQP.BasicProperties options) {
-        sendToExchange(this.errorRoutingKey, payload, options);
+    public void sendError(Throwable e, AMQP.BasicProperties options, Message originalMessage) {
+
+        final StringWriter writer = new StringWriter();
+        e.printStackTrace(new PrintWriter(writer));
+
+        final JsonObjectBuilder builder = Json.createObjectBuilder()
+                .add("name", e.getClass().getName())
+                .add("stack", writer.toString());
+
+        if (e.getMessage() != null) {
+            builder.add("message", e.getMessage());
+        }
+
+        final JsonObject error = builder.build();
+
+        final JsonObjectBuilder payloadBuilder = Json.createObjectBuilder()
+                .add("error", cipher.encryptJsonObject(error));
+
+        if (originalMessage != null) {
+            payloadBuilder.add("errorInput", cipher.encryptMessage(originalMessage));
+        }
+
+        final JsonObject payload = payloadBuilder.build();
+
+        byte[] errorPayload = payload.toString().getBytes();
+
+        sendToExchange(this.errorRoutingKey, errorPayload, options);
     }
 
     public void sendRebound(byte[] payload, AMQP.BasicProperties options) {
         sendToExchange(this.reboundRoutingKey, payload, options);
     }
 
-    private AMQPWrapper openConnection(String uri) {
+    private AmqpServiceImpl openConnection(String uri) {
         try {
             if (amqp == null) {
                 ConnectionFactory factory = new ConnectionFactory();
@@ -175,7 +232,7 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         }
     }
 
-    private AMQPWrapper openPublishChannel() {
+    private AmqpServiceImpl openPublishChannel() {
         try {
             if (publishChannel == null) {
                 publishChannel = amqp.createChannel();
@@ -187,7 +244,7 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         }
     }
 
-    private AMQPWrapper openSubscribeChannel() {
+    private AmqpServiceImpl openSubscribeChannel() {
         try {
             if (subscribeChannel == null) {
                 subscribeChannel = amqp.createChannel();

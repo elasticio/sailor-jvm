@@ -37,17 +37,17 @@ public class ExecutionContext {
         result.put("function", this.step.getFunction());
         result.put("start", System.currentTimeMillis());
 
+        final Object replyTo = headers.get("reply_to");
+
+        if (replyTo != null) {
+            result.put("reply_to", replyTo);
+        }
+
         return result;
     }
 
     public AMQP.BasicProperties buildDefaultOptions() {
-        return new AMQP.BasicProperties.Builder()
-                .contentType("application/json")
-                .contentEncoding("utf8")
-                .headers(buildDefaultHeaders())
-                .priority(1)// this should equal to mandatory true
-                .deliveryMode(2)//TODO: check if flag .mandatory(true) was set
-                .build();
+        return Utils.buildAmqpProperties(buildDefaultHeaders());
     }
 
 

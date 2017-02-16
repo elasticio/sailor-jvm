@@ -1,11 +1,13 @@
-package io.elastic.sailor
+package io.elastic.sailor.impl
 
 import com.github.restdriver.clientdriver.ClientDriverRequest
 import com.github.restdriver.clientdriver.ClientDriverRule
-import com.google.gson.JsonObject
+import io.elastic.sailor.impl.HttpUtils
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.junit.Rule
 import spock.lang.Specification
+
+import javax.json.Json
 
 import static com.github.restdriver.clientdriver.RestClientDriver.giveResponse
 import static com.github.restdriver.clientdriver.RestClientDriver.onRequestTo
@@ -19,8 +21,9 @@ class HttpUtilsSpec extends Specification {
     def "should post json successfully"() {
 
         setup:
-        def body = new JsonObject()
-        body.addProperty('foo', 'barbaz')
+        def body = Json.createObjectBuilder()
+                .add('foo', 'barbaz')
+                .build()
 
         driver.addExpectation(
                 onRequestTo("/v1/exec/result/55e5eeb460a8e2070000001e")
@@ -43,8 +46,9 @@ class HttpUtilsSpec extends Specification {
     def "should put json successfully"() {
 
         setup:
-        def body = new JsonObject()
-        body.addProperty('foo', 'barbaz')
+        def body = Json.createObjectBuilder()
+                .add('foo', 'barbaz')
+                .build()
 
         driver.addExpectation(
                 onRequestTo("/v1/accounts/55e5eeb460a8e2070000001e")
@@ -89,7 +93,7 @@ class HttpUtilsSpec extends Specification {
         when:
         HttpUtils.postJson(
                 "http://localhost:10000/v1/exec/result/55e5eeb460a8e2070000001e",
-                new JsonObject())
+                Json.createObjectBuilder().build())
         then:
         def e = thrown(RuntimeException)
         e.message.contains 'User info is missing in the given url: http://localhost:10000/v1/exec/result/55e5eeb460a8e2070000001e'

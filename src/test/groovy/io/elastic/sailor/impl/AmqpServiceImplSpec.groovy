@@ -1,12 +1,17 @@
-package io.elastic.sailor
+package io.elastic.sailor.impl
 
 import com.google.inject.Guice
 import com.google.inject.Injector
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
+import io.elastic.api.Message
+import io.elastic.sailor.ApiAwareSpecification
+import io.elastic.sailor.SailorModule
+import io.elastic.sailor.SailorTestModule
+import io.elastic.sailor.impl.AmqpServiceImpl
 import spock.lang.Shared
 
-class AMPQSpec extends ApiAwareSpecification {
+class AmqpServiceImplSpec extends ApiAwareSpecification {
 
     def exchange = "5527f0ea43238e5d5f000002_exchange"
     def dataRoutingKey = "5559edd38968ec0736000003.test_exec.step_1.message"
@@ -23,7 +28,7 @@ class AMPQSpec extends ApiAwareSpecification {
     def setupSpec() {
         Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule())
 
-        amqp = injector.getInstance(AMQPWrapper.class)
+        amqp = injector.getInstance(AmqpServiceImpl.class)
     }
 
     def setup() {
@@ -47,7 +52,7 @@ class AMPQSpec extends ApiAwareSpecification {
 
     def "Should send error with ERROR_ROUTING_KEY"() {
         when:
-        amqp.sendError(new String("some-content").getBytes(), getOptions());
+        amqp.sendError(new RuntimeException("Ouch"), getOptions(), new Message.Builder().build());
         then:
         1 * publishChannel.basicPublish(exchange, errorRoutingKey, _, _)
     }

@@ -88,7 +88,7 @@ class ServiceSpec extends Specification {
                 onRequestTo("/")
                         .withMethod(ClientDriverRequest.Method.POST)
                         .withBasicAuth("admin", "secret")
-                        .withBody(containsString('{"status":"error","data":{"message":"java.lang.RuntimeException: Spec author told me to fail\\n\\tat io.elastic.sailor.component.SimpleSelectModelProvider.getSelectModel(SimpleSelectModelProvider.java:14)'),
+                        .withBody(containsString('{"status":"error","data":{"message":"java.lang.RuntimeException: Spec author told me to fail\\n\\tat io.elastic.sailor.component.SimpleSelectModelProvider.getSelectModel(SimpleSelectModelProvider.java:16)'),
                         "application/json"),
                 giveResponse('{"message":"ok"}', 'application/json')
                         .withStatus(200));
