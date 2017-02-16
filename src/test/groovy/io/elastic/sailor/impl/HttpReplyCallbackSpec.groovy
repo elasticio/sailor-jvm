@@ -1,20 +1,17 @@
 package io.elastic.sailor.impl
 
 import io.elastic.api.HttpReply
-import io.elastic.api.JSON
 import io.elastic.api.Message
-import io.elastic.sailor.AMQPWrapperInterface
-import io.elastic.sailor.CipherWrapper
+import io.elastic.sailor.AmqpService
 import io.elastic.sailor.ExecutionContext
-import io.elastic.sailor.Step
 import io.elastic.sailor.TestUtils
 import spock.lang.Shared
 import spock.lang.Specification
 
 class HttpReplyCallbackSpec extends Specification {
-    def amqp = Mock(AMQPWrapperInterface)
+    def amqp = Mock(AmqpService)
     @Shared
-    def cipher = new CipherWrapper("testCryptoPassword", "iv=any16_symbols")
+    def cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 
     def ctx = new ExecutionContext(
             TestUtils.createStep(), new Message.Builder().build(), Collections.emptyMap())

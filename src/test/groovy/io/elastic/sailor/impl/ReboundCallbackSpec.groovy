@@ -1,11 +1,8 @@
 package io.elastic.sailor.impl
 
-import io.elastic.api.JSON
 import io.elastic.api.Message
-import io.elastic.sailor.AMQPWrapperInterface
-import io.elastic.sailor.CipherWrapper
+import io.elastic.sailor.AmqpService
 import io.elastic.sailor.ExecutionContext
-import io.elastic.sailor.Step
 import io.elastic.sailor.TestUtils
 import spock.lang.Specification
 import spock.lang.Unroll
@@ -15,9 +12,9 @@ class ReboundCallbackSpec extends Specification{
     ExecutionContext ctx = new ExecutionContext(
             TestUtils.createStep(), new Message.Builder().build(), Collections.emptyMap())
 
-    CipherWrapper cipher = new CipherWrapper("testCryptoPassword", "iv=any16_symbols")
+    CryptoServiceImpl cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 
-    AMQPWrapperInterface amqp = Mock()
+    AmqpService amqp = Mock()
 
     def callback = new ReboundCallback(ctx, amqp, cipher, 5, 1500)
 

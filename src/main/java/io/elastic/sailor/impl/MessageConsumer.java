@@ -1,4 +1,4 @@
-package io.elastic.sailor;
+package io.elastic.sailor.impl;
 
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -6,6 +6,8 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import io.elastic.api.Message;
 import io.elastic.api.Module;
+import io.elastic.sailor.ExecutionStats;
+import io.elastic.sailor.MessageProcessor;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -13,11 +15,11 @@ import java.io.IOException;
 public class MessageConsumer extends DefaultConsumer {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
-    private final CipherWrapper cipher;
+    private final CryptoServiceImpl cipher;
     private final MessageProcessor processor;
     private final Module module;
 
-    public MessageConsumer(Channel channel, CipherWrapper cipher, MessageProcessor processor, Module module) {
+    public MessageConsumer(Channel channel, CryptoServiceImpl cipher, MessageProcessor processor, Module module) {
         super(channel);
         this.cipher = cipher;
         this.processor = processor;

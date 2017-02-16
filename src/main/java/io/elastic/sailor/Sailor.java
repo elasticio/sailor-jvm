@@ -17,7 +17,7 @@ public class Sailor {
 
     private static final Logger logger = LoggerFactory.getLogger(Sailor.class);
 
-    private AMQPWrapperInterface amqp;
+    private AmqpService amqp;
     private ModuleBuilder moduleBuilder;
     private Step step;
     private ContainerContext containerContext;
@@ -40,7 +40,7 @@ public class Sailor {
     }
 
     @Inject
-    public void setAMQP(AMQPWrapperInterface amqp) {
+    public void setAMQP(AmqpService amqp) {
         this.amqp = amqp;
     }
 

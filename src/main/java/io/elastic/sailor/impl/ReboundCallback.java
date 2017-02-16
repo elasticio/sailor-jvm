@@ -15,16 +15,16 @@ public class ReboundCallback extends CountingCallbackImpl {
     private static final String HEADER_REBOUND_ITERATION = "reboundIteration";
 
     private ExecutionContext executionContext;
-    private AMQPWrapperInterface amqp;
-    private CipherWrapper cipher;
+    private AmqpService amqp;
+    private CryptoServiceImpl cipher;
     private Integer reboundLimit;
     private Integer reboundInitialExpiration;
 
     @Inject
     public ReboundCallback(
             @Assisted ExecutionContext executionContext,
-            AMQPWrapperInterface amqp,
-            CipherWrapper cipher,
+            AmqpService amqp,
+            CryptoServiceImpl cipher,
             @Named(Constants.ENV_VAR_REBOUND_LIMIT) Integer reboundLimit,
             @Named(Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION) Integer reboundInitialExpiration) {
         this.executionContext = executionContext;

@@ -6,6 +6,8 @@ import com.rabbitmq.client.Envelope
 import io.elastic.api.HttpReply
 import io.elastic.api.JSON
 import io.elastic.api.Message
+import io.elastic.sailor.impl.AmqpServiceImpl
+import io.elastic.sailor.impl.CryptoServiceImpl
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
@@ -63,11 +65,11 @@ class IntegrationSpec extends Specification {
         System.setProperty(Constants.ENV_VAR_REBOUND_ROUTING_KEY, prefix + ':routing_key:rebound')
         System.setProperty(Constants.ENV_VAR_SNAPSHOT_ROUTING_KEY, prefix + ':routing_key:snapshot')
 
-        cipher = new CipherWrapper(
+        cipher = new CryptoServiceImpl(
                 System.getProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD),
                 System.getProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_IV))
 
-        amqp = new AMQPWrapper(cipher)
+        amqp = new AmqpServiceImpl(cipher)
 
         amqp.setAmqpUri(System.getProperty(Constants.ENV_VAR_AMQP_URI))
         amqp.setPublishExchangeName(System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO))

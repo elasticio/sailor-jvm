@@ -5,7 +5,7 @@ import io.elastic.api.JSON;
 
 import java.util.Map;
 
-class Utils {
+public class Utils {
 
     public static boolean isJsonObject(final String input) {
         if (input == null) {

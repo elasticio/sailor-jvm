@@ -1,14 +1,17 @@
-package io.elastic.sailor
+package io.elastic.sailor.impl
 
 import com.google.inject.Guice
 import com.google.inject.Injector
 import io.elastic.api.Message
+import io.elastic.sailor.SailorModule
+import io.elastic.sailor.SailorTestModule
+import io.elastic.sailor.impl.CryptoServiceImpl
 import spock.lang.Shared
 import spock.lang.Specification
 
 import javax.json.Json
 
-class CipherSpec extends Specification {
+class CryptoServiceImplSpec extends Specification {
 
     @Shared
     def cipher;
@@ -16,7 +19,7 @@ class CipherSpec extends Specification {
     def setupSpec() {
         Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule());
 
-        cipher = injector.getInstance(CipherWrapper.class);
+        cipher = injector.getInstance(CryptoServiceImpl.class);
     }
 
     def "should encrypt & decrypt strings"() {

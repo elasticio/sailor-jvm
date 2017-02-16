@@ -5,6 +5,8 @@ import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Envelope
 import io.elastic.api.Message
 import io.elastic.sailor.component.HelloWorldAction
+import io.elastic.sailor.impl.CryptoServiceImpl
+import io.elastic.sailor.impl.MessageConsumer
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -16,7 +18,7 @@ class MessageConsumerSpec extends Specification {
     MessageProcessor processor = Mock()
 
     @Shared
-    CipherWrapper cipher = new CipherWrapper("testCryptoPassword", "iv=any16_symbols")
+    CryptoServiceImpl cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 
     def consumer
 

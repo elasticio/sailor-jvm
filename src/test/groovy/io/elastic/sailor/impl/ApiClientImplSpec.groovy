@@ -1,7 +1,8 @@
-package io.elastic.sailor
+package io.elastic.sailor.impl
 
 import com.github.restdriver.clientdriver.ClientDriverRequest
 import com.github.restdriver.clientdriver.ClientDriverRule
+import io.elastic.sailor.impl.ApiClientImpl
 import org.junit.Rule
 import spock.lang.Specification
 

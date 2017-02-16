@@ -4,7 +4,7 @@ import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
 import io.elastic.api.Module;
 
-public interface AMQPWrapperInterface {
+public interface AmqpService {
 
     void connect();
 

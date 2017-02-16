@@ -1,4 +1,4 @@
-package io.elastic.sailor;
+package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -9,6 +9,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import io.elastic.api.Message;
 import io.elastic.api.Module;
+import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
@@ -21,8 +22,8 @@ import java.net.URI;
 import java.util.Map;
 
 @Singleton
-public class AMQPWrapper implements AMQPWrapperInterface {
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AMQPWrapper.class);
+public class AmqpServiceImpl implements AmqpService {
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AmqpServiceImpl.class);
 
     private Connection amqp;
     private Channel subscribeChannel;
@@ -36,12 +37,12 @@ public class AMQPWrapper implements AMQPWrapperInterface {
     private String reboundRoutingKey;
     private String snapshotRoutingKey;
     private Integer prefetchCount;
-    private CipherWrapper cipher;
+    private CryptoServiceImpl cipher;
     private MessageProcessor messageProcessor;
     private String consumerTag;
 
     @Inject
-    public AMQPWrapper(CipherWrapper cipher) {
+    public AmqpServiceImpl(CryptoServiceImpl cipher) {
         this.cipher = cipher;
     }
 
@@ -217,7 +218,7 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         sendToExchange(this.reboundRoutingKey, payload, options);
     }
 
-    private AMQPWrapper openConnection(String uri) {
+    private AmqpServiceImpl openConnection(String uri) {
         try {
             if (amqp == null) {
                 ConnectionFactory factory = new ConnectionFactory();
@@ -231,7 +232,7 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         }
     }
 
-    private AMQPWrapper openPublishChannel() {
+    private AmqpServiceImpl openPublishChannel() {
         try {
             if (publishChannel == null) {
                 publishChannel = amqp.createChannel();
@@ -243,7 +244,7 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         }
     }
 
-    private AMQPWrapper openSubscribeChannel() {
+    private AmqpServiceImpl openSubscribeChannel() {
         try {
             if (subscribeChannel == null) {
                 subscribeChannel = amqp.createChannel();

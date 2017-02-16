@@ -17,7 +17,7 @@ public class SailorModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(AMQPWrapperInterface.class).to(AMQPWrapper.class);
+        bind(AmqpService.class).to(AmqpServiceImpl.class);
         bind(MessageProcessor.class).to(MessageProcessorImpl.class);
 
         bind(ApiClient.class).to(ApiClientImpl.class);

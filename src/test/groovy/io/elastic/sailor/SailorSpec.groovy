@@ -6,7 +6,7 @@ import io.elastic.sailor.component.HelloWorldAction
 
 class SailorSpec extends ApiAwareSpecification {
 
-    def amqp = Mock(AMQPWrapperInterface)
+    def amqp = Mock(AmqpService)
     def componentBuilder = Mock(ModuleBuilder)
 
     def sailor;

@@ -4,8 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.HttpReply;
-import io.elastic.sailor.AMQPWrapperInterface;
-import io.elastic.sailor.CipherWrapper;
+import io.elastic.sailor.AmqpService;
 import io.elastic.sailor.ExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,15 +19,15 @@ public class HttpReplyCallback implements EventEmitter.Callback {
 
     private static final Logger logger = LoggerFactory.getLogger(DataCallback.class);
 
-    private AMQPWrapperInterface amqp;
-    private CipherWrapper cipher;
+    private AmqpService amqp;
+    private CryptoServiceImpl cipher;
     private ExecutionContext executionContext;
 
     @Inject
     public HttpReplyCallback(
             final @Assisted ExecutionContext executionContext,
-            final AMQPWrapperInterface amqp,
-            final CipherWrapper cipher) {
+            final AmqpService amqp,
+            final CryptoServiceImpl cipher) {
         this.executionContext = executionContext;
         this.amqp = amqp;
         this.cipher = cipher;

@@ -1,10 +1,12 @@
-package io.elastic.sailor;
+package io.elastic.sailor.impl;
 
 import com.google.common.base.Preconditions;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.elastic.api.JSON;
 import io.elastic.api.Message;
+import io.elastic.sailor.Constants;
+import io.elastic.sailor.Utils;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.LoggerFactory;
 
@@ -18,8 +20,8 @@ import java.security.Key;
 import java.security.MessageDigest;
 import java.util.UUID;
 
-public final class CipherWrapper {
-    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CipherWrapper.class);
+public final class CryptoServiceImpl {
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CryptoServiceImpl.class);
     public static final String MESSAGE_PROPERTY_ID = "id";
     public static final String MESSAGE_PROPERTY_BODY = "body";
     public static final String MESSAGE_PROPERTY_ATTACHMENTS = "attachments";
@@ -30,7 +32,7 @@ public final class CipherWrapper {
     private IvParameterSpec encryptionIV;
 
     @Inject
-    public CipherWrapper(
+    public CryptoServiceImpl(
             @Named(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD) String password,
             @Named(Constants.ENV_VAR_MESSAGE_CRYPTO_IV) String initializationVector) {
 

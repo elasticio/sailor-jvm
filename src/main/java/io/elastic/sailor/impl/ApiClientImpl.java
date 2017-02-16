@@ -1,8 +1,11 @@
-package io.elastic.sailor;
+package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import io.elastic.sailor.ApiClient;
+import io.elastic.sailor.Constants;
+import io.elastic.sailor.Step;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

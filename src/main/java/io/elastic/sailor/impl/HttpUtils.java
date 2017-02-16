@@ -1,4 +1,4 @@
-package io.elastic.sailor;
+package io.elastic.sailor.impl;
 
 import io.elastic.api.JSON;
 import org.apache.http.Header;
@@ -17,16 +17,13 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonWriter;
 import java.io.IOException;
-import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.net.URLDecoder;
 
-class HttpUtils {
+public class HttpUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class.getName());
 

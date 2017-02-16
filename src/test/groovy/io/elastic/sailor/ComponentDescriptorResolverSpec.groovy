@@ -6,7 +6,7 @@ import io.elastic.sailor.component.CredentialsVerifierImpl
 import spock.lang.Shared
 import spock.lang.Specification
 
-class ComponentResolverSpec extends Specification {
+class ComponentDescriptorResolverSpec extends Specification {
 
     @Shared
     def resolver;
