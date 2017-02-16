@@ -1,10 +1,9 @@
 package io.elastic.sailor.component
 
-import io.elastic.api.Component
-import io.elastic.api.EventEmitter
 import io.elastic.api.ExecutionParameters
+import io.elastic.api.Module
 
-class SleepAction implements Component{
+class SleepAction implements Module{
 
     public void execute(ExecutionParameters parameters){
         for (int i =0; i < 100; i++) {

@@ -2,7 +2,10 @@ package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.elastic.api.*;
+import io.elastic.api.EventEmitter;
+import io.elastic.api.ExecutionParameters;
+import io.elastic.api.Message;
+import io.elastic.api.Module;
 import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +29,7 @@ public class MessageProcessorImpl implements MessageProcessor {
 
     public ExecutionStats processMessage(final Message incomingMessage,
                                          final Map<String, Object> incomingHeaders,
-                                         final Component component) {
+                                         final Module module) {
 
         final ExecutionContext executionContext = new ExecutionContext(
                 this.step, incomingMessage, incomingHeaders);
@@ -69,7 +72,7 @@ public class MessageProcessorImpl implements MessageProcessor {
                 .build();
 
         try {
-            component.execute(params);
+            module.execute(params);
         } catch (RuntimeException e) {
             logger.error("Component execution failed", e);
             eventEmitter.emitException(e);

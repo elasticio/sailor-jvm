@@ -1,15 +1,14 @@
 package io.elastic.sailor.component;
 
-import groovy.json.JsonBuilder;
-import io.elastic.api.Component;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
+import io.elastic.api.Module;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-public class StartupInitAction implements Component {
+public class StartupInitAction implements Module {
 
     private JsonObjectBuilder builder;
 

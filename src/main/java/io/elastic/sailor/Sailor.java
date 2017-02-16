@@ -4,7 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import io.elastic.api.Component;
+import io.elastic.api.Module;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,7 +18,7 @@ public class Sailor {
     private static final Logger logger = LoggerFactory.getLogger(Sailor.class);
 
     private AMQPWrapperInterface amqp;
-    private ComponentBuilder componentBuilder;
+    private ModuleBuilder moduleBuilder;
     private Step step;
     private ContainerContext containerContext;
 
@@ -45,8 +45,8 @@ public class Sailor {
     }
 
     @Inject
-    public void setComponentBuilder(ComponentBuilder componentBuilder) {
-        this.componentBuilder = componentBuilder;
+    public void setModuleBuilder(ModuleBuilder moduleBuilder) {
+        this.moduleBuilder = moduleBuilder;
     }
 
     @Inject
@@ -67,22 +67,22 @@ public class Sailor {
         try {
             logger.info("Processing flow step: {}", this.step.getId());
             logger.info("Component id to be executed: {}", this.step.getCompId());
-            logger.info("Trigger/action to be executed: {}", this.step.getFunction());
+            logger.info("Module to be executed: {}", this.step.getFunction());
 
             final JsonObject cfg = this.step.getCfg();
 
-            final Component component = componentBuilder.build();
+            final Module module = moduleBuilder.build();
 
             if (containerContext.isStartupRequired()) {
                 logger.info("Starting up component");
-                component.startup(cfg);
+                module.startup(cfg);
             }
 
-            logger.info("Initializing component for execution");
-            component.init(cfg);
+            logger.info("Initializing module for execution");
+            module.init(cfg);
 
             logger.info("Subscribing to queues");
-            amqp.subscribeConsumer(component);
+            amqp.subscribeConsumer(module);
         } catch (Exception e) {
             reportException(e);
         }

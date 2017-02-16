@@ -1,13 +1,15 @@
 package io.elastic.sailor.component;
 
-import io.elastic.api.*;
+import io.elastic.api.ExecutionParameters;
+import io.elastic.api.HttpReply;
+import io.elastic.api.JSON;
+import io.elastic.api.Module;
 
 import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
 import java.io.ByteArrayInputStream;
 
-public class HttpReplyAction implements Component {
+public class HttpReplyAction implements Module {
 
     public void execute(ExecutionParameters parameters) {
         final JsonObject body =Json.createObjectBuilder()

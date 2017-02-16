@@ -14,20 +14,20 @@ class ComponentResolverSpec extends Specification {
     def setupSpec() {
         Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule());
 
-        resolver = injector.getInstance(ComponentResolver.class);
+        resolver = injector.getInstance(ComponentDescriptorResolver.class);
     }
 
     def "should successfully load component.json if no slash at the end"() {
         when:
-        new ComponentResolver()
+        new ComponentDescriptorResolver()
         then:
         notThrown(RuntimeException)
     }
 
     def "should find trigger"() {
         when:
-        def resolver = new ComponentResolver()
-        def result = resolver.findTriggerOrAction("sleep")
+        def resolver = new ComponentDescriptorResolver()
+        def result = resolver.findModule("sleep")
         then:
         notThrown(RuntimeException)
         result == "io.elastic.sailor.component.SleepAction"
@@ -35,7 +35,7 @@ class ComponentResolverSpec extends Specification {
 
     def "should find action"() {
         when:
-        def result = resolver.findTriggerOrAction("helloworldaction")
+        def result = resolver.findModule("helloworldaction")
         then:
         notThrown(RuntimeException)
         result == "io.elastic.sailor.component.HelloWorldAction"
@@ -43,7 +43,7 @@ class ComponentResolverSpec extends Specification {
 
     def "should throw exception if trigger or action is not found"() {
         when:
-        resolver.findTriggerOrAction("missing_action")
+        resolver.findModule("missing_action")
         then:
         RuntimeException e = thrown()
         e.getMessage() == "'missing_action' trigger or action is not found"

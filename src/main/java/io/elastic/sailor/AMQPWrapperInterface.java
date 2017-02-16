@@ -1,14 +1,14 @@
 package io.elastic.sailor;
 
 import com.rabbitmq.client.AMQP;
-import io.elastic.api.Component;
 import io.elastic.api.Message;
+import io.elastic.api.Module;
 
 public interface AMQPWrapperInterface {
 
     void connect();
 
-    void subscribeConsumer(Component component);
+    void subscribeConsumer(Module module);
 
     void cancelConsumer();
 

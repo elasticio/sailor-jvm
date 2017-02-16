@@ -7,7 +7,7 @@ import io.elastic.sailor.component.HelloWorldAction
 class SailorSpec extends ApiAwareSpecification {
 
     def amqp = Mock(AMQPWrapperInterface)
-    def componentBuilder = Mock(ComponentBuilder)
+    def componentBuilder = Mock(ModuleBuilder)
 
     def sailor;
 
@@ -17,7 +17,7 @@ class SailorSpec extends ApiAwareSpecification {
 
         sailor = injector.getInstance(Sailor.class)
         sailor.setAMQP(amqp)
-        sailor.setComponentBuilder(componentBuilder)
+        sailor.setModuleBuilder(componentBuilder)
         sailor.setStep(TestUtils.createStep())
     }
 

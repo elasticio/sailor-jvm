@@ -1,13 +1,12 @@
 package io.elastic.sailor.component;
 
-import io.elastic.api.Component;
-import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
+import io.elastic.api.Module;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 
-public class TestAction implements Component {
+public class TestAction implements Module {
 
     public void execute(ExecutionParameters parameters) {
 

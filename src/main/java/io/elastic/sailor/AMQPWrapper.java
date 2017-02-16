@@ -7,8 +7,8 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-import io.elastic.api.Component;
 import io.elastic.api.Message;
+import io.elastic.api.Module;
 import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
@@ -124,8 +124,8 @@ public class AMQPWrapper implements AMQPWrapperInterface {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public void subscribeConsumer(final Component component) {
-        final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, this.messageProcessor, component);
+    public void subscribeConsumer(final Module module) {
+        final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, this.messageProcessor, module);
 
         try {
             consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);

@@ -21,7 +21,7 @@ public class Service {
     private final ServiceExecutionParameters params;
 
     @Inject()
-    public Service(ComponentResolver resolver,
+    public Service(ComponentDescriptorResolver resolver,
                    @Named(Constants.ENV_VAR_POST_RESULT_URL) String postResultUrl,
                    @Named(Constants.NAME_CFG_JSON) JsonObject configuration,
                    @Named(Constants.ENV_VAR_ACTION_OR_TRIGGER) Provider<String> triggerOrActionProvider,
@@ -35,7 +35,7 @@ public class Service {
 
         if (triggerOrAction != null) {
             triggerOrActionObj = resolver
-                    .findTriggerOrActionObject(triggerOrAction);
+                    .findModuleObject(triggerOrAction);
         }
 
         params = new ServiceExecutionParameters.Builder()

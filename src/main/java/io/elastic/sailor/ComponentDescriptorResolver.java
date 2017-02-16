@@ -15,14 +15,14 @@ import java.io.InputStreamReader;
  * and to find there triggers and actions
  */
 
-public final class ComponentResolver {
-    private static final Logger logger = LoggerFactory.getLogger(ComponentResolver.class);
+public final class ComponentDescriptorResolver {
+    private static final Logger logger = LoggerFactory.getLogger(ComponentDescriptorResolver.class);
 
     private static final String FILENAME = "/component.json";
 
     private final JsonObject componentJson;
 
-    public ComponentResolver() {
+    public ComponentDescriptorResolver() {
         componentJson = loadComponentJson();
     }
 
@@ -30,7 +30,7 @@ public final class ComponentResolver {
 
         logger.info("Component descriptor from classpath: {}", FILENAME);
 
-        final InputStream stream = ComponentResolver.class
+        final InputStream stream = ComponentDescriptorResolver.class
                 .getResourceAsStream(FILENAME);
 
         if (stream == null) {
@@ -76,9 +76,9 @@ public final class ComponentResolver {
      * @param name - trigger or action name
      * @return name of Java class to execute for that trigger or action
      */
-    public String findTriggerOrAction(String name) {
+    public String findModule(String name) {
 
-        final JsonObject object = findTriggerOrActionObject(name);
+        final JsonObject object = findModuleObject(name);
 
         final JsonString main = object.getJsonString("main");
 
@@ -89,7 +89,7 @@ public final class ComponentResolver {
         return main.getString();
     }
 
-    public JsonObject findTriggerOrActionObject(String name) {
+    public JsonObject findModuleObject(String name) {
         JsonObject result = null;
 
         final JsonObject triggers = componentJson.getJsonObject("triggers");
