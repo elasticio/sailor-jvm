@@ -48,7 +48,7 @@ public class MessageConsumer extends DefaultConsumer {
         ExecutionStats stats = null;
 
         try {
-            stats = processor.processMessage(message, properties.getHeaders(), this.module);
+            stats = processor.processMessage(message, properties, this.module);
         } catch (Exception e) {
             logger.error("Failed to process message for delivery tag:" + deliveryTag, e);
         } finally {

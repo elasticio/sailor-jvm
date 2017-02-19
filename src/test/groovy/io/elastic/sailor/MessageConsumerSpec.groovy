@@ -23,7 +23,7 @@ class MessageConsumerSpec extends Specification {
     def consumer
 
     @Shared
-    def options
+    def amqpProperties
 
     @Shared
     def headers
@@ -41,7 +41,7 @@ class MessageConsumerSpec extends Specification {
 
         headers = ["execId": "exec1", "taskId": "task2", "userId": "user3"] as Map
 
-        options = new AMQP.BasicProperties.Builder()
+        amqpProperties = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
                 .headers(headers)
@@ -64,12 +64,12 @@ class MessageConsumerSpec extends Specification {
     def "should decrypt and process message successfully"() {
 
         when:
-        consumer.handleDelivery(consumerTag, envelope, options, encryptedMessage.getBytes());
+        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
 
         then:
         1 * processor.processMessage({
             it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, headers, component) >> new ExecutionStats(1, 0, 0)
+        }, amqpProperties, component) >> new ExecutionStats(1, 0, 0)
         1 * channel.basicAck(123456, true)
         0 * _
 
@@ -79,12 +79,12 @@ class MessageConsumerSpec extends Specification {
     def "should reject message if error callback has count > 0"() {
 
         when:
-        consumer.handleDelivery(consumerTag, envelope, options, encryptedMessage.getBytes());
+        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
 
         then:
         1 * processor.processMessage({
             it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, headers, component) >> new ExecutionStats(0, 1, 0)
+        }, amqpProperties, component) >> new ExecutionStats(0, 1, 0)
         1 * channel.basicReject(123456, false)
         0 * _
 
@@ -93,19 +93,19 @@ class MessageConsumerSpec extends Specification {
     def "should reject message if processing fails"() {
 
         when:
-        consumer.handleDelivery(consumerTag, envelope, options, encryptedMessage.getBytes());
+        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
 
         then:
         1 * processor.processMessage({
             it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, headers, component) >> { throw new Exception("Ouch") }
+        }, amqpProperties, component) >> { throw new Exception("Ouch") }
         1 * channel.basicReject(123456, false)
 
     }
 
     def "should reject message if decryption fails"() {
         when:
-        consumer.handleDelivery(consumerTag, envelope, options, "here be monsters".getBytes());
+        consumer.handleDelivery(consumerTag, envelope, amqpProperties, "here be monsters".getBytes());
 
         then:
         1 * channel.basicReject(123456, false)

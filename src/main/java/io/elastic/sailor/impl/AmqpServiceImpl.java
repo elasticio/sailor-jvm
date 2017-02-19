@@ -105,6 +105,7 @@ public class AmqpServiceImpl implements AmqpService {
         openSubscribeChannel();
     }
 
+    @Override
     public void disconnect() {
         logger.info("About to disconnect from AMQP");
         try {
@@ -270,13 +271,6 @@ public class AmqpServiceImpl implements AmqpService {
 
         logger.info("Successfully published data to {}", this.publishExchangeName);
     }
-
-    @Override
-    protected void finalize() throws Throwable {
-        disconnect();
-        super.finalize();
-    }
-
 
     public void setSubscribeChannel(Channel subscribeChannel) {
         this.subscribeChannel = subscribeChannel;

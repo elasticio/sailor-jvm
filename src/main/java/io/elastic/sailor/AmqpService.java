@@ -8,6 +8,8 @@ public interface AmqpService {
 
     void connect();
 
+    void disconnect();
+
     void subscribeConsumer(Module module);
 
     void cancelConsumer();

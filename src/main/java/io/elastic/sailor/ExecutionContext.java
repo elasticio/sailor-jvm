@@ -5,21 +5,22 @@ import io.elastic.api.Message;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ExecutionContext {
 
     private final Step step;
     private final Message message;
-    private final Map<String, Object> headers;
+    private final AMQP.BasicProperties amqpProperties;
 
 
     public ExecutionContext(
             final Step step,
             final Message message,
-            final Map<String, Object> headers) {
+            final AMQP.BasicProperties amqpProperties) {
         this.step = step;
         this.message = message;
-        this.headers = headers;
+        this.amqpProperties = amqpProperties;
     }
 
     public Step getStep() {
@@ -29,6 +30,7 @@ public class ExecutionContext {
     public Map<String, Object> buildDefaultHeaders() {
         final Map<String, Object> result = new HashMap<String, Object>();
 
+        final Map<String, Object> headers = amqpProperties.getHeaders();
         result.put("execId", headers.get("execId"));
         result.put("taskId", headers.get("taskId"));
         result.put("userId", headers.get("userId"));
@@ -43,19 +45,23 @@ public class ExecutionContext {
             result.put("reply_to", replyTo);
         }
 
+        headers.entrySet()
+                .stream()
+                .filter(entry -> entry.getKey().toLowerCase().startsWith(Constants.AMQP_HEADER_PASSTHROUGH_PREFIX))
+                .forEach(entry -> result.put(entry.getKey().toLowerCase(), entry.getValue()));
+
         return result;
     }
 
     public AMQP.BasicProperties buildDefaultOptions() {
-        return Utils.buildAmqpProperties(buildDefaultHeaders());
+        return Utils.buildAmqpProperties(this.amqpProperties, buildDefaultHeaders());
     }
-
 
     public Message getMessage() {
         return message;
     }
 
     public Map<String, Object> getHeaders() {
-        return headers;
+        return amqpProperties.getHeaders();
     }
 }
