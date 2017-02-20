@@ -4,6 +4,7 @@ import com.rabbitmq.client.AMQP;
 import io.elastic.api.JSON;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class Utils {
 
@@ -42,9 +43,16 @@ public class Utils {
     }
 
     public static AMQP.BasicProperties buildAmqpProperties(final AMQP.BasicProperties amqpProperties,
-                                                            final Map<String, Object> headers) {
+                                                           final UUID messageId,
+                                                           final Map<String, Object> headers) {
+
+        if (messageId == null) {
+            throw new IllegalArgumentException("messageId is required");
+        }
+
         return createDefaultAmqpPropertiesBuilder(headers)
                 .correlationId(amqpProperties.getCorrelationId())
+                .messageId(messageId.toString())
                 .build();
     }
 

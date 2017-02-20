@@ -40,6 +40,9 @@ class IntegrationSpec extends Specification {
     def errorsQueue = prefix + '_queue_errors'
 
     @Shared
+    def correlationId = prefix + '_correlation_id_123456'
+
+    @Shared
     def sailor;
 
     def setupSpec() {
@@ -137,6 +140,8 @@ class IntegrationSpec extends Specification {
         System.setProperty(Constants.ENV_VAR_FUNCTION, 'helloworldaction')
         def metaHeader = Constants.AMQP_META_HEADER_PREFIX +'flow-id'
 
+        def messageId = UUID.randomUUID().toString()
+
         def headers = [
                 'execId'  : 'some-exec-id',
                 'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
@@ -149,10 +154,11 @@ class IntegrationSpec extends Specification {
         def options = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
+                .messageId(messageId)
                 .headers(headers)
                 .priority(1)
                 .deliveryMode(2)
-                .correlationId('integration_test_correlation_id_123456')
+                .correlationId(correlationId)
                 .build()
 
         def msg = new Message.Builder()
@@ -190,17 +196,21 @@ class IntegrationSpec extends Specification {
 
         then: "AMQP properties contain correlationId"
         def result = blockingVar.get()
-        result.properties.correlationId == 'integration_test_correlation_id_123456'
+        result.properties.correlationId == correlationId
 
-        then: "AMQP properties headers are all st"
-        result.properties.headers.size() == 8
-        result.properties.headers.remove('start');
+        then: "AMQP properties contain messageId"
+        result.properties.messageId == result.message.id.toString()
+
+        then: "AMQP properties headers are all set"
+        result.properties.headers.size() == 9
+        result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == headers.function
         result.properties.headers.stepId.toString() == "step_1"
         result.properties.headers.userId.toString() == "5559edd38968ec0736000002"
         result.properties.headers.taskId.toString() == headers.taskId
         result.properties.headers.execId.toString() == headers.execId
+        result.properties.headers.parentMessageId.toString() == messageId
         result.properties.headers[metaHeader].toString() == headers.taskId
 
         then: "Emitted message is received"
@@ -230,6 +240,7 @@ class IntegrationSpec extends Specification {
                 .contentType("application/json")
                 .contentEncoding("utf8")
                 .headers(headers)
+                .correlationId(correlationId)
                 .priority(1)
                 .deliveryMode(2)
                 .build()
@@ -257,7 +268,7 @@ class IntegrationSpec extends Specification {
                 IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
                 def message = IntegrationSpec.this.cipher.decryptMessage(bodyString);
-                blockingVar.set(message);
+                blockingVar.set([message:message, properties:properties]);
             }
         }
 
@@ -267,10 +278,16 @@ class IntegrationSpec extends Specification {
 
         sailor = Sailor.createAndStartSailor()
 
-        then:
+        then: "AMQP properties contain correlationId"
         def result = blockingVar.get()
-        result.headers.isEmpty()
-        JSON.stringify(result.body) == '{"echo":{"message":"Show me startup/init"},"startupAndInit":{"startup":{"apiKey":"secret"},"init":{"apiKey":"secret"}}}'
+        result.properties.correlationId == correlationId
+
+        then: "AMQP properties contain messageId"
+        result.properties.messageId != null
+
+        then: "Emitted message is received"
+        result.message.headers.isEmpty()
+        JSON.stringify(result.message.body) == '{"echo":{"message":"Show me startup/init"},"startupAndInit":{"startup":{"apiKey":"secret"},"init":{"apiKey":"secret"}}}'
 
         cleanup:
         sailor.amqp.cancelConsumer()
@@ -306,6 +323,7 @@ class IntegrationSpec extends Specification {
                 .contentType("application/json")
                 .contentEncoding("utf8")
                 .headers(headers)
+                .correlationId(correlationId)
                 .priority(1)
                 .deliveryMode(2)
                 .build()
@@ -333,7 +351,7 @@ class IntegrationSpec extends Specification {
                 IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
                 def message = IntegrationSpec.this.cipher.decrypt(bodyString);
-                blockingVar.set(JSON.parseObject(message));
+                blockingVar.set([message:message, properties:properties]);
             }
         }
 
@@ -343,11 +361,18 @@ class IntegrationSpec extends Specification {
 
         sailor = Sailor.createAndStartSailor()
 
-        then:
+        then: "AMQP properties contain correlationId"
         def result = blockingVar.get()
-        result.statusCode.intValue() == HttpReply.Status.ACCEPTED.statusCode
-        result.getJsonString('body').getString() == '{"echo":{"message":"Send me a reply"}}'
-        JSON.stringify(result.get('headers')) == '{"Content-type":"application/json","x-custom-header":"abcdef"}'
+        result.properties.correlationId == correlationId
+
+        then: "AMQP properties contain messageId"
+        result.properties.messageId != null
+
+        then: "Emitted message is received"
+        def message = JSON.parseObject(result.message)
+        message.statusCode.intValue() == HttpReply.Status.ACCEPTED.statusCode
+        message.getJsonString('body').getString() == '{"echo":{"message":"Send me a reply"}}'
+        JSON.stringify(message.get('headers')) == '{"Content-type":"application/json","x-custom-header":"abcdef"}'
 
         cleanup:
         sailor.amqp.cancelConsumer()
@@ -371,6 +396,7 @@ class IntegrationSpec extends Specification {
                 .contentType("application/json")
                 .contentEncoding("utf8")
                 .headers(headers)
+                .correlationId(correlationId)
                 .priority(1)
                 .deliveryMode(2)
                 .build()
@@ -398,7 +424,7 @@ class IntegrationSpec extends Specification {
                 IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def errorJson = JSON.parseObject(new String(body, "UTF-8"))
                 def error = IntegrationSpec.this.cipher.decrypt(errorJson.getString('error'));
-                blockingVar.set(error);
+                blockingVar.set([error:error, properties:properties]);
             }
         }
 
@@ -408,9 +434,16 @@ class IntegrationSpec extends Specification {
 
         sailor = Sailor.createAndStartSailor()
 
-        then:
+
+        then: "AMQP properties contain correlationId"
         def result = blockingVar.get()
-        def errorJson = JSON.parseObject(result);
+        result.properties.correlationId == correlationId
+
+        then: "AMQP properties contain messageId"
+        result.properties.messageId != null
+
+        then: "Emitted error received"
+        def errorJson = JSON.parseObject(result.error);
         errorJson.getString('name') == 'java.lang.RuntimeException'
         errorJson.getString('message') == 'Ouch. Something went wrong'
         errorJson.getString('stack').startsWith('java.lang.RuntimeException: Ouch. Something went wrong')
