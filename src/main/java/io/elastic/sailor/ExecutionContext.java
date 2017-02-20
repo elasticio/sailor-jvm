@@ -5,7 +5,6 @@ import io.elastic.api.Message;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ExecutionContext {
 
@@ -47,7 +46,7 @@ public class ExecutionContext {
 
         headers.entrySet()
                 .stream()
-                .filter(entry -> entry.getKey().toLowerCase().startsWith(Constants.AMQP_HEADER_PASSTHROUGH_PREFIX))
+                .filter(entry -> entry.getKey().toLowerCase().startsWith(Constants.AMQP_META_HEADER_PREFIX))
                 .forEach(entry -> result.put(entry.getKey().toLowerCase(), entry.getValue()));
 
         return result;

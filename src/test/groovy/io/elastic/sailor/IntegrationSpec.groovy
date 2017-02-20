@@ -135,6 +135,7 @@ class IntegrationSpec extends Specification {
         def blockingVar = new BlockingVariable(5)
         setup:
         System.setProperty(Constants.ENV_VAR_FUNCTION, 'helloworldaction')
+        def metaHeader = Constants.AMQP_META_HEADER_PREFIX +'flow-id'
 
         def headers = [
                 'execId'  : 'some-exec-id',
@@ -142,7 +143,7 @@ class IntegrationSpec extends Specification {
                 'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
                 'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
                 start     : System.currentTimeMillis(),
-                'x-eio-passthrough-flow-id': System.getProperty(Constants.ENV_VAR_FLOW_ID)
+                (metaHeader): System.getProperty(Constants.ENV_VAR_FLOW_ID)
         ]
 
         def options = new AMQP.BasicProperties.Builder()
@@ -200,7 +201,7 @@ class IntegrationSpec extends Specification {
         result.properties.headers.userId.toString() == "5559edd38968ec0736000002"
         result.properties.headers.taskId.toString() == headers.taskId
         result.properties.headers.execId.toString() == headers.execId
-        result.properties.headers['x-eio-passthrough-flow-id'].toString() == headers.taskId
+        result.properties.headers[metaHeader].toString() == headers.taskId
 
         then: "Emitted message is received"
         result.message.headers.isEmpty()

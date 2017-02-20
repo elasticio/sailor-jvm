@@ -48,6 +48,6 @@ public final class Constants {
     public static final String ENV_VAR_RABBITMQ_PREFETCH_SAILOR = "ELASTICIO_RABBITMQ_PREFETCH_SAILOR";
     public static final String ENV_VAR_STARTUP_REQUIRED = "ELASTICIO_STARTUP_REQUIRED";
 
-    public static final String AMQP_HEADER_PASSTHROUGH_PREFIX = "x-eio-passthrough-";
+    public static final String AMQP_META_HEADER_PREFIX = "x-eio-meta-";
 
 }
