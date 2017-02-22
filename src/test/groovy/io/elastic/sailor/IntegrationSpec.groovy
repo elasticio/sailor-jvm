@@ -40,7 +40,10 @@ class IntegrationSpec extends Specification {
     def errorsQueue = prefix + '_queue_errors'
 
     @Shared
-    def correlationId = prefix + '_correlation_id_123456'
+    def traceId = prefix + '_trace_id_123456'
+
+    @Shared
+    def messageId = UUID.randomUUID().toString()
 
     @Shared
     def sailor;
@@ -138,9 +141,6 @@ class IntegrationSpec extends Specification {
         def blockingVar = new BlockingVariable(5)
         setup:
         System.setProperty(Constants.ENV_VAR_FUNCTION, 'helloworldaction')
-        def metaHeader = Constants.AMQP_META_HEADER_PREFIX +'flow-id'
-
-        def messageId = UUID.randomUUID().toString()
 
         def headers = [
                 'execId'  : 'some-exec-id',
@@ -148,17 +148,16 @@ class IntegrationSpec extends Specification {
                 'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
                 'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
                 start     : System.currentTimeMillis(),
-                (metaHeader): System.getProperty(Constants.ENV_VAR_FLOW_ID)
+                messageId: messageId,
+                (Constants.AMQP_META_HEADER_TRACE_ID): traceId
         ]
 
         def options = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
-                .messageId(messageId)
                 .headers(headers)
                 .priority(1)
                 .deliveryMode(2)
-                .correlationId(correlationId)
                 .build()
 
         def msg = new Message.Builder()
@@ -194,15 +193,11 @@ class IntegrationSpec extends Specification {
 
         sailor = Sailor.createAndStartSailor()
 
-        then: "AMQP properties contain correlationId"
-        def result = blockingVar.get()
-        result.properties.correlationId == correlationId
-
-        then: "AMQP properties contain messageId"
-        result.properties.messageId == result.message.id.toString()
 
         then: "AMQP properties headers are all set"
-        result.properties.headers.size() == 9
+        def result = blockingVar.get()
+
+        result.properties.headers.size() == 10
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == headers.function
@@ -210,8 +205,9 @@ class IntegrationSpec extends Specification {
         result.properties.headers.userId.toString() == "5559edd38968ec0736000002"
         result.properties.headers.taskId.toString() == headers.taskId
         result.properties.headers.execId.toString() == headers.execId
+        result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        result.properties.headers.messageId.toString() == result.message.id.toString()
         result.properties.headers.parentMessageId.toString() == messageId
-        result.properties.headers[metaHeader].toString() == headers.taskId
 
         then: "Emitted message is received"
         result.message.headers.isEmpty()
@@ -233,14 +229,15 @@ class IntegrationSpec extends Specification {
                 'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
                 'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
                 'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
-                start     : System.currentTimeMillis()
+                start     : System.currentTimeMillis(),
+                messageId: messageId,
+                (Constants.AMQP_META_HEADER_TRACE_ID): traceId
         ]
 
         def options = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
                 .headers(headers)
-                .correlationId(correlationId)
                 .priority(1)
                 .deliveryMode(2)
                 .build()
@@ -278,12 +275,12 @@ class IntegrationSpec extends Specification {
 
         sailor = Sailor.createAndStartSailor()
 
-        then: "AMQP properties contain correlationId"
+        then: "AMQP properties headers are all set"
         def result = blockingVar.get()
-        result.properties.correlationId == correlationId
 
-        then: "AMQP properties contain messageId"
-        result.properties.messageId != null
+        result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        result.properties.headers.messageId.toString() == result.message.id.toString()
+        result.properties.headers.parentMessageId.toString() == messageId
 
         then: "Emitted message is received"
         result.message.headers.isEmpty()
@@ -316,14 +313,15 @@ class IntegrationSpec extends Specification {
                 'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
                 'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
                 start     : System.currentTimeMillis(),
-                'reply_to': replyQueueRoutingKey
+                'reply_to': replyQueueRoutingKey,
+                messageId: messageId,
+                (Constants.AMQP_META_HEADER_TRACE_ID): traceId
         ]
 
         def options = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
                 .headers(headers)
-                .correlationId(correlationId)
                 .priority(1)
                 .deliveryMode(2)
                 .build()
@@ -361,12 +359,11 @@ class IntegrationSpec extends Specification {
 
         sailor = Sailor.createAndStartSailor()
 
-        then: "AMQP properties contain correlationId"
+        then: "AMQP properties headers are all set"
         def result = blockingVar.get()
-        result.properties.correlationId == correlationId
-
-        then: "AMQP properties contain messageId"
-        result.properties.messageId != null
+        result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        result.properties.headers.messageId.toString() != null
+        result.properties.headers.parentMessageId.toString() == messageId
 
         then: "Emitted message is received"
         def message = JSON.parseObject(result.message)
@@ -389,14 +386,15 @@ class IntegrationSpec extends Specification {
                 'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
                 'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
                 'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
-                start     : System.currentTimeMillis()
+                start     : System.currentTimeMillis(),
+                messageId: messageId,
+                (Constants.AMQP_META_HEADER_TRACE_ID): traceId
         ]
 
         def options = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
                 .headers(headers)
-                .correlationId(correlationId)
                 .priority(1)
                 .deliveryMode(2)
                 .build()
@@ -435,12 +433,11 @@ class IntegrationSpec extends Specification {
         sailor = Sailor.createAndStartSailor()
 
 
-        then: "AMQP properties contain correlationId"
+        then: "AMQP properties headers are all set"
         def result = blockingVar.get()
-        result.properties.correlationId == correlationId
-
-        then: "AMQP properties contain messageId"
-        result.properties.messageId != null
+        result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        result.properties.headers.messageId.toString() != null
+        result.properties.headers.parentMessageId.toString() == messageId
 
         then: "Emitted error received"
         def errorJson = JSON.parseObject(result.error);

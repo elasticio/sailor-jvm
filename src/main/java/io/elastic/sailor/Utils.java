@@ -42,20 +42,6 @@ public class Utils {
         return value;
     }
 
-    public static AMQP.BasicProperties buildAmqpProperties(final AMQP.BasicProperties amqpProperties,
-                                                           final UUID messageId,
-                                                           final Map<String, Object> headers) {
-
-        if (messageId == null) {
-            throw new IllegalArgumentException("messageId is required");
-        }
-
-        return createDefaultAmqpPropertiesBuilder(headers)
-                .correlationId(amqpProperties.getCorrelationId())
-                .messageId(messageId.toString())
-                .build();
-    }
-
     public static AMQP.BasicProperties buildAmqpProperties(final Map<String, Object> headers) {
         return createDefaultAmqpPropertiesBuilder(headers).build();
     }

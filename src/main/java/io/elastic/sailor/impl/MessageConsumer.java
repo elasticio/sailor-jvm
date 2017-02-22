@@ -6,6 +6,7 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import io.elastic.api.Message;
 import io.elastic.api.Module;
+import io.elastic.sailor.Constants;
 import io.elastic.sailor.ExecutionStats;
 import io.elastic.sailor.MessageProcessor;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,12 @@ public class MessageConsumer extends DefaultConsumer {
         Message message;
         long deliveryTag = envelope.getDeliveryTag();
 
-        logger.info("Consumer {} received message {}", consumerTag, deliveryTag);
+        final Object messageId = getHeaderValue(properties, Constants.AMQP_HEADER_MESSAGE_ID);
+        final Object parentMessageId = getHeaderValue(properties, Constants.AMQP_HEADER_PARENT_MESSAGE_ID);
+        final Object traceId = getHeaderValue(properties, Constants.AMQP_META_HEADER_TRACE_ID);
+
+        logger.info("Consumer {} received message: deliveryTag={}, messageId={}, parentMessageId={}, traceId={}",
+                consumerTag, deliveryTag, messageId, parentMessageId, traceId);
 
         try {
             // decrypt message
@@ -68,6 +74,10 @@ public class MessageConsumer extends DefaultConsumer {
 
         logger.info("Acknowledging received messages {}", deliveryTag);
         this.getChannel().basicAck(deliveryTag, true);
+    }
+
+    private Object getHeaderValue(final AMQP.BasicProperties properties, final String headerName) {
+        return properties.getHeaders().getOrDefault(headerName, "unknown");
     }
 
 }

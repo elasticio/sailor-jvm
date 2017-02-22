@@ -8,15 +8,6 @@ import java.util.Map;
 import java.util.UUID;
 
 public class ExecutionContext {
-    public final static String HEADER_PARENT_MESSAGE_ID = "parentMessageId";
-    public final static String HEADER_REPLY_TO = "reply_to";
-    public final static String HEADER_EXEC_ID = "execId";
-    public final static String HEADER_TASK_ID = "taskId";
-    public final static String HEADER_USER_ID = "userId";
-    public final static String HEADER_STEP_ID = "stepId";
-    public final static String HEADER_COMPONENT_ID = "compId";
-    public final static String HEADER_FUNCTION = "function";
-    public final static String HEADER_START_TIMESTAMP = "start";
 
     private final Step step;
     private final Message message;
@@ -41,24 +32,24 @@ public class ExecutionContext {
         final Map<String, Object> result = new HashMap<String, Object>();
 
         final Map<String, Object> headers = amqpProperties.getHeaders();
-        result.put(HEADER_EXEC_ID, headers.get(HEADER_EXEC_ID));
-        result.put(HEADER_TASK_ID, headers.get(HEADER_TASK_ID));
-        result.put(HEADER_USER_ID, headers.get(HEADER_USER_ID));
-        result.put(HEADER_STEP_ID, this.step.getId());
-        result.put(HEADER_COMPONENT_ID, this.step.getCompId());
-        result.put(HEADER_FUNCTION, this.step.getFunction());
-        result.put(HEADER_START_TIMESTAMP, System.currentTimeMillis());
+        result.put(Constants.AMQP_HEADER_EXEC_ID, headers.get(Constants.AMQP_HEADER_EXEC_ID));
+        result.put(Constants.AMQP_HEADER_TASK_ID, headers.get(Constants.AMQP_HEADER_TASK_ID));
+        result.put(Constants.AMQP_HEADER_USER_ID, headers.get(Constants.AMQP_HEADER_USER_ID));
+        result.put(Constants.AMQP_HEADER_STEP_ID, this.step.getId());
+        result.put(Constants.AMQP_HEADER_COMPONENT_ID, this.step.getCompId());
+        result.put(Constants.AMQP_HEADER_FUNCTION, this.step.getFunction());
+        result.put(Constants.AMQP_HEADER_START_TIMESTAMP, System.currentTimeMillis());
 
-        final Object replyTo = headers.get(HEADER_REPLY_TO);
+        final Object replyTo = headers.get(Constants.AMQP_HEADER_REPLY_TO);
 
         if (replyTo != null) {
-            result.put(HEADER_REPLY_TO, replyTo);
+            result.put(Constants.AMQP_HEADER_REPLY_TO, replyTo);
         }
 
-        final Object parentMessageId = amqpProperties.getMessageId();
+        final Object parentMessageId = headers.get(Constants.AMQP_HEADER_MESSAGE_ID);
 
         if (parentMessageId != null) {
-            result.put(HEADER_PARENT_MESSAGE_ID, parentMessageId);
+            result.put(Constants.AMQP_HEADER_PARENT_MESSAGE_ID, parentMessageId);
         }
 
         headers.entrySet()
@@ -69,12 +60,19 @@ public class ExecutionContext {
         return result;
     }
 
-    public AMQP.BasicProperties buildDefaultOptions() {
-        return buildDefaultOptions(UUID.randomUUID());
+    public AMQP.BasicProperties buildAmqpProperties() {
+        return buildAmqpProperties(UUID.randomUUID());
     }
 
-    public AMQP.BasicProperties buildDefaultOptions(final UUID messageId) {
-        return Utils.buildAmqpProperties(this.amqpProperties, messageId, buildDefaultHeaders());
+    public AMQP.BasicProperties buildAmqpProperties(final UUID messageId) {
+        if (messageId == null) {
+            throw new IllegalArgumentException("messageId is required");
+        }
+
+        final Map<String, Object> headers = buildDefaultHeaders();
+        headers.put(Constants.AMQP_HEADER_MESSAGE_ID, messageId.toString());
+
+        return Utils.buildAmqpProperties(headers);
     }
 
     public Message getMessage() {
