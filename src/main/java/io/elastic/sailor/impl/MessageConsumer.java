@@ -10,12 +10,14 @@ import io.elastic.sailor.Constants;
 import io.elastic.sailor.ExecutionStats;
 import io.elastic.sailor.MessageProcessor;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.IOException;
 
 public class MessageConsumer extends DefaultConsumer {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
+    private static final String MDC_TRACE_ID = "traceId";
     private final CryptoServiceImpl cipher;
     private final MessageProcessor processor;
     private final Module module;
@@ -38,6 +40,10 @@ public class MessageConsumer extends DefaultConsumer {
         final Object parentMessageId = getHeaderValue(properties, Constants.AMQP_HEADER_PARENT_MESSAGE_ID);
         final Object traceId = getHeaderValue(properties, Constants.AMQP_META_HEADER_TRACE_ID);
 
+        if (traceId != null) {
+            MDC.put(MDC_TRACE_ID, traceId.toString());
+        }
+
         logger.info("Consumer {} received message: deliveryTag={}, messageId={}, parentMessageId={}, traceId={}",
                 consumerTag, deliveryTag, messageId, parentMessageId, traceId);
 
@@ -58,6 +64,11 @@ public class MessageConsumer extends DefaultConsumer {
         } catch (Exception e) {
             logger.error("Failed to process message for delivery tag:" + deliveryTag, e);
         } finally {
+            try {
+                MDC.remove(MDC_TRACE_ID);
+            }catch(Exception e) {
+                logger.warn("Failed to remove {} from MDC", MDC_TRACE_ID, e);
+            }
             ackOrReject(stats, deliveryTag);
         }
     }
