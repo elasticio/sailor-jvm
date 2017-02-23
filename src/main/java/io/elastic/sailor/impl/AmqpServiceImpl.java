@@ -20,6 +20,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 
 @Singleton
 public class AmqpServiceImpl implements AmqpService {
@@ -110,12 +111,12 @@ public class AmqpServiceImpl implements AmqpService {
         logger.info("About to disconnect from AMQP");
         try {
             subscribeChannel.close();
-        } catch (IOException e) {
+        } catch (IOException | TimeoutException e) {
             logger.info("Subscription channel is already closed: " + e);
         }
         try {
             publishChannel.close();
-        } catch (IOException e) {
+        } catch (IOException | TimeoutException e) {
             logger.info("Publish channel is already closed: " + e);
         }
         try {
