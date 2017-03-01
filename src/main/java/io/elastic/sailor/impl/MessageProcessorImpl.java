@@ -2,6 +2,7 @@ package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.rabbitmq.client.AMQP;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
@@ -28,11 +29,11 @@ public class MessageProcessorImpl implements MessageProcessor {
     }
 
     public ExecutionStats processMessage(final Message incomingMessage,
-                                         final Map<String, Object> incomingHeaders,
+                                         final AMQP.BasicProperties amqpProperties,
                                          final Module module) {
 
         final ExecutionContext executionContext = new ExecutionContext(
-                this.step, incomingMessage, incomingHeaders);
+                this.step, incomingMessage, amqpProperties);
 
         final JsonObject cfg = this.step.getCfg();
         final JsonObject snapshot = this.step.getSnapshot();

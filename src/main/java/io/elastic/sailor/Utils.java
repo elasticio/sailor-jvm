@@ -4,6 +4,7 @@ import com.rabbitmq.client.AMQP;
 import io.elastic.api.JSON;
 
 import java.util.Map;
+import java.util.UUID;
 
 public class Utils {
 
@@ -42,13 +43,16 @@ public class Utils {
     }
 
     public static AMQP.BasicProperties buildAmqpProperties(final Map<String, Object> headers) {
+        return createDefaultAmqpPropertiesBuilder(headers).build();
+    }
+
+    private static AMQP.BasicProperties.Builder createDefaultAmqpPropertiesBuilder(final Map<String, Object> headers) {
         return new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
                 .contentEncoding("utf8")
                 .headers(headers)
                 .priority(1)// this should equal to mandatory true
-                .deliveryMode(2)//TODO: check if flag .mandatory(true) was set
-                .build();
+                .deliveryMode(2);
     }
 
 }

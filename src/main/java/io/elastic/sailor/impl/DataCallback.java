@@ -36,6 +36,6 @@ public class DataCallback extends CountingCallbackImpl {
         // encrypt
         byte[] encryptedPayload = cipher.encryptMessage(message).getBytes();
 
-        amqp.sendData(encryptedPayload, executionContext.buildDefaultOptions());
+        amqp.sendData(encryptedPayload, executionContext.buildAmqpProperties(message.getId()));
     }
 }

@@ -48,4 +48,18 @@ public final class Constants {
     public static final String ENV_VAR_RABBITMQ_PREFETCH_SAILOR = "ELASTICIO_RABBITMQ_PREFETCH_SAILOR";
     public static final String ENV_VAR_STARTUP_REQUIRED = "ELASTICIO_STARTUP_REQUIRED";
 
+    public static final String AMQP_META_HEADER_PREFIX = "x-eio-meta-";
+    public static final String AMQP_META_HEADER_TRACE_ID = Constants.AMQP_META_HEADER_PREFIX + "trace-id";
+
+    public final static String AMQP_HEADER_MESSAGE_ID = "messageId";
+    public final static String AMQP_HEADER_PARENT_MESSAGE_ID = "parentMessageId";
+    public final static String AMQP_HEADER_REPLY_TO = "reply_to";
+    public final static String AMQP_HEADER_EXEC_ID = "execId";
+    public final static String AMQP_HEADER_TASK_ID = "taskId";
+    public final static String AMQP_HEADER_USER_ID = "userId";
+    public final static String AMQP_HEADER_STEP_ID = "stepId";
+    public final static String AMQP_HEADER_COMPONENT_ID = "compId";
+    public final static String AMQP_HEADER_FUNCTION = "function";
+    public final static String AMQP_HEADER_START_TIMESTAMP = "start";
+
 }

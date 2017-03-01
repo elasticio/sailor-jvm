@@ -23,6 +23,6 @@ public class ErrorCallback extends CountingCallbackImpl {
 
     @Override
     public void receiveData(Object data) {
-        amqp.sendError((Throwable) data, executionContext.buildDefaultOptions(), executionContext.getMessage());
+        amqp.sendError((Throwable) data, executionContext.buildAmqpProperties(), executionContext.getMessage());
     }
 }

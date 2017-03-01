@@ -26,6 +26,6 @@ public class SnapshotCallback extends CountingCallbackImpl {
 
         byte[] payload = snapshot.toString().getBytes();
 
-        amqp.sendSnapshot(payload, executionDetails.buildDefaultOptions());
+        amqp.sendSnapshot(payload, executionDetails.buildAmqpProperties());
     }
 }

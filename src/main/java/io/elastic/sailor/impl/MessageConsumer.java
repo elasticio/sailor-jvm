@@ -6,15 +6,18 @@ import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
 import io.elastic.api.Message;
 import io.elastic.api.Module;
+import io.elastic.sailor.Constants;
 import io.elastic.sailor.ExecutionStats;
 import io.elastic.sailor.MessageProcessor;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.IOException;
 
 public class MessageConsumer extends DefaultConsumer {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
+    private static final String MDC_TRACE_ID = "traceId";
     private final CryptoServiceImpl cipher;
     private final MessageProcessor processor;
     private final Module module;
@@ -33,7 +36,16 @@ public class MessageConsumer extends DefaultConsumer {
         Message message;
         long deliveryTag = envelope.getDeliveryTag();
 
-        logger.info("Consumer {} received message {}", consumerTag, deliveryTag);
+        final Object messageId = getHeaderValue(properties, Constants.AMQP_HEADER_MESSAGE_ID);
+        final Object parentMessageId = getHeaderValue(properties, Constants.AMQP_HEADER_PARENT_MESSAGE_ID);
+        final Object traceId = getHeaderValue(properties, Constants.AMQP_META_HEADER_TRACE_ID);
+
+        if (traceId != null) {
+            MDC.put(MDC_TRACE_ID, traceId.toString());
+        }
+
+        logger.info("Consumer {} received message: deliveryTag={}, messageId={}, parentMessageId={}, traceId={}",
+                consumerTag, deliveryTag, messageId, parentMessageId, traceId);
 
         try {
             // decrypt message
@@ -48,10 +60,15 @@ public class MessageConsumer extends DefaultConsumer {
         ExecutionStats stats = null;
 
         try {
-            stats = processor.processMessage(message, properties.getHeaders(), this.module);
+            stats = processor.processMessage(message, properties, this.module);
         } catch (Exception e) {
             logger.error("Failed to process message for delivery tag:" + deliveryTag, e);
         } finally {
+            try {
+                MDC.remove(MDC_TRACE_ID);
+            }catch(Exception e) {
+                logger.warn("Failed to remove {} from MDC", MDC_TRACE_ID, e);
+            }
             ackOrReject(stats, deliveryTag);
         }
     }
@@ -68,6 +85,10 @@ public class MessageConsumer extends DefaultConsumer {
 
         logger.info("Acknowledging received messages {}", deliveryTag);
         this.getChannel().basicAck(deliveryTag, true);
+    }
+
+    private Object getHeaderValue(final AMQP.BasicProperties properties, final String headerName) {
+        return properties.getHeaders().getOrDefault(headerName, "unknown");
     }
 
 }
