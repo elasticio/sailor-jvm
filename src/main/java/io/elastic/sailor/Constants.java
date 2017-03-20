@@ -16,6 +16,7 @@ public final class Constants {
     public static final String STEP_PROPERTY_COMP_ID = "comp_id";
     public static final String STEP_PROPERTY_CFG = "config";
     public static final String STEP_PROPERTY_SNAPSHOT = "snapshot";
+    public static final String STEP_PROPERTY_PASSTHROUGH = "is_passthrough";
 
     public static final int DEFAULT_REBOUND_LIMIT = 20;
     public static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;
@@ -62,4 +63,9 @@ public final class Constants {
     public final static String AMQP_HEADER_FUNCTION = "function";
     public final static String AMQP_HEADER_START_TIMESTAMP = "start";
 
+    public static final String MESSAGE_PROPERTY_ID = "id";
+    public static final String MESSAGE_PROPERTY_BODY = "body";
+    public static final String MESSAGE_PROPERTY_ATTACHMENTS = "attachments";
+    public static final String MESSAGE_PROPERTY_HEADERS = "headers";
+    public static final String MESSAGE_PROPERTY_PASSTHROUGH = "passthrough";
 }

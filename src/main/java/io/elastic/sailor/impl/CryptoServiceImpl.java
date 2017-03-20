@@ -50,38 +50,6 @@ public final class CryptoServiceImpl {
         return encrypt(message.toString());
     }
 
-    public Message decryptMessage(String encrypted) {
-        final JsonObject payload = decryptMessageContent(encrypted);
-
-        JsonString id = payload.getJsonString(MESSAGE_PROPERTY_ID);
-        JsonObject headers = payload.getJsonObject(MESSAGE_PROPERTY_HEADERS);
-        JsonObject body = payload.getJsonObject(MESSAGE_PROPERTY_BODY);
-        JsonObject attachments = payload.getJsonObject(MESSAGE_PROPERTY_ATTACHMENTS);
-
-        if (headers == null) {
-            headers = Json.createObjectBuilder().build();
-        }
-
-        if (body == null) {
-            body = Json.createObjectBuilder().build();
-        }
-
-        if (attachments == null) {
-            attachments = Json.createObjectBuilder().build();
-        }
-
-        final Message.Builder builder = new Message.Builder()
-                .headers(headers)
-                .body(body)
-                .attachments(attachments);
-
-        if (id != null) {
-            builder.id(UUID.fromString(id.getString()));
-        }
-
-        return builder.build();
-    }
-
     // converts JSON to string and encrypts
     public String encryptJsonObject(JsonObject message) {
         return encrypt(message.toString());
@@ -105,7 +73,7 @@ public final class CryptoServiceImpl {
         throw new RuntimeException("Message is not a JSON object: " + decryptedMessage);
     }
 
-    private String encrypt(String message) {
+    public String encrypt(String message) {
         try {
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, encryptionKey, encryptionIV);

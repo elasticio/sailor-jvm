@@ -182,7 +182,7 @@ class IntegrationSpec extends Specification {
 
                 IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
-                def message = IntegrationSpec.this.cipher.decryptMessage(bodyString);
+                def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
                 blockingVar.set([message:message, properties:properties]);
             }
         }
@@ -264,7 +264,7 @@ class IntegrationSpec extends Specification {
 
                 IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
-                def message = IntegrationSpec.this.cipher.decryptMessage(bodyString);
+                def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
                 blockingVar.set([message:message, properties:properties]);
             }
         }

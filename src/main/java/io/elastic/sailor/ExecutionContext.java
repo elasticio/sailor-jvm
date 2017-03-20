@@ -3,6 +3,9 @@ package io.elastic.sailor;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -12,15 +15,25 @@ public class ExecutionContext {
     private final Step step;
     private final Message message;
     private final AMQP.BasicProperties amqpProperties;
+    private final JsonObject passthrough;
 
 
     public ExecutionContext(
             final Step step,
             final Message message,
             final AMQP.BasicProperties amqpProperties) {
+        this(step, message, amqpProperties, null);
+    }
+
+    public ExecutionContext(
+            final Step step,
+            final Message message,
+            final AMQP.BasicProperties amqpProperties,
+            final JsonObject passthrough) {
         this.step = step;
         this.message = message;
         this.amqpProperties = amqpProperties;
+        this.passthrough = passthrough;
     }
 
     public Step getStep() {
@@ -81,5 +94,36 @@ public class ExecutionContext {
 
     public Map<String, Object> getHeaders() {
         return amqpProperties.getHeaders();
+    }
+
+    public JsonObject createPassthroughMessage(final JsonObject message) {
+
+        if (!this.step.isPassThroughRequired()) {
+            return message;
+        }
+
+        final JsonObjectBuilder result = copyJsonObject(message);
+
+        final JsonObjectBuilder passthroughBuilder = createPassthroughBuilder();
+
+        passthroughBuilder.add(this.step.getId(), message);
+
+        result.add(Constants.MESSAGE_PROPERTY_PASSTHROUGH, passthroughBuilder);
+
+        return result.build();
+    }
+
+    private JsonObjectBuilder createPassthroughBuilder() {
+        if (this.passthrough == null) {
+            return Json.createObjectBuilder();
+        }
+
+        return copyJsonObject(this.passthrough);
+    }
+
+    private JsonObjectBuilder copyJsonObject(final JsonObject obj) {
+        final JsonObjectBuilder result = Json.createObjectBuilder();
+        obj.entrySet().forEach(s -> result.add(s.getKey(), s.getValue()));
+        return result;
     }
 }

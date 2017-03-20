@@ -1,8 +1,6 @@
 package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.rabbitmq.client.AMQP;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
@@ -11,7 +9,6 @@ import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 
 import javax.json.JsonObject;
-import java.util.Map;
 
 public class MessageProcessorImpl implements MessageProcessor {
 
@@ -19,24 +16,19 @@ public class MessageProcessorImpl implements MessageProcessor {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageProcessorImpl.class);
 
     private final EmitterCallbackFactory emitterCallbackFactory;
-    private final Step step;
 
     @Inject
-    public MessageProcessorImpl(EmitterCallbackFactory emitterCallbackFactory,
-                                @Named(Constants.NAME_STEP_JSON) Step step) {
+    public MessageProcessorImpl(EmitterCallbackFactory emitterCallbackFactory) {
         this.emitterCallbackFactory = emitterCallbackFactory;
-        this.step = step;
     }
 
-    public ExecutionStats processMessage(final Message incomingMessage,
-                                         final AMQP.BasicProperties amqpProperties,
+    public ExecutionStats processMessage(final ExecutionContext executionContext,
                                          final Module module) {
 
-        final ExecutionContext executionContext = new ExecutionContext(
-                this.step, incomingMessage, amqpProperties);
-
-        final JsonObject cfg = this.step.getCfg();
-        final JsonObject snapshot = this.step.getSnapshot();
+        final Message incomingMessage = executionContext.getMessage();
+        final Step step = executionContext.getStep();
+        final JsonObject cfg = step.getCfg();
+        final JsonObject snapshot = step.getSnapshot();
 
         // make data callback
         final CountingCallback dataCallback = emitterCallbackFactory.createDataCallback(executionContext);

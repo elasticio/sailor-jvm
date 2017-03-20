@@ -2,7 +2,6 @@ package io.elastic.sailor
 
 import com.google.inject.Guice
 import com.google.inject.Injector
-import io.elastic.api.JSON
 import io.elastic.api.Message
 import io.elastic.sailor.impl.DataCallback
 import io.elastic.sailor.impl.ErrorCallback

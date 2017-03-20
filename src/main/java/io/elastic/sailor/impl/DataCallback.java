@@ -2,11 +2,14 @@ package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import io.elastic.api.JSON;
 import io.elastic.api.Message;
 import io.elastic.sailor.AmqpService;
 import io.elastic.sailor.ExecutionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.json.JsonObject;
 
 public class DataCallback extends CountingCallbackImpl {
 
@@ -31,10 +34,14 @@ public class DataCallback extends CountingCallbackImpl {
         logger.info("Step produced data to be published");
 
         // payload
-        Message message = (Message) data;
+        final Message message = (Message) data;
+
+        JsonObject messageAsJson = message.toJsonObject();
+
+        messageAsJson = executionContext.createPassthroughMessage(messageAsJson);
 
         // encrypt
-        byte[] encryptedPayload = cipher.encryptMessage(message).getBytes();
+        byte[] encryptedPayload = cipher.encrypt(JSON.stringify(messageAsJson)).getBytes();
 
         amqp.sendData(encryptedPayload, executionContext.buildAmqpProperties(message.getId()));
     }

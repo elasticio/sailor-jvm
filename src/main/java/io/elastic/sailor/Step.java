@@ -11,6 +11,7 @@ public final class Step {
     private final String function;
     private final JsonObject cfg;
     private final JsonObject snapshot;
+    private final boolean passThroughRequired;
 
     public Step(final JsonObject data) {
         this.id = getAsRequiredString(data, Constants.STEP_PROPERTY_ID);
@@ -18,6 +19,7 @@ public final class Step {
         this.function = getAsRequiredString(data, Constants.STEP_PROPERTY_FUNCTION);
         this.cfg = getAsNullSafeObject(data, Constants.STEP_PROPERTY_CFG);
         this.snapshot = getAsNullSafeObject(data, Constants.STEP_PROPERTY_SNAPSHOT);
+        this.passThroughRequired = data.getBoolean(Constants.STEP_PROPERTY_PASSTHROUGH, false);
     }
 
     public String getId() {
@@ -38,6 +40,10 @@ public final class Step {
 
     public JsonObject getSnapshot() {
         return this.snapshot;
+    }
+
+    public boolean isPassThroughRequired() {
+        return passThroughRequired;
     }
 
     private static String getAsRequiredString(
