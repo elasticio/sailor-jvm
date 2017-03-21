@@ -143,7 +143,7 @@ public class AmqpServiceImpl implements AmqpService {
             throw new RuntimeException(e);
         }
 
-        logger.info("Subscribed consumer. Waiting for messages to arrive ...");
+        logger.info("Subscribed consumer {}. Waiting for messages to arrive ...", consumerTag);
     }
 
     public void cancelConsumer() {
@@ -155,6 +155,8 @@ public class AmqpServiceImpl implements AmqpService {
                 throw new RuntimeException(e);
             }
         }
+
+        consumerTag = null;
     }
 
     public void ack(Long deliveryTag) {

@@ -121,9 +121,10 @@ class IntegrationSpec extends Specification {
                         .add(Constants.STEP_PROPERTY_COMP_ID, System.getProperty(Constants.ENV_VAR_COMP_ID))
                         .add(Constants.STEP_PROPERTY_FUNCTION, System.getProperty(Constants.ENV_VAR_FUNCTION))
                         .add(Constants.STEP_PROPERTY_CFG, Json.createObjectBuilder().add('apiKey', 'secret').build())
-                        .add(Constants.STEP_PROPERTY_SNAPSHOT,
-                        Json.createObjectBuilder().add('lastModifiedDate', 123456789).build())
-                        .build();
+                        .add(Constants.STEP_PROPERTY_SNAPSHOT, Json.createObjectBuilder().add('lastModifiedDate', 123456789).build())
+                        .add(Constants.STEP_PROPERTY_PASSTHROUGH, true)
+                        .build()
+
                 response.setHeader("Content-type", 'application/json')
                 response.getOutputStream().write(JSON.stringify(stepData).getBytes());
                 response.getOutputStream().close();
@@ -212,6 +213,102 @@ class IntegrationSpec extends Specification {
         then: "Emitted message is received"
         result.message.headers.isEmpty()
         JSON.stringify(result.message.body) == '{"echo":{"message":"Just do it!"}}'
+
+        cleanup:
+        sailor.amqp.cancelConsumer()
+        amqp.publishChannel.basicCancel(consumerTag)
+    }
+
+    def "run sailor successfully and pass through"() {
+        def blockingVar = new BlockingVariable(5)
+        setup:
+        System.setProperty(Constants.ENV_VAR_FUNCTION, 'helloworldaction')
+
+        def headers = [
+                'execId'  : 'some-exec-id',
+                'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
+                'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
+                'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
+                start     : System.currentTimeMillis(),
+                messageId: messageId,
+                (Constants.AMQP_META_HEADER_TRACE_ID): traceId
+        ]
+
+        def options = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .priority(1)
+                .deliveryMode(2)
+                .build()
+
+        def passedThroughMessage = new Message.Builder()
+                .body(Json.createObjectBuilder().add('greetings', 'Hello from trigger').build())
+                .build()
+                .toJsonObject()
+        def msgBody = Json.createObjectBuilder().add('message', 'Just do it!').build();
+
+        def passthrough = Json.createObjectBuilder()
+                .add('step_0', passedThroughMessage)
+                .build();
+
+        def msg = Json.createObjectBuilder()
+                .add(Constants.MESSAGE_PROPERTY_BODY, msgBody)
+                .add(Constants.MESSAGE_PROPERTY_PASSTHROUGH, passthrough)
+                .build()
+
+        byte[] payload = cipher.encryptJsonObject(msg).getBytes();
+
+        amqp.publishChannel.basicPublish(
+                System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
+                System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
+                options,
+                payload);
+
+        def consumer = new DefaultConsumer(amqp.publishChannel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body)
+                    throws IOException {
+
+                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                def bodyString = new String(body, "UTF-8");
+                def decryptedJson = IntegrationSpec.this.cipher.decryptMessageContent(bodyString)
+                def message = Utils.createMessage(decryptedJson)
+                def receivedPassthrough = decryptedJson.getJsonObject(Constants.MESSAGE_PROPERTY_PASSTHROUGH)
+                blockingVar.set([message:message, properties:properties, receivedPassthrough:receivedPassthrough]);
+            }
+        }
+
+        def consumerTag = amqp.publishChannel.basicConsume(dataQueue, consumer)
+
+        when:
+
+        sailor = Sailor.createAndStartSailor()
+
+
+        then: "AMQP properties headers are all set"
+        def result = blockingVar.get()
+
+        result.properties.headers.size() == 10
+        result.properties.headers.start != null
+        result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
+        result.properties.headers.function.toString() == headers.function
+        result.properties.headers.stepId.toString() == "step_1"
+        result.properties.headers.userId.toString() == "5559edd38968ec0736000002"
+        result.properties.headers.taskId.toString() == headers.taskId
+        result.properties.headers.execId.toString() == headers.execId
+        result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        result.properties.headers.messageId.toString() == result.message.id.toString()
+        result.properties.headers.parentMessageId.toString() == messageId
+
+        then: "Emitted message is received"
+        result.message.headers.isEmpty()
+        JSON.stringify(result.message.body) == '{"echo":{"message":"Just do it!"}}'
+        JSON.stringify(result.receivedPassthrough.get('step_0').get('body')) == '{"greetings":"Hello from trigger"}'
+        JSON.stringify(result.receivedPassthrough.get('step_1').get('body')) == '{"echo":{"message":"Just do it!"}}'
 
         cleanup:
         sailor.amqp.cancelConsumer()
