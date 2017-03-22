@@ -52,20 +52,22 @@ public class Service {
             throw new IllegalArgumentException("1 argument is required, but were passed " + args.length);
         }
 
-        Injector injector = Guice.createInjector(new ServiceModule(), new ServiceEnvironmentModule());
+        createServiceInstanceAndExecute(args[0]);
 
-        final String methodName = args[0];
+        logger.info("Java exiting with 0");
+
+        System.exit(0);
+
+    }
+
+    static void createServiceInstanceAndExecute(final String methodName) {
+        Injector injector = Guice.createInjector(new ServiceModule(), new ServiceEnvironmentModule());
 
         logger.info("Starting execution of {}", methodName);
 
         final ServiceMethods method = ServiceMethods.parse(methodName);
 
         getServiceInstanceAndExecute(method, injector);
-
-        logger.info("Java exiting with 0");
-
-        System.exit(0);
-
     }
 
     public static void getServiceInstanceAndExecute(
