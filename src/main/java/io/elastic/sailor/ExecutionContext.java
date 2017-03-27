@@ -96,19 +96,25 @@ public class ExecutionContext {
         return amqpProperties.getHeaders();
     }
 
-    public JsonObject createPassthroughMessage(final JsonObject message) {
+    public JsonObject createPassthroughMessage(final Message message) {
+
+        final JsonObject messageAsJson = Utils.pick(message.toJsonObject(),
+                Message.PROPERTY_ID,
+                Message.PROPERTY_HEADERS,
+                Message.PROPERTY_BODY,
+                Message.PROPERTY_ATTACHMENTS);
 
         if (!this.step.isPassThroughRequired()) {
-            return message;
+            return messageAsJson;
         }
 
-        final JsonObjectBuilder result = copyJsonObject(message);
+        final JsonObjectBuilder result = createJsonObjectBuilder(messageAsJson);
 
         final JsonObjectBuilder passthroughBuilder = createPassthroughBuilder();
 
-        passthroughBuilder.add(this.step.getId(), message);
+        passthroughBuilder.add(this.step.getId(), messageAsJson);
 
-        result.add(Constants.MESSAGE_PROPERTY_PASSTHROUGH, passthroughBuilder);
+        result.add(Message.PROPERTY_PASSTHROUGH, passthroughBuilder);
 
         return result.build();
     }
@@ -118,12 +124,14 @@ public class ExecutionContext {
             return Json.createObjectBuilder();
         }
 
-        return copyJsonObject(this.passthrough);
+        return createJsonObjectBuilder(this.passthrough);
     }
 
-    private JsonObjectBuilder copyJsonObject(final JsonObject obj) {
+    private JsonObjectBuilder createJsonObjectBuilder(final JsonObject obj) {
         final JsonObjectBuilder result = Json.createObjectBuilder();
-        obj.entrySet().forEach(s -> result.add(s.getKey(), s.getValue()));
+        obj.entrySet()
+                .stream()
+                .forEach(s -> result.add(s.getKey(), s.getValue()));
         return result;
     }
 }

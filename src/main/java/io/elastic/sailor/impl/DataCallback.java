@@ -36,9 +36,7 @@ public class DataCallback extends CountingCallbackImpl {
         // payload
         final Message message = (Message) data;
 
-        JsonObject messageAsJson = message.toJsonObject();
-
-        messageAsJson = executionContext.createPassthroughMessage(messageAsJson);
+        final JsonObject messageAsJson = executionContext.createPassthroughMessage(message);
 
         // encrypt
         byte[] encryptedPayload = cipher.encrypt(JSON.stringify(messageAsJson)).getBytes();

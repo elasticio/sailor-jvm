@@ -253,8 +253,8 @@ class IntegrationSpec extends Specification {
                 .build();
 
         def msg = Json.createObjectBuilder()
-                .add(Constants.MESSAGE_PROPERTY_BODY, msgBody)
-                .add(Constants.MESSAGE_PROPERTY_PASSTHROUGH, passthrough)
+                .add(Message.PROPERTY_BODY, msgBody)
+                .add(Message.PROPERTY_PASSTHROUGH, passthrough)
                 .build()
 
         byte[] payload = cipher.encryptJsonObject(msg).getBytes();
@@ -277,7 +277,7 @@ class IntegrationSpec extends Specification {
                 def bodyString = new String(body, "UTF-8");
                 def decryptedJson = IntegrationSpec.this.cipher.decryptMessageContent(bodyString)
                 def message = Utils.createMessage(decryptedJson)
-                def receivedPassthrough = decryptedJson.getJsonObject(Constants.MESSAGE_PROPERTY_PASSTHROUGH)
+                def receivedPassthrough = decryptedJson.getJsonObject(Message.PROPERTY_PASSTHROUGH)
                 blockingVar.set([message:message, properties:properties, receivedPassthrough:receivedPassthrough]);
             }
         }

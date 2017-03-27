@@ -6,7 +6,10 @@ import io.elastic.api.Message;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -60,12 +63,11 @@ public class Utils {
     }
 
 
-
     public static Message createMessage(final JsonObject payload) {
-        JsonString id = payload.getJsonString(Constants.MESSAGE_PROPERTY_ID);
-        JsonObject headers = payload.getJsonObject(Constants.MESSAGE_PROPERTY_HEADERS);
-        JsonObject body = payload.getJsonObject(Constants.MESSAGE_PROPERTY_BODY);
-        JsonObject attachments = payload.getJsonObject(Constants.MESSAGE_PROPERTY_ATTACHMENTS);
+        JsonString id = payload.getJsonString(Message.PROPERTY_ID);
+        JsonObject headers = payload.getJsonObject(Message.PROPERTY_HEADERS);
+        JsonObject body = payload.getJsonObject(Message.PROPERTY_BODY);
+        JsonObject attachments = payload.getJsonObject(Message.PROPERTY_ATTACHMENTS);
 
         if (headers == null) {
             headers = Json.createObjectBuilder().build();
@@ -91,4 +93,23 @@ public class Utils {
         return builder.build();
     }
 
+
+    public static JsonObject copy(final JsonObject obj) {
+        return pick(obj);
+    }
+
+
+    public static JsonObject pick(final JsonObject obj, String... properties) {
+        if (properties == null) {
+            throw new IllegalArgumentException("Properties must not be null");
+        }
+        final List<String> propertiesList = Arrays.asList(properties);
+
+        final JsonObjectBuilder result = Json.createObjectBuilder();
+        obj.entrySet()
+                .stream()
+                .filter(s -> propertiesList.contains(s.getKey()))
+                .forEach(s -> result.add(s.getKey(), s.getValue()));
+        return result.build();
+    }
 }

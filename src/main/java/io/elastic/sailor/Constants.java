@@ -62,10 +62,4 @@ public final class Constants {
     public final static String AMQP_HEADER_COMPONENT_ID = "compId";
     public final static String AMQP_HEADER_FUNCTION = "function";
     public final static String AMQP_HEADER_START_TIMESTAMP = "start";
-
-    public static final String MESSAGE_PROPERTY_ID = "id";
-    public static final String MESSAGE_PROPERTY_BODY = "body";
-    public static final String MESSAGE_PROPERTY_ATTACHMENTS = "attachments";
-    public static final String MESSAGE_PROPERTY_HEADERS = "headers";
-    public static final String MESSAGE_PROPERTY_PASSTHROUGH = "passthrough";
 }
