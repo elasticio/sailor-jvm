@@ -113,12 +113,10 @@ public class ExecutionContext {
             return Json.createObjectBuilder();
         }
 
-        System.err.println("passthrough:" + this.message.getPassthrough().toString());
         return createJsonObjectBuilder(this.message.getPassthrough());
     }
 
     private JsonObjectBuilder createJsonObjectBuilder(final JsonObject obj) {
-        System.err.println(obj);
         final JsonObjectBuilder result = Json.createObjectBuilder();
         obj.entrySet()
                 .stream()
