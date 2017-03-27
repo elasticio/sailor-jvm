@@ -85,9 +85,7 @@ public class MessageConsumer extends DefaultConsumer {
 
         final Message message = Utils.createMessage(payload);
 
-        final JsonObject passthrough = payload.getJsonObject(Message.PROPERTY_PASSTHROUGH);
-
-        return new ExecutionContext(this.step, message, properties, passthrough);
+        return new ExecutionContext(this.step, message, properties);
     }
 
 

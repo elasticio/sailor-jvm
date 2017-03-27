@@ -298,9 +298,8 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 new Step(step),
-                new Message.Builder().build(),
-                Utils.buildAmqpProperties(originalHeaders),
-                passthroughSoFar);
+                new Message.Builder().passthrough(passthroughSoFar).build(),
+                Utils.buildAmqpProperties(originalHeaders));
 
         when:
         def result = ctx.createPublisheableMessage(emittedMsg)

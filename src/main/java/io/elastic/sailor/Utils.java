@@ -68,6 +68,7 @@ public class Utils {
         JsonObject headers = payload.getJsonObject(Message.PROPERTY_HEADERS);
         JsonObject body = payload.getJsonObject(Message.PROPERTY_BODY);
         JsonObject attachments = payload.getJsonObject(Message.PROPERTY_ATTACHMENTS);
+        JsonObject passthrough = payload.getJsonObject(Message.PROPERTY_PASSTHROUGH);
 
         if (headers == null) {
             headers = Json.createObjectBuilder().build();
@@ -81,21 +82,21 @@ public class Utils {
             attachments = Json.createObjectBuilder().build();
         }
 
+        if (passthrough == null) {
+            passthrough = Json.createObjectBuilder().build();
+        }
+
         final Message.Builder builder = new Message.Builder()
                 .headers(headers)
                 .body(body)
-                .attachments(attachments);
+                .attachments(attachments)
+                .passthrough(passthrough);
 
         if (id != null) {
             builder.id(UUID.fromString(id.getString()));
         }
 
         return builder.build();
-    }
-
-
-    public static JsonObject copy(final JsonObject obj) {
-        return pick(obj);
     }
 
 

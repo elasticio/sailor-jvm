@@ -15,25 +15,14 @@ public class ExecutionContext {
     private final Step step;
     private final Message message;
     private final AMQP.BasicProperties amqpProperties;
-    private final JsonObject passthrough;
-
 
     public ExecutionContext(
             final Step step,
             final Message message,
             final AMQP.BasicProperties amqpProperties) {
-        this(step, message, amqpProperties, null);
-    }
-
-    public ExecutionContext(
-            final Step step,
-            final Message message,
-            final AMQP.BasicProperties amqpProperties,
-            final JsonObject passthrough) {
         this.step = step;
         this.message = message;
         this.amqpProperties = amqpProperties;
-        this.passthrough = passthrough;
     }
 
     public Step getStep() {
@@ -120,14 +109,16 @@ public class ExecutionContext {
     }
 
     private JsonObjectBuilder createPassthroughBuilder() {
-        if (this.passthrough == null) {
+        if (this.message.getPassthrough() == null) {
             return Json.createObjectBuilder();
         }
 
-        return createJsonObjectBuilder(this.passthrough);
+        System.err.println("passthrough:" + this.message.getPassthrough().toString());
+        return createJsonObjectBuilder(this.message.getPassthrough());
     }
 
     private JsonObjectBuilder createJsonObjectBuilder(final JsonObject obj) {
+        System.err.println(obj);
         final JsonObjectBuilder result = Json.createObjectBuilder();
         obj.entrySet()
                 .stream()
