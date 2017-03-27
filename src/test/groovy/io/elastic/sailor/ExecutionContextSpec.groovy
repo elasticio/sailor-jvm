@@ -182,7 +182,7 @@ class ExecutionContextSpec extends Specification {
                 Utils.buildAmqpProperties(originalHeaders));
 
         when:
-        def result = ctx.createPassthroughMessage(emittedMessage)
+        def result = ctx.createPublisheableMessage(emittedMessage)
 
         then:
         JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{},"attachments":{}}'
@@ -207,7 +207,7 @@ class ExecutionContextSpec extends Specification {
                 Utils.buildAmqpProperties(originalHeaders));
 
         when:
-        def result = ctx.createPassthroughMessage(emittedMessage)
+        def result = ctx.createPublisheableMessage(emittedMessage)
 
         then:
         JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{},"attachments":{}}'
@@ -244,7 +244,7 @@ class ExecutionContextSpec extends Specification {
                 Utils.buildAmqpProperties(originalHeaders));
 
         when:
-        def result = ctx.createPassthroughMessage(emittedMessage)
+        def result = ctx.createPublisheableMessage(emittedMessage)
 
         then:
         JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{},"passthrough":{"step_1":{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{}}}}'
@@ -303,7 +303,7 @@ class ExecutionContextSpec extends Specification {
                 passthroughSoFar);
 
         when:
-        def result = ctx.createPassthroughMessage(emittedMsg)
+        def result = ctx.createPublisheableMessage(emittedMsg)
 
         then:
         JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{},"passthrough":{"step_0":{"id":"5594bf23-611f-4bc2-acff-d897409614ec","headers":{},"body":{"time":"2017-03-20T18:45:02.122Z"},"attachments":{}},"step_1":{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{}}}}'

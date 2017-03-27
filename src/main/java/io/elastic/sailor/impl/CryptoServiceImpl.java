@@ -22,10 +22,6 @@ import java.util.UUID;
 
 public final class CryptoServiceImpl {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CryptoServiceImpl.class);
-    public static final String MESSAGE_PROPERTY_ID = "id";
-    public static final String MESSAGE_PROPERTY_BODY = "body";
-    public static final String MESSAGE_PROPERTY_ATTACHMENTS = "attachments";
-    public static final String MESSAGE_PROPERTY_HEADERS = "headers";
 
     private final String ALGORITHM = "AES/CBC/PKCS5Padding";
     private Key encryptionKey;

@@ -96,7 +96,7 @@ public class ExecutionContext {
         return amqpProperties.getHeaders();
     }
 
-    public JsonObject createPassthroughMessage(final Message message) {
+    public JsonObject createPublisheableMessage(final Message message) {
 
         final JsonObject messageAsJson = Utils.pick(message.toJsonObject(),
                 Message.PROPERTY_ID,
