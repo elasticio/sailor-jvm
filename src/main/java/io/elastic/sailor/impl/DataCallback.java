@@ -38,6 +38,8 @@ public class DataCallback extends CountingCallbackImpl {
 
         final JsonObject messageAsJson = executionContext.createPublisheableMessage(message);
 
+        logger.info("Publishing message {}", messageAsJson);
+
         // encrypt
         byte[] encryptedPayload = cipher.encrypt(JSON.stringify(messageAsJson)).getBytes();
 
