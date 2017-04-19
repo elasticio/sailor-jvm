@@ -8,4 +8,6 @@ public interface ApiClient {
     Step retrieveFlowStep(String taskId, String stepId);
 
     JsonObject updateAccount(String accountId, JsonObject body);
+
+    void storeStartupState(String flowId, JsonObject body);
 }

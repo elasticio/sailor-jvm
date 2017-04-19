@@ -29,6 +29,13 @@ public class HttpUtils {
 
     public static String postJson(String url, JsonObject body) throws IOException {
 
+        return postJson(url, body, null);
+    }
+
+    public static String postJson(final String url,
+                                  final JsonObject body,
+                                  final UsernamePasswordCredentials credentials) {
+
 
         final HttpPost httpPost = new HttpPost(url);
         httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json");
@@ -36,7 +43,7 @@ public class HttpUtils {
 
         logger.info("Successfully posted json {} bytes length", body.toString().length());
 
-        return sendHttpRequest(httpPost, null);
+        return sendHttpRequest(httpPost, credentials);
     }
 
     public static JsonObject getJson(final String url,

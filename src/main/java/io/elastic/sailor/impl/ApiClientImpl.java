@@ -56,4 +56,14 @@ public class ApiClientImpl implements ApiClient {
         return HttpUtils.putJson(uri, body, credentials);
 
     }
+
+    @Override
+    public void storeStartupState(final String flowId, final JsonObject body) {
+        final String uri = String.format("%s/sailor-support/hooks/task/%s/startup/data", this.apiBaseUri, flowId);
+
+        final UsernamePasswordCredentials credentials
+                = new UsernamePasswordCredentials(this.apiUser, this.apiKey);
+
+        HttpUtils.postJson(uri, body, credentials);
+    }
 }

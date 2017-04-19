@@ -6,6 +6,7 @@ import com.rabbitmq.client.Envelope
 import io.elastic.api.HttpReply
 import io.elastic.api.JSON
 import io.elastic.api.Message
+import io.elastic.sailor.component.StartupShutdownAction
 import io.elastic.sailor.impl.AmqpServiceImpl
 import io.elastic.sailor.impl.CryptoServiceImpl
 import org.eclipse.jetty.server.Request
@@ -17,6 +18,7 @@ import spock.lang.Stepwise
 import spock.util.concurrent.BlockingVariable
 
 import javax.json.Json
+import javax.json.JsonObject
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
@@ -43,10 +45,16 @@ class IntegrationSpec extends Specification {
     def traceId = prefix + '_trace_id_123456'
 
     @Shared
+    def flowId = '5559edd38968ec0736000003'
+
+    @Shared
     def messageId = UUID.randomUUID().toString()
 
     @Shared
     def sailor;
+
+    @Shared
+    def startupPayload
 
     def setupSpec() {
         System.setProperty(Constants.ENV_VAR_API_URI, 'http://localhost:8182')
@@ -54,7 +62,7 @@ class IntegrationSpec extends Specification {
         System.setProperty(Constants.ENV_VAR_API_KEY, '5559edd')
         System.setProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD, 'testCryptoPassword')
         System.setProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_IV, 'iv=any16_symbols')
-        System.setProperty(Constants.ENV_VAR_FLOW_ID, '5559edd38968ec0736000003')
+        System.setProperty(Constants.ENV_VAR_FLOW_ID, flowId)
         System.setProperty(Constants.ENV_VAR_STEP_ID, 'step_1')
         System.setProperty(Constants.ENV_VAR_USER_ID, '5559edd38968ec0736000002')
         System.setProperty(Constants.ENV_VAR_COMP_ID, '5559edd38968ec0736000456')
@@ -116,18 +124,34 @@ class IntegrationSpec extends Specification {
                                HttpServletResponse response)
                     throws IOException, ServletException {
 
-                def stepData = Json.createObjectBuilder()
-                        .add(Constants.STEP_PROPERTY_ID, System.getProperty(Constants.ENV_VAR_STEP_ID))
-                        .add(Constants.STEP_PROPERTY_COMP_ID, System.getProperty(Constants.ENV_VAR_COMP_ID))
-                        .add(Constants.STEP_PROPERTY_FUNCTION, System.getProperty(Constants.ENV_VAR_FUNCTION))
-                        .add(Constants.STEP_PROPERTY_CFG, Json.createObjectBuilder().add('apiKey', 'secret').build())
-                        .add(Constants.STEP_PROPERTY_SNAPSHOT, Json.createObjectBuilder().add('lastModifiedDate', 123456789).build())
-                        .add(Constants.STEP_PROPERTY_PASSTHROUGH, true)
-                        .build()
+                def jsonResponse = createResponse(target, baseRequest)
 
                 response.setHeader("Content-type", 'application/json')
-                response.getOutputStream().write(JSON.stringify(stepData).getBytes());
+                response.getOutputStream().write(JSON.stringify(jsonResponse).getBytes());
                 response.getOutputStream().close();
+            }
+
+            private JsonObject createResponse(final String target, final Request baseRequest) {
+                def flowId = IntegrationSpec.this.flowId
+                if ("/v1/tasks/${flowId}/steps/step_1".toString().equals(target)) {
+                    return Json.createObjectBuilder()
+                            .add(Constants.STEP_PROPERTY_ID, System.getProperty(Constants.ENV_VAR_STEP_ID))
+                            .add(Constants.STEP_PROPERTY_COMP_ID, System.getProperty(Constants.ENV_VAR_COMP_ID))
+                            .add(Constants.STEP_PROPERTY_FUNCTION, System.getProperty(Constants.ENV_VAR_FUNCTION))
+                            .add(Constants.STEP_PROPERTY_CFG, Json.createObjectBuilder().add('apiKey', 'secret').build())
+                            .add(Constants.STEP_PROPERTY_SNAPSHOT, Json.createObjectBuilder().add('lastModifiedDate', 123456789).build())
+                            .add(Constants.STEP_PROPERTY_PASSTHROUGH, true)
+                            .build()
+                } else if ("/v1/sailor-support/hooks/task/${flowId}/startup/data".toString().equals(target)) {
+                    def payload = Json.createReader(baseRequest.getInputStream()).readObject()
+                    IntegrationSpec.this.startupPayload = payload
+                    return Json.createObjectBuilder()
+                            .add("taskId", flowId)
+                            .add("payload", payload)
+                            .build()
+                }
+
+                throw new IllegalStateException("Target not supported yet:" + target);
             }
         });
 
@@ -136,6 +160,7 @@ class IntegrationSpec extends Specification {
 
     def cleanup() {
         System.clearProperty(Constants.ENV_VAR_STARTUP_REQUIRED)
+        startupPayload = null
     }
 
     def "run sailor successfully"() {
@@ -382,6 +407,88 @@ class IntegrationSpec extends Specification {
         then: "Emitted message is received"
         result.message.headers.isEmpty()
         JSON.stringify(result.message.body) == '{"echo":{"message":"Show me startup/init"},"startupAndInit":{"startup":{"apiKey":"secret"},"init":{"apiKey":"secret"}}}'
+
+        then: "Startup payload is not sent to API"
+        startupPayload == null
+
+        cleanup:
+        sailor.amqp.cancelConsumer()
+        amqp.publishChannel.basicCancel(consumerTag)
+    }
+
+    def "should execute startup/shutdown successfully"() {
+        def blockingVar = new BlockingVariable(5)
+        setup:
+        System.setProperty(Constants.ENV_VAR_STARTUP_REQUIRED, "1");
+        System.setProperty(Constants.ENV_VAR_FUNCTION, 'startupShutdownAction')
+
+        def headers = [
+                'execId'  : 'some-exec-id',
+                'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
+                'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
+                'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
+                start     : System.currentTimeMillis(),
+                messageId: messageId,
+                (Constants.AMQP_META_HEADER_TRACE_ID): traceId
+        ]
+
+        def options = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .priority(1)
+                .deliveryMode(2)
+                .build()
+
+        def msg = new Message.Builder()
+                .body(Json.createObjectBuilder().add('message', 'Show me startup/shutdown').build())
+                .build()
+
+        byte[] payload = cipher.encryptMessage(msg).getBytes();
+
+        amqp.publishChannel.basicPublish(
+                System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
+                System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
+                options,
+                payload);
+
+        def consumer = new DefaultConsumer(amqp.publishChannel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body)
+                    throws IOException {
+
+                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                def bodyString = new String(body, "UTF-8");
+                def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
+                blockingVar.set([message:message, properties:properties]);
+            }
+        }
+
+        def consumerTag = amqp.publishChannel.basicConsume(dataQueue, consumer)
+
+        when:
+
+        sailor = Sailor.createAndStartSailor()
+
+        then: "AMQP properties headers are all set"
+        def result = blockingVar.get()
+
+        result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        result.properties.headers.messageId.toString() == result.message.id.toString()
+        result.properties.headers.parentMessageId.toString() == messageId
+
+        then: "Emitted message is received"
+        result.message.headers.isEmpty()
+        JSON.stringify(result.message.body) == '{"echo":{"message":"Show me startup/shutdown"},"startupAndShutdown":{"startup":{"apiKey":"secret"}}}'
+
+        then: "Startup payload sent to API"
+        def expectedPayload = Json.createObjectBuilder()
+                .add("subscriptionId", StartupShutdownAction.SUBSCRIPTION_ID)
+                .build()
+        JSON.stringify(startupPayload) == JSON.stringify(expectedPayload)
 
         cleanup:
         sailor.amqp.cancelConsumer()

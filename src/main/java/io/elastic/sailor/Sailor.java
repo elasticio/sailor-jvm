@@ -21,6 +21,7 @@ public class Sailor {
     private ModuleBuilder moduleBuilder;
     private Step step;
     private ContainerContext containerContext;
+    private ApiClient apiClient;
 
     public static void main(String[] args) throws IOException {
         createAndStartSailor();
@@ -40,23 +41,28 @@ public class Sailor {
     }
 
     @Inject
-    public void setAMQP(AmqpService amqp) {
+    public void setAMQP(final AmqpService amqp) {
         this.amqp = amqp;
     }
 
     @Inject
-    public void setModuleBuilder(ModuleBuilder moduleBuilder) {
+    public void setModuleBuilder(final ModuleBuilder moduleBuilder) {
         this.moduleBuilder = moduleBuilder;
     }
 
     @Inject
-    public void setStep(@Named(Constants.NAME_STEP_JSON) Step step) {
+    public void setStep(final @Named(Constants.NAME_STEP_JSON) Step step) {
         this.step = step;
     }
 
     @Inject
-    public void setContainerContext(ContainerContext containerContext) {
+    public void setContainerContext(final ContainerContext containerContext) {
         this.containerContext = containerContext;
+    }
+
+    @Inject
+    public void setApiClient(final ApiClient apiClient) {
+        this.apiClient = apiClient;
     }
 
     public void start() throws IOException {
@@ -73,10 +79,7 @@ public class Sailor {
 
             final Module module = moduleBuilder.build();
 
-            if (containerContext.isStartupRequired()) {
-                logger.info("Starting up component");
-                module.startup(cfg);
-            }
+            startupModule(module, cfg);
 
             logger.info("Initializing module for execution");
             module.init(cfg);
@@ -93,6 +96,18 @@ public class Sailor {
                 logger.info("Shutdown hook called");
             }
         });
+    }
+
+    private void startupModule(final Module module, final JsonObject cfg) {
+
+        if (containerContext.isStartupRequired()) {
+            logger.info("Starting up component module");
+            final JsonObject state = module.startup(cfg);
+
+            if (state != null && !state.isEmpty()) {
+                apiClient.storeStartupState(containerContext.getFlowId(), state);
+            }
+        }
     }
 
     private void reportException(final Exception e) {

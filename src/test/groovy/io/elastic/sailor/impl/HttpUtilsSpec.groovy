@@ -18,7 +18,7 @@ class HttpUtilsSpec extends Specification {
     @Rule
     public ClientDriverRule driver = new ClientDriverRule(12345);
 
-    def "should post json successfully"() {
+    def "should post json successfully when credentials are inside url"() {
 
         setup:
         def body = Json.createObjectBuilder()
@@ -37,6 +37,32 @@ class HttpUtilsSpec extends Specification {
         def result = HttpUtils.postJson(
                 "http://homer.simpson%40example.org:secret@localhost:12345/v1/exec/result/55e5eeb460a8e2070000001e",
                 body)
+
+        then:
+
+        result == '{"status":"done"}'
+    }
+
+    def "should post json successfully"() {
+
+        setup:
+        def body = Json.createObjectBuilder()
+                .add('foo', 'barbaz')
+                .build()
+
+        driver.addExpectation(
+                onRequestTo("/v1/exec/result/55e5eeb460a8e2070000001e")
+                        .withMethod(ClientDriverRequest.Method.POST)
+                        .withBasicAuth("homer.simpson@example.org", "secret")
+                        .withBody(equalToIgnoringCase('{"foo":"barbaz"}'), "application/json"),
+                giveResponse('{"status":"done"}', 'application/json')
+                        .withStatus(200));
+
+        when:
+        def result = HttpUtils.postJson(
+                "http://localhost:12345/v1/exec/result/55e5eeb460a8e2070000001e",
+                body,
+                new UsernamePasswordCredentials("homer.simpson@example.org", "secret"))
 
         then:
 
