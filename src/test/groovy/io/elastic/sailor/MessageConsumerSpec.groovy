@@ -3,6 +3,7 @@ package io.elastic.sailor
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.Envelope
+import io.elastic.api.JSON
 import io.elastic.api.Message
 import io.elastic.sailor.component.HelloWorldAction
 import io.elastic.sailor.impl.CryptoServiceImpl
@@ -57,7 +58,7 @@ class MessageConsumerSpec extends Specification {
 
     def setup() {
         component = new HelloWorldAction()
-        consumer = new MessageConsumer(channel, cipher, processor, component)
+        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep())
     }
 
 
@@ -68,8 +69,10 @@ class MessageConsumerSpec extends Specification {
 
         then:
         1 * processor.processMessage({
-            it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, amqpProperties, component) >> new ExecutionStats(1, 0, 0)
+            assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
+            assert it.step != null
+            it.amqpProperties == amqpProperties
+        }, component) >> new ExecutionStats(1, 0, 0)
         1 * channel.basicAck(123456, true)
         0 * _
 
@@ -83,8 +86,10 @@ class MessageConsumerSpec extends Specification {
 
         then:
         1 * processor.processMessage({
-            it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, amqpProperties, component) >> new ExecutionStats(0, 1, 0)
+            assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
+            assert it.step != null
+            it.amqpProperties == amqpProperties
+        }, component) >> new ExecutionStats(0, 1, 0)
         1 * channel.basicReject(123456, false)
         0 * _
 
@@ -97,8 +102,10 @@ class MessageConsumerSpec extends Specification {
 
         then:
         1 * processor.processMessage({
-            it.getBody().toString() == "{\"content\":\"Hello world!\"}"
-        }, amqpProperties, component) >> { throw new Exception("Ouch") }
+            assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
+            assert it.step != null
+            it.amqpProperties == amqpProperties
+        }, component) >> { throw new Exception("Ouch") }
         1 * channel.basicReject(123456, false)
 
     }

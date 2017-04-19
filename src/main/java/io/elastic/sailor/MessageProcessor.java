@@ -8,7 +8,5 @@ import java.util.Map;
 
 public interface MessageProcessor {
 
-    ExecutionStats processMessage(final Message incomingMessage,
-                        final AMQP.BasicProperties amqpProperties,
-                        final Module module);
+    ExecutionStats processMessage(final ExecutionContext executionContext, final Module module);
 }

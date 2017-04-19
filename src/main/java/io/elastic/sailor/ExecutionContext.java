@@ -3,6 +3,9 @@ package io.elastic.sailor;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
 
+import javax.json.Json;
+import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -12,7 +15,6 @@ public class ExecutionContext {
     private final Step step;
     private final Message message;
     private final AMQP.BasicProperties amqpProperties;
-
 
     public ExecutionContext(
             final Step step,
@@ -81,5 +83,44 @@ public class ExecutionContext {
 
     public Map<String, Object> getHeaders() {
         return amqpProperties.getHeaders();
+    }
+
+    public JsonObject createPublisheableMessage(final Message message) {
+
+        final JsonObject messageAsJson = Utils.pick(message.toJsonObject(),
+                Message.PROPERTY_ID,
+                Message.PROPERTY_HEADERS,
+                Message.PROPERTY_BODY,
+                Message.PROPERTY_ATTACHMENTS);
+
+        if (!this.step.isPassThroughRequired()) {
+            return messageAsJson;
+        }
+
+        final JsonObjectBuilder result = createJsonObjectBuilder(messageAsJson);
+
+        final JsonObjectBuilder passthroughBuilder = createPassthroughBuilder();
+
+        passthroughBuilder.add(this.step.getId(), messageAsJson);
+
+        result.add(Message.PROPERTY_PASSTHROUGH, passthroughBuilder);
+
+        return result.build();
+    }
+
+    private JsonObjectBuilder createPassthroughBuilder() {
+        if (this.message.getPassthrough() == null) {
+            return Json.createObjectBuilder();
+        }
+
+        return createJsonObjectBuilder(this.message.getPassthrough());
+    }
+
+    private JsonObjectBuilder createJsonObjectBuilder(final JsonObject obj) {
+        final JsonObjectBuilder result = Json.createObjectBuilder();
+        obj.entrySet()
+                .stream()
+                .forEach(s -> result.add(s.getKey(), s.getValue()));
+        return result;
     }
 }

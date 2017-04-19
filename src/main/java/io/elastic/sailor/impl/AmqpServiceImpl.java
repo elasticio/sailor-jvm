@@ -40,6 +40,7 @@ public class AmqpServiceImpl implements AmqpService {
     private Integer prefetchCount;
     private CryptoServiceImpl cipher;
     private MessageProcessor messageProcessor;
+    private Step step;
     private String consumerTag;
 
     @Inject
@@ -100,6 +101,11 @@ public class AmqpServiceImpl implements AmqpService {
         this.prefetchCount = prefetchCount;
     }
 
+    @Inject
+    public void setStep(@Named(Constants.NAME_STEP_JSON) Step step) {
+        this.step = step;
+    }
+
     public void connect() {
         openConnection(this.amqpUri);
         openPublishChannel();
@@ -128,7 +134,8 @@ public class AmqpServiceImpl implements AmqpService {
     }
 
     public void subscribeConsumer(final Module module) {
-        final MessageConsumer consumer = new MessageConsumer(subscribeChannel, cipher, this.messageProcessor, module);
+        final MessageConsumer consumer = new MessageConsumer(
+                subscribeChannel, cipher, this.messageProcessor, module, step);
 
         try {
             consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
@@ -136,7 +143,7 @@ public class AmqpServiceImpl implements AmqpService {
             throw new RuntimeException(e);
         }
 
-        logger.info("Subscribed consumer. Waiting for messages to arrive ...");
+        logger.info("Subscribed consumer {}. Waiting for messages to arrive ...", consumerTag);
     }
 
     public void cancelConsumer() {
@@ -148,6 +155,8 @@ public class AmqpServiceImpl implements AmqpService {
                 throw new RuntimeException(e);
             }
         }
+
+        consumerTag = null;
     }
 
     public void ack(Long deliveryTag) {
