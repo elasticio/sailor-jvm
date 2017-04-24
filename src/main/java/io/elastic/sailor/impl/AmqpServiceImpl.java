@@ -20,6 +20,8 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.net.URI;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 @Singleton
@@ -234,13 +236,24 @@ public class AmqpServiceImpl implements AmqpService {
             if (amqp == null) {
                 ConnectionFactory factory = new ConnectionFactory();
                 factory.setUri(new URI(uri));
-                amqp = factory.newConnection();
+                amqp = factory.newConnection(newExecutorService());
                 logger.info("Connected to AMQP");
             }
             return this;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private ExecutorService newExecutorService() {
+        final int availableProcessorsCount = Runtime.getRuntime().availableProcessors();
+        logger.info("Component is configured to prefetch {} messages", prefetchCount);
+        logger.info("Processors available on this machine: {}", availableProcessorsCount);
+
+        final int threadCount = availableProcessorsCount * prefetchCount;
+        logger.info("Number of maximal messages processed in parallel: {}", threadCount);
+
+        return Executors.newFixedThreadPool(threadCount);
     }
 
     private AmqpServiceImpl openPublishChannel() {
