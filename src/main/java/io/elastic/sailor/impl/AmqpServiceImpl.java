@@ -246,14 +246,9 @@ public class AmqpServiceImpl implements AmqpService {
     }
 
     private ExecutorService newExecutorService() {
-        final int availableProcessorsCount = Runtime.getRuntime().availableProcessors();
         logger.info("Component is configured to prefetch {} messages", prefetchCount);
-        logger.info("Processors available on this machine: {}", availableProcessorsCount);
 
-        final int threadCount = availableProcessorsCount * prefetchCount;
-        logger.info("Number of maximal messages processed in parallel: {}", threadCount);
-
-        return Executors.newFixedThreadPool(threadCount);
+        return Executors.newFixedThreadPool(prefetchCount);
     }
 
     private AmqpServiceImpl openPublishChannel() {
