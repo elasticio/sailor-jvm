@@ -45,6 +45,7 @@ public class SailorEnvironmentModule extends AbstractModule {
                 Constants.DEFAULT_RABBITMQ_PREFETCH_SAILOR);
 
         bindOptionalYesNoEnvVar(Constants.ENV_VAR_STARTUP_REQUIRED);
+        bindOptionalYesNoEnvVar(Constants.ENV_VAR_HOOK_SHUTDOWN);
 
 
     }

@@ -48,6 +48,9 @@ class IntegrationSpec extends Specification {
     def flowId = '5559edd38968ec0736000003'
 
     @Shared
+    def stepCfg
+
+    @Shared
     def messageId = UUID.randomUUID().toString()
 
     @Shared
@@ -56,7 +59,11 @@ class IntegrationSpec extends Specification {
     @Shared
     def startupPayload
 
+    @Shared
+    def shutdownFlowId
+
     def setupSpec() {
+
         System.setProperty(Constants.ENV_VAR_API_URI, 'http://localhost:8182')
         System.setProperty(Constants.ENV_VAR_API_USERNAME, 'test@test.com')
         System.setProperty(Constants.ENV_VAR_API_KEY, '5559edd')
@@ -75,6 +82,16 @@ class IntegrationSpec extends Specification {
         System.setProperty(Constants.ENV_VAR_ERROR_ROUTING_KEY, prefix + ':routing_key:error')
         System.setProperty(Constants.ENV_VAR_REBOUND_ROUTING_KEY, prefix + ':routing_key:rebound')
         System.setProperty(Constants.ENV_VAR_SNAPSHOT_ROUTING_KEY, prefix + ':routing_key:snapshot')
+
+
+        stepCfg = Json.createObjectBuilder()
+                .add('apiKey', 'secret')
+                .add(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD, System.getProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD))
+                .add(Constants.ENV_VAR_MESSAGE_CRYPTO_IV, System.getProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_IV))
+                .add(Constants.ENV_VAR_AMQP_URI, System.getProperty(Constants.ENV_VAR_AMQP_URI))
+                .add(Constants.ENV_VAR_PUBLISH_MESSAGES_TO, System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO))
+                .add(Constants.ENV_VAR_DATA_ROUTING_KEY, System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY))
+                .build()
 
         cipher = new CryptoServiceImpl(
                 System.getProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD),
@@ -116,6 +133,8 @@ class IntegrationSpec extends Specification {
                 System.getProperty(Constants.ENV_VAR_ERROR_ROUTING_KEY)
         )
 
+        amqp.publishChannel.queuePurge(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
+
         Server server = new Server(8182);
         server.setHandler(new AbstractHandler() {
             @Override
@@ -134,21 +153,33 @@ class IntegrationSpec extends Specification {
             private JsonObject createResponse(final String target, final Request baseRequest) {
                 def flowId = IntegrationSpec.this.flowId
                 if ("/v1/tasks/${flowId}/steps/step_1".toString().equals(target)) {
+
                     return Json.createObjectBuilder()
                             .add(Constants.STEP_PROPERTY_ID, System.getProperty(Constants.ENV_VAR_STEP_ID))
                             .add(Constants.STEP_PROPERTY_COMP_ID, System.getProperty(Constants.ENV_VAR_COMP_ID))
                             .add(Constants.STEP_PROPERTY_FUNCTION, System.getProperty(Constants.ENV_VAR_FUNCTION))
-                            .add(Constants.STEP_PROPERTY_CFG, Json.createObjectBuilder().add('apiKey', 'secret').build())
+                            .add(Constants.STEP_PROPERTY_CFG, IntegrationSpec.this.stepCfg)
                             .add(Constants.STEP_PROPERTY_SNAPSHOT, Json.createObjectBuilder().add('lastModifiedDate', 123456789).build())
                             .add(Constants.STEP_PROPERTY_PASSTHROUGH, true)
                             .build()
-                } else if ("/v1/sailor-support/hooks/task/${flowId}/startup/data".toString().equals(target)) {
-                    def payload = Json.createReader(baseRequest.getInputStream()).readObject()
-                    IntegrationSpec.this.startupPayload = payload
-                    return Json.createObjectBuilder()
-                            .add("taskId", flowId)
-                            .add("payload", payload)
-                            .build()
+                }
+                if ("/v1/sailor-support/hooks/task/${flowId}/startup/data".toString().equals(target)) {
+                    if (baseRequest.getMethod().equalsIgnoreCase("post")) {
+                        def payload = Json.createReader(baseRequest.getInputStream()).readObject()
+                        IntegrationSpec.this.startupPayload = payload
+                        return Json.createObjectBuilder()
+                                .add("taskId", flowId)
+                                .add("payload", payload)
+                                .build()
+                    }
+                    else {
+                        if (baseRequest.getMethod().equalsIgnoreCase("delete")) {
+                            IntegrationSpec.this.shutdownFlowId = flowId
+                        }
+                        return Json.createObjectBuilder()
+                                .add("method", baseRequest.getMethod())
+                                .build()
+                    }
                 }
 
                 throw new IllegalStateException("Target not supported yet:" + target);
@@ -160,7 +191,9 @@ class IntegrationSpec extends Specification {
 
     def cleanup() {
         System.clearProperty(Constants.ENV_VAR_STARTUP_REQUIRED)
+        System.clearProperty(Constants.ENV_VAR_HOOK_SHUTDOWN)
         startupPayload = null
+        shutdownFlowId = null
     }
 
     def "run sailor successfully"() {
@@ -406,7 +439,9 @@ class IntegrationSpec extends Specification {
 
         then: "Emitted message is received"
         result.message.headers.isEmpty()
-        JSON.stringify(result.message.body) == '{"echo":{"message":"Show me startup/init"},"startupAndInit":{"startup":{"apiKey":"secret"},"init":{"apiKey":"secret"}}}'
+        result.message.body.echo == msg.body
+        result.message.body.startupAndInit.startup == stepCfg
+        result.message.body.startupAndInit.init == stepCfg
 
         then: "Startup payload is not sent to API"
         startupPayload == null
@@ -416,7 +451,7 @@ class IntegrationSpec extends Specification {
         amqp.publishChannel.basicCancel(consumerTag)
     }
 
-    def "should execute startup/shutdown successfully"() {
+    def "should execute startup successfully"() {
         def blockingVar = new BlockingVariable(5)
         setup:
         System.setProperty(Constants.ENV_VAR_STARTUP_REQUIRED, "1");
@@ -482,13 +517,56 @@ class IntegrationSpec extends Specification {
 
         then: "Emitted message is received"
         result.message.headers.isEmpty()
-        JSON.stringify(result.message.body) == '{"echo":{"message":"Show me startup/shutdown"},"startupAndShutdown":{"startup":{"apiKey":"secret"}}}'
+        result.message.body.echo == msg.body
+        result.message.body.startupAndShutdown.startup == stepCfg
 
         then: "Startup payload sent to API"
         def expectedPayload = Json.createObjectBuilder()
                 .add("subscriptionId", StartupShutdownAction.SUBSCRIPTION_ID)
                 .build()
         JSON.stringify(startupPayload) == JSON.stringify(expectedPayload)
+
+        cleanup:
+        sailor.amqp.cancelConsumer()
+        amqp.publishChannel.basicCancel(consumerTag)
+    }
+
+    def "should execute shutdown successfully"() {
+        def blockingVar = new BlockingVariable(5)
+        setup:
+        System.setProperty(Constants.ENV_VAR_HOOK_SHUTDOWN, "1");
+        System.setProperty(Constants.ENV_VAR_FUNCTION, 'startupShutdownAction')
+
+        def consumer = new DefaultConsumer(amqp.publishChannel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body)
+                    throws IOException {
+
+                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                def bodyString = new String(body, "UTF-8");
+                def message = JSON.parseObject(bodyString)
+                blockingVar.set([message:message, properties:properties]);
+            }
+        }
+
+        def consumerTag = amqp.publishChannel.basicConsume(dataQueue, consumer)
+
+        when:
+
+        sailor = Sailor.createAndStartSailor()
+
+        then: "Blocking var exists"
+        def result = blockingVar.get()
+
+        then: "Emitted message is received"
+        result.message.getString("shutdownSignal") == "1"
+        result.message.configuration == stepCfg
+
+        then: "Shutdown payload sent to API"
+        shutdownFlowId == System.getProperty(Constants.ENV_VAR_FLOW_ID)
 
         cleanup:
         sailor.amqp.cancelConsumer()

@@ -41,9 +41,11 @@ public class HttpUtils {
         httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpPost.setEntity(createStringEntity(body));
 
+        final String result = sendHttpRequest(httpPost, credentials);
+
         logger.info("Successfully posted json {} bytes length", body.toString().length());
 
-        return sendHttpRequest(httpPost, credentials);
+        return result;
     }
 
     public static JsonObject getJson(final String url,
@@ -70,6 +72,21 @@ public class HttpUtils {
         final String content = sendHttpRequest(httpPut, credentials);
 
         logger.info("Successfully put json {} bytes length", body.toString().length());
+
+        return JSON.parseObject(content);
+    }
+
+
+
+    public static JsonObject delete(final String url,
+                                    final UsernamePasswordCredentials credentials) {
+
+        final HttpDelete httpDelete = new HttpDelete(url);
+        httpDelete.addHeader(HTTP.CONTENT_TYPE, "application/json");
+
+        final String content = sendHttpRequest(httpDelete, credentials);
+
+        logger.info("Successfully sent delete");
 
         return JSON.parseObject(content);
     }

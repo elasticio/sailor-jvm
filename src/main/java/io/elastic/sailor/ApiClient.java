@@ -10,4 +10,8 @@ public interface ApiClient {
     JsonObject updateAccount(String accountId, JsonObject body);
 
     void storeStartupState(String flowId, JsonObject body);
+
+    JsonObject retrieveStartupState(String flowId);
+
+    void deleteStartupState(String flowId);
 }

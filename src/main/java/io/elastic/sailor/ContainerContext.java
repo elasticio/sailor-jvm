@@ -12,6 +12,7 @@ public class ContainerContext {
     private String compId;
     private String function;
     private boolean isStartupRequired;
+    private boolean isShutdownRequired;
 
     public String getFlowId() {
         return flowId;
@@ -72,7 +73,16 @@ public class ContainerContext {
     }
 
     @Inject
-    public void setStartupRequired(@Named(Constants.ENV_VAR_STARTUP_REQUIRED)  boolean startupRequired) {
+    public void setStartupRequired(@Named(Constants.ENV_VAR_STARTUP_REQUIRED) final boolean startupRequired) {
         isStartupRequired = startupRequired;
+    }
+
+    public boolean isShutdownRequired() {
+        return isShutdownRequired;
+    }
+
+    @Inject
+    public void setShutdownRequired(@Named(Constants.ENV_VAR_HOOK_SHUTDOWN) final boolean shutdownRequired) {
+        isShutdownRequired = shutdownRequired;
     }
 }

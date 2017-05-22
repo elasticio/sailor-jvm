@@ -33,9 +33,7 @@ public class Sailor {
 
         final Sailor sailor = injector.getInstance(Sailor.class);
 
-        sailor.start();
-
-        logger.info("Sailor started");
+        sailor.startOrShutdown();
 
         return sailor;
     }
@@ -65,7 +63,16 @@ public class Sailor {
         this.apiClient = apiClient;
     }
 
-    public void start() throws IOException {
+    public void startOrShutdown(){
+        if (containerContext.isShutdownRequired()) {
+            shutdown();
+            return;
+        }
+
+        start();
+    }
+
+    public void start() {
 
         logger.info("Connecting to AMQP");
         amqp.connect();
@@ -90,12 +97,7 @@ public class Sailor {
             reportException(e);
         }
 
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                logger.info("Shutdown hook called");
-            }
-        });
+        logger.info("Sailor started");
     }
 
     private void startupModule(final Module module, final JsonObject cfg) {
@@ -108,6 +110,22 @@ public class Sailor {
                 apiClient.storeStartupState(containerContext.getFlowId(), state);
             }
         }
+    }
+
+    public void shutdown() {
+        logger.info("Shutting down component module");
+
+        final String flowId = containerContext.getFlowId();
+        final JsonObject cfg = this.step.getCfg();
+        final Module module = moduleBuilder.build();
+
+        final JsonObject state = this.apiClient.retrieveStartupState(flowId);
+
+        module.shutdown(cfg, state);
+
+        this.apiClient.deleteStartupState(flowId);
+
+        logger.info("Component module shut down successfully");
     }
 
     private void reportException(final Exception e) {
