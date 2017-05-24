@@ -4,7 +4,10 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
+import io.elastic.api.InitParameters;
 import io.elastic.api.Module;
+import io.elastic.api.ShutdownParameters;
+import io.elastic.api.StartupParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,7 +66,7 @@ public class Sailor {
         this.apiClient = apiClient;
     }
 
-    public void startOrShutdown(){
+    public void startOrShutdown() {
         if (containerContext.isShutdownRequired()) {
             shutdown();
             return;
@@ -89,7 +92,10 @@ public class Sailor {
             startupModule(module, cfg);
 
             logger.info("Initializing module for execution");
-            module.init(cfg);
+            final InitParameters initParameters = new InitParameters.Builder()
+                    .configuration(cfg)
+                    .build();
+            module.init(initParameters);
 
             logger.info("Subscribing to queues");
             amqp.subscribeConsumer(module);
@@ -104,7 +110,10 @@ public class Sailor {
 
         if (containerContext.isStartupRequired()) {
             logger.info("Starting up component module");
-            final JsonObject state = module.startup(cfg);
+            final StartupParameters startupParameters = new StartupParameters.Builder()
+                    .configuration(cfg)
+                    .build();
+            final JsonObject state = module.startup(startupParameters);
 
             if (state != null && !state.isEmpty()) {
                 apiClient.storeStartupState(containerContext.getFlowId(), state);
@@ -121,7 +130,12 @@ public class Sailor {
 
         final JsonObject state = this.apiClient.retrieveStartupState(flowId);
 
-        module.shutdown(cfg, state);
+        final ShutdownParameters shutdownParameters = new ShutdownParameters.Builder()
+                .configuration(cfg)
+                .state(state)
+                .build();
+
+        module.shutdown(shutdownParameters);
 
         this.apiClient.deleteStartupState(flowId);
 

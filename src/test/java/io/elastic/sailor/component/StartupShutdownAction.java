@@ -1,10 +1,7 @@
 package io.elastic.sailor.component;
 
 import com.rabbitmq.client.AMQP;
-import io.elastic.api.ExecutionParameters;
-import io.elastic.api.JSON;
-import io.elastic.api.Message;
-import io.elastic.api.Module;
+import io.elastic.api.*;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.impl.AmqpServiceImpl;
 import io.elastic.sailor.impl.CryptoServiceImpl;
@@ -21,16 +18,16 @@ public class StartupShutdownAction implements Module {
     private JsonObjectBuilder builder;
 
     @Override
-    public JsonObject startup(JsonObject configuration) {
+    public JsonObject startup(final StartupParameters parameters) {
         builder = Json.createObjectBuilder()
-                .add("startup", configuration);
+                .add("startup", parameters.getConfiguration());
 
         return Json.createObjectBuilder()
                 .add("subscriptionId", SUBSCRIPTION_ID)
                 .build();
     }
 
-    public void execute(ExecutionParameters parameters) {
+    public void execute(final ExecutionParameters parameters) {
         final JsonObject body = Json.createObjectBuilder()
                 .add("echo", parameters.getMessage().getBody())
                 .add("startupAndShutdown", builder.build())
@@ -43,7 +40,9 @@ public class StartupShutdownAction implements Module {
     }
 
     @Override
-    public void shutdown(JsonObject configuration, JsonObject state) {
+    public void shutdown(final ShutdownParameters parameters) {
+        final JsonObject configuration = parameters.getConfiguration();
+
         final CryptoServiceImpl cipher = new CryptoServiceImpl(
                 configuration.getString(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD),
                 configuration.getString(Constants.ENV_VAR_MESSAGE_CRYPTO_IV));
