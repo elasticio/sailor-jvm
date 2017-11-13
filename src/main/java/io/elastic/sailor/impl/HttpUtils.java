@@ -1,6 +1,7 @@
 package io.elastic.sailor.impl;
 
 import io.elastic.api.JSON;
+import io.elastic.sailor.UnexpectedStatusCodeException;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
@@ -112,7 +113,7 @@ public class HttpUtils {
             final int statusCode = statusLine.getStatusCode();
             logger.info("Got {} response", statusCode);
             if (statusCode >= 400) {
-                throw new RuntimeException(String.format("Got %s response", statusCode));
+                throw new UnexpectedStatusCodeException(statusCode);
             }
 
             final HttpEntity responseEntity = response.getEntity();

@@ -125,7 +125,7 @@ task wrapper(type: Wrapper) {
 jar {
     manifest {
         attributes("Implementation-Vendor" : "elastic.io Gmbh",
-                "Implementation-Title": "elastic.io Sailor form JVM",
+                "Implementation-Title": "elastic.io Sailor for JVM",
                 "Implementation-Version": version)
     }
 }

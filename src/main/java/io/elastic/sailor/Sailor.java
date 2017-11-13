@@ -11,6 +11,7 @@ import io.elastic.api.StartupParameters;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
 import javax.json.JsonObject;
 import java.io.IOException;
 import java.util.HashMap;
@@ -113,10 +114,19 @@ public class Sailor {
             final StartupParameters startupParameters = new StartupParameters.Builder()
                     .configuration(cfg)
                     .build();
-            final JsonObject state = module.startup(startupParameters);
+            JsonObject state = module.startup(startupParameters);
 
-            if (state != null && !state.isEmpty()) {
-                apiClient.storeStartupState(containerContext.getFlowId(), state);
+            if (state == null || state.isEmpty()) {
+                state = Json.createObjectBuilder().build();
+            }
+
+            final String flowId = containerContext.getFlowId();
+            try {
+                apiClient.storeStartupState(flowId, state);
+            } catch (UnexpectedStatusCodeException e) {
+                logger.warn("Startup data already exists. Rewriting.");
+                apiClient.deleteStartupState(flowId);
+                apiClient.storeStartupState(flowId, state);
             }
         }
     }

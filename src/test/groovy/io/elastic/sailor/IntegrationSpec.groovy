@@ -444,7 +444,8 @@ class IntegrationSpec extends Specification {
         result.message.body.startupAndInit.init == stepCfg
 
         then: "Startup payload is not sent to API"
-        startupPayload == null
+        startupPayload != null
+        startupPayload.isEmpty()
 
         cleanup:
         sailor.amqp.cancelConsumer()
