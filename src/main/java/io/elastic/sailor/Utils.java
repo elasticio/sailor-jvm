@@ -3,6 +3,7 @@ package io.elastic.sailor;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.JSON;
 import io.elastic.api.Message;
+import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -14,6 +15,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public class Utils {
+
+    private static final org.slf4j.Logger logger = LoggerFactory.getLogger(Utils.class);
 
     public static boolean isJsonObject(final String input) {
         if (input == null) {
@@ -30,6 +33,8 @@ public class Utils {
 
     public static String getEnvVar(final String key) {
         final String value = getOptionalEnvVar(key);
+
+        logger.info("Env var: {}={}", key, value);
 
         if (value == null) {
             throw new IllegalStateException(
