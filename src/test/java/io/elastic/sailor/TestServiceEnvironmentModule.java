@@ -18,6 +18,7 @@ public class TestServiceEnvironmentModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_ACTION_OR_TRIGGER, "helloworldaction");
         bindRequiredStringEnvVar(Constants.ENV_VAR_CFG, "{\"key\":0}");
         bindRequiredStringEnvVar(Constants.ENV_VAR_GET_MODEL_METHOD, SimpleSelectModelProvider.class.getName());
+        bindRequiredStringEnvVar(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS, "0");
     }
 
     void bindRequiredStringEnvVar(final String name, final String value) {
