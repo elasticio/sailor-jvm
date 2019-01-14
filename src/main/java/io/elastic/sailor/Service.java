@@ -20,7 +20,7 @@ public class Service {
 
     private final String postResultUrl;
     private final ServiceExecutionParameters params;
-    private final int retryCnt;
+    private final int retryCount;
 
     @Inject()
     public Service(ComponentDescriptorResolver resolver,
@@ -30,7 +30,7 @@ public class Service {
                    @Named(Constants.ENV_VAR_GET_MODEL_METHOD) Provider<String> metaModelName,
                    @Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount) {
         this.postResultUrl = postResultUrl;
-        this.retryCnt = retryCount;
+        this.retryCount = retryCount;
 
         final String triggerOrAction = triggerOrActionProvider.get();
 
@@ -95,7 +95,7 @@ public class Service {
                 .add("data", data)
                 .build();
 
-        sendData(this.postResultUrl, payload, this.retryCnt);
+        sendData(this.postResultUrl, payload, this.retryCount);
     }
 
     public void executeMethod(final ServiceMethods method) {

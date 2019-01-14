@@ -20,7 +20,7 @@ public class ApiClientImpl implements ApiClient {
     private final String apiUser;
     private final String apiKey;
     private final String apiBaseUri;
-    private final int retryCnt;
+    private final int retryCount;
 
     @Inject
     public ApiClientImpl(@Named(Constants.ENV_VAR_API_URI) final String apiUri,
@@ -30,7 +30,7 @@ public class ApiClientImpl implements ApiClient {
         this.apiUser = apiUser;
         this.apiKey = apiKey;
         this.apiBaseUri = String.format("%s/v1", apiUri);
-        this.retryCnt = retryCount;
+        this.retryCount = retryCount;
     }
 
     @Override
@@ -42,7 +42,7 @@ public class ApiClientImpl implements ApiClient {
         final UsernamePasswordCredentials credentials
                 = new UsernamePasswordCredentials(this.apiUser, this.apiKey);
 
-        final JsonObject step = HttpUtils.getJson(uri, credentials, this.retryCnt);
+        final JsonObject step = HttpUtils.getJson(uri, credentials, this.retryCount);
 
         return new Step(step);
     }
@@ -56,7 +56,7 @@ public class ApiClientImpl implements ApiClient {
         final UsernamePasswordCredentials credentials
                 = new UsernamePasswordCredentials(this.apiUser, this.apiKey);
 
-        return HttpUtils.putJson(uri, body, credentials, this.retryCnt);
+        return HttpUtils.putJson(uri, body, credentials, this.retryCount);
 
     }
 }
