@@ -22,12 +22,6 @@ public class ApiClientImpl implements ApiClient {
     private final String apiBaseUri;
     private final int retryCnt;
 
-    public ApiClientImpl(final String apiUri,
-                        final String apiUser,
-                        final String apiKey) {
-        this(apiUri, apiUser, apiKey, 3);
-    }
-
     @Inject
     public ApiClientImpl(@Named(Constants.ENV_VAR_API_URI) final String apiUri,
                          @Named(Constants.ENV_VAR_API_USERNAME) final String apiUser,

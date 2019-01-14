@@ -22,14 +22,6 @@ public class Service {
     private final ServiceExecutionParameters params;
     private final int retryCnt;
 
-    public Service(ComponentDescriptorResolver resolver,
-                   @Named(Constants.ENV_VAR_POST_RESULT_URL) String postResultUrl,
-                   @Named(Constants.NAME_CFG_JSON) JsonObject configuration,
-                   @Named(Constants.ENV_VAR_ACTION_OR_TRIGGER) Provider<String> triggerOrActionProvider,
-                   @Named(Constants.ENV_VAR_GET_MODEL_METHOD) Provider<String> metaModelName) {
-        this(resolver, postResultUrl, configuration, triggerOrActionProvider, metaModelName, 0);
-    }
-
     @Inject()
     public Service(ComponentDescriptorResolver resolver,
                    @Named(Constants.ENV_VAR_POST_RESULT_URL) String postResultUrl,
