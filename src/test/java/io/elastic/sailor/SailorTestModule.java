@@ -49,6 +49,8 @@ public class SailorTestModule extends AbstractModule {
                 .annotatedWith(Names.named(Constants.ENV_VAR_STARTUP_REQUIRED))
                 .toInstance(false);
 
+        bindRequiredIntegerEnvVar(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS, 5);
+
     }
 
     void bindRequiredStringEnvVar(final String name, final String value) {

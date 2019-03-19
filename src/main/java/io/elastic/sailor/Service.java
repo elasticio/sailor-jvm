@@ -20,14 +20,17 @@ public class Service {
 
     private final String postResultUrl;
     private final ServiceExecutionParameters params;
+    private final int retryCount;
 
     @Inject()
     public Service(ComponentDescriptorResolver resolver,
                    @Named(Constants.ENV_VAR_POST_RESULT_URL) String postResultUrl,
                    @Named(Constants.NAME_CFG_JSON) JsonObject configuration,
                    @Named(Constants.ENV_VAR_ACTION_OR_TRIGGER) Provider<String> triggerOrActionProvider,
-                   @Named(Constants.ENV_VAR_GET_MODEL_METHOD) Provider<String> metaModelName) {
+                   @Named(Constants.ENV_VAR_GET_MODEL_METHOD) Provider<String> metaModelName,
+                   @Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount) {
         this.postResultUrl = postResultUrl;
+        this.retryCount = retryCount;
 
         final String triggerOrAction = triggerOrActionProvider.get();
 
@@ -92,7 +95,7 @@ public class Service {
                 .add("data", data)
                 .build();
 
-        sendData(this.postResultUrl, payload);
+        sendData(this.postResultUrl, payload, this.retryCount);
     }
 
     public void executeMethod(final ServiceMethods method) {
@@ -115,12 +118,12 @@ public class Service {
         createResponseAndSend("error", data);
     }
 
-    private static void sendData(String url, JsonObject payload) {
+    private static void sendData(String url, JsonObject payload, int retryCnt) {
 
         logger.info("Sending response");
 
         try {
-            String response = HttpUtils.postJson(url, payload);
+            String response = HttpUtils.postJson(url, payload, retryCnt);
             logger.info("Received response from server: {}", response.toString());
         } catch (IOException e) {
             logger.info("Failed to send response: {}", e.getMessage());

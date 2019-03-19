@@ -21,6 +21,7 @@ public final class Constants {
     public static final int DEFAULT_REBOUND_LIMIT = 20;
     public static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;
     public static final int DEFAULT_RABBITMQ_PREFETCH_SAILOR = 1;
+    public static final int DEFAULT_API_REQUEST_RETRY_ATTEMPTS = 3;
 
     public static final String ENV_VAR_API_URI = "ELASTICIO_API_URI";
     public static final String ENV_VAR_API_USERNAME = "ELASTICIO_API_USERNAME";
@@ -48,6 +49,8 @@ public final class Constants {
     public static final String ENV_VAR_COMP_ID = "ELASTICIO_COMP_ID";
     public static final String ENV_VAR_RABBITMQ_PREFETCH_SAILOR = "ELASTICIO_RABBITMQ_PREFETCH_SAILOR";
     public static final String ENV_VAR_STARTUP_REQUIRED = "ELASTICIO_STARTUP_REQUIRED";
+    public static final String ENV_VAR_API_REQUEST_RETRY_ATTEMPTS =
+            "ELASTICIO_API_REQUEST_RETRY_ATTEMPTS";
 
     public static final String AMQP_META_HEADER_PREFIX = "x-eio-meta-";
     public static final String AMQP_META_HEADER_TRACE_ID = Constants.AMQP_META_HEADER_PREFIX + "trace-id";

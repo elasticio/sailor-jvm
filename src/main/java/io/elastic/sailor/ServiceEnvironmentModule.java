@@ -21,6 +21,9 @@ public class ServiceEnvironmentModule extends AbstractModule {
 
         bindOptionalStringEnvVar(Constants.ENV_VAR_ACTION_OR_TRIGGER);
         bindOptionalStringEnvVar(Constants.ENV_VAR_GET_MODEL_METHOD);
+        bindOptionalIntegerEnvVar(
+                Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS,
+                Constants.DEFAULT_API_REQUEST_RETRY_ATTEMPTS);
     }
 
     void bindRequiredStringEnvVar(final String name) {
@@ -41,5 +44,21 @@ public class ServiceEnvironmentModule extends AbstractModule {
                         return Utils.getOptionalEnvVar(name);
                     }
                 });
+    }
+
+    private static int getOptionalIntegerValue(final String key, int defaultValue) {
+        final String value = Utils.getOptionalEnvVar(key);
+
+        if (value != null) {
+            return Integer.parseInt(value);
+        }
+
+        return defaultValue;
+    }
+
+    void bindOptionalIntegerEnvVar(final String name, int defaultValue) {
+        bind(Integer.class)
+                .annotatedWith(Names.named(name))
+                .toInstance(getOptionalIntegerValue(name, defaultValue));
     }
 }

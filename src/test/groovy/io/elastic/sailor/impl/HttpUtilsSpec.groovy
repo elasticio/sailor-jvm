@@ -2,8 +2,11 @@ package io.elastic.sailor.impl
 
 import com.github.restdriver.clientdriver.ClientDriverRequest
 import com.github.restdriver.clientdriver.ClientDriverRule
-import io.elastic.sailor.impl.HttpUtils
+import com.github.tomakehurst.wiremock.http.Fault
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.apache.http.auth.UsernamePasswordCredentials
+import com.github.tomakehurst.wiremock.WireMockServer
+import static com.github.tomakehurst.wiremock.client.WireMock.*
 import org.junit.Rule
 import spock.lang.Specification
 
@@ -86,6 +89,38 @@ class HttpUtilsSpec extends Specification {
         then:
 
         result.toString() == '{"id":"1","email":"homer.simpson@example.org"}'
+    }
+
+    def "should retry getting json"() {
+
+        def wireMockServer = new WireMockServer(12346);
+
+        setup:
+        wireMockServer.start()
+
+        configureFor("localhost", 12346)
+
+        stubFor(get(urlEqualTo("/econnreset")).inScenario("retry")
+                .whenScenarioStateIs(Scenario.STARTED)
+                .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER))
+                .willSetStateTo("next request"))
+
+        stubFor(get(urlEqualTo("/econnreset")).inScenario("retry")
+                .whenScenarioStateIs("next request")
+                .willReturn(
+                    aResponse().withStatus(200).withBody('{"id":"1","email":"homer.simpson@example.org"}')
+        ))
+
+        when:
+        def result = HttpUtils.getJson(
+                "http://localhost:12346/econnreset",
+                new UsernamePasswordCredentials("admin", "secret"), 2)
+
+        then:
+        result.toString() == '{"id":"1","email":"homer.simpson@example.org"}'
+
+        cleanup:
+        wireMockServer.stop()
     }
 
     def "should fail to post json if user info not present in the url"() {
