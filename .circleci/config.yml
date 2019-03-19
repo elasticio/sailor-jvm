@@ -17,8 +17,6 @@ jobs:
             - gradle-repo-v1-{{ .Branch }}-
             - gradle-repo-v1-
       
-      - run: mvn dependency:go-offline
-      
       - save_cache:
           paths:
             - ~/.gradle
