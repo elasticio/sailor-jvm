@@ -6,6 +6,7 @@ jobs:
 
     docker:
       - image: circleci/openjdk:8-jdk-browsers
+      - image: circleci/rabbitmq:3.6.6
 
     steps:
 
