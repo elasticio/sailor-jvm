@@ -1,0 +1,18 @@
+version: 2
+jobs:
+  build:
+    
+    working_directory: ~/sailor-jvm
+
+    docker:
+      - image: circleci/openjdk:8-jdk-browsers
+      - image: circleci/rabbitmq:3.6.6
+
+    steps:
+
+      - checkout
+      
+      - run: export TERM=${TERM:-dumb} && ./gradlew build --refresh-dependencies uploadArchives -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
+      
+      - store_test_results:
+          path: build/reports
