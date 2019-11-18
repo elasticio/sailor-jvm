@@ -60,10 +60,12 @@ public final class CryptoServiceImpl {
         }
 
         final String decryptedMessage = decrypt(message);
-
+        logger.trace("decryptedMessage: {}", decryptedMessage);
         if (Utils.isJsonObject(decryptedMessage)) {
             logger.info("Parsing message JSON");
-            return JSON.parseObject(decryptedMessage);
+            JsonObject parsedObject = JSON.parseObject(decryptedMessage);
+            logger.trace("parsedObject: {}", parsedObject.toString());
+            return parsedObject;
         }
 
         throw new RuntimeException("Message is not a JSON object: " + decryptedMessage);
