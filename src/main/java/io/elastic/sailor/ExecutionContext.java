@@ -34,6 +34,7 @@ public class ExecutionContext {
         final Map<String, Object> result = new HashMap<String, Object>();
 
         final Map<String, Object> headers = amqpProperties.getHeaders();
+        result.put(Constants.AMQP_HEADER_THREAD_ID, Utils.getThreadId(amqpProperties));
         result.put(Constants.AMQP_HEADER_EXEC_ID, headers.get(Constants.AMQP_HEADER_EXEC_ID));
         result.put(Constants.AMQP_HEADER_TASK_ID, headers.get(Constants.AMQP_HEADER_TASK_ID));
         result.put(Constants.AMQP_HEADER_USER_ID, headers.get(Constants.AMQP_HEADER_USER_ID));

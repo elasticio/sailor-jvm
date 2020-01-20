@@ -65,4 +65,9 @@ public final class Constants {
     public final static String AMQP_HEADER_COMPONENT_ID = "compId";
     public final static String AMQP_HEADER_FUNCTION = "function";
     public final static String AMQP_HEADER_START_TIMESTAMP = "start";
+    public static final String AMQP_HEADER_THREAD_ID = "threadId";
+
+    public static final String MDC_THREAD_ID = AMQP_HEADER_THREAD_ID;
+    public static final String MDC_MESSAGE_ID = AMQP_HEADER_MESSAGE_ID;
+    public static final String MDC_PARENT_MESSAGE_ID = AMQP_HEADER_PARENT_MESSAGE_ID;
 }

@@ -1,9 +1,14 @@
 <configuration>
 
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
+        <encoder class="ch.qos.logback.core.encoder.LayoutWrappingEncoder">
             <pattern>%-5level %logger{5} T:%X{traceId} - %msg%n</pattern>
+            <layout class="io.elastic.sailor.impl.BunyanJsonLayout">
+                <jsonFormatter class="ch.qos.logback.contrib.jackson.JacksonJsonFormatter"/>
+                <appendLineSeparator>true</appendLineSeparator>
+            </layout>
         </encoder>
+
     </appender>
 
     <root level="info">

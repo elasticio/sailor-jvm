@@ -18,7 +18,6 @@ import java.nio.charset.Charset;
 public class MessageConsumer extends DefaultConsumer {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
-    private static final String MDC_TRACE_ID = "traceId";
     private final CryptoServiceImpl cipher;
     private final MessageProcessor processor;
     private final Module module;
@@ -43,16 +42,16 @@ public class MessageConsumer extends DefaultConsumer {
         ExecutionContext executionContext = null;
         long deliveryTag = envelope.getDeliveryTag();
 
+        final String threadId = Utils.getThreadId(properties);
         final Object messageId = getHeaderValue(properties, Constants.AMQP_HEADER_MESSAGE_ID);
         final Object parentMessageId = getHeaderValue(properties, Constants.AMQP_HEADER_PARENT_MESSAGE_ID);
-        final Object traceId = getHeaderValue(properties, Constants.AMQP_META_HEADER_TRACE_ID);
 
-        if (traceId != null) {
-            MDC.put(MDC_TRACE_ID, traceId.toString());
-        }
+        MDC.put(Constants.MDC_THREAD_ID, threadId);
+        MDC.put(Constants.MDC_MESSAGE_ID, messageId.toString());
+        MDC.put(Constants.MDC_PARENT_MESSAGE_ID, parentMessageId.toString());
 
-        logger.info("Consumer {} received message: deliveryTag={}, messageId={}, parentMessageId={}, traceId={}",
-                consumerTag, deliveryTag, messageId, parentMessageId, traceId);
+        logger.info("Consumer {} received message: deliveryTag={}, messageId={}, parentMessageId={}, threadId={}",
+                consumerTag, deliveryTag, messageId, parentMessageId, threadId);
 
         try {
             executionContext = createExecutionContext(body, properties);
@@ -69,12 +68,18 @@ public class MessageConsumer extends DefaultConsumer {
         } catch (Exception e) {
             logger.error("Failed to process message for delivery tag:" + deliveryTag, e);
         } finally {
-            try {
-                MDC.remove(MDC_TRACE_ID);
-            }catch(Exception e) {
-                logger.warn("Failed to remove {} from MDC", MDC_TRACE_ID, e);
-            }
+            removeFromMDC(Constants.MDC_THREAD_ID);
+            removeFromMDC(Constants.MDC_MESSAGE_ID);
+            removeFromMDC(Constants.MDC_PARENT_MESSAGE_ID);
             ackOrReject(stats, deliveryTag);
+        }
+    }
+
+    private static void removeFromMDC(final String key) {
+        try {
+            MDC.remove(key);
+        }catch(Exception e) {
+            logger.warn("Failed to remove {} from MDC", key, e);
         }
     }
 
