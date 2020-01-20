@@ -73,6 +73,12 @@ public class Sailor {
 
             final Module module = moduleBuilder.build();
 
+            if (containerContext.isShutdownRequired()) {
+                logger.info("Shutdown hook called");
+                module.shutdown(cfg);
+                return;
+            }
+
             if (containerContext.isStartupRequired()) {
                 logger.info("Starting up component");
                 module.startup(cfg);
@@ -86,13 +92,6 @@ public class Sailor {
         } catch (Exception e) {
             reportException(e);
         }
-
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-            @Override
-            public void run() {
-                logger.info("Shutdown hook called");
-            }
-        });
     }
 
     private void reportException(final Exception e) {
