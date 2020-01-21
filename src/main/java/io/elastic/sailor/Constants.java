@@ -51,6 +51,8 @@ public final class Constants {
     public static final String ENV_VAR_STARTUP_REQUIRED = "ELASTICIO_STARTUP_REQUIRED";
     public static final String ENV_VAR_API_REQUEST_RETRY_ATTEMPTS =
             "ELASTICIO_API_REQUEST_RETRY_ATTEMPTS";
+    public static final String ENV_VAR_NO_SELF_PASSTRHOUGH =
+            "ELASTICIO_NO_SELF_PASSTRHOUGH";
 
     public static final String AMQP_META_HEADER_PREFIX = "x-eio-meta-";
     public static final String AMQP_META_HEADER_TRACE_ID = Constants.AMQP_META_HEADER_PREFIX + "trace-id";

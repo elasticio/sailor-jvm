@@ -48,6 +48,7 @@ public class SailorEnvironmentModule extends AbstractModule {
                 Constants.DEFAULT_API_REQUEST_RETRY_ATTEMPTS);
 
         bindOptionalYesNoEnvVar(Constants.ENV_VAR_STARTUP_REQUIRED);
+        bindOptionalYesNoEnvVar(Constants.ENV_VAR_NO_SELF_PASSTRHOUGH);
 
 
     }
