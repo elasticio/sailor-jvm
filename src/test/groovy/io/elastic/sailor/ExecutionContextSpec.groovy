@@ -308,6 +308,52 @@ class ExecutionContextSpec extends Specification {
         JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{},"passthrough":{"step_0":{"id":"5594bf23-611f-4bc2-acff-d897409614ec","headers":{},"body":{"time":"2017-03-20T18:45:02.122Z"},"attachments":{}},"step_1":{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{}}}}'
     }
 
+    def "should add anything to passthrough in the message because the component is a trigger (stepId is missing in AMQP headers)"() {
+        given:
+        def originalHeaders = [
+                (Constants.AMQP_HEADER_EXEC_ID): "_exec_01",
+                (Constants.AMQP_HEADER_TASK_ID): "5559edd38968ec0736000003",
+                (Constants.AMQP_HEADER_USER_ID): "010101"
+        ] as Map
+
+        def incomingBody = Json.createObjectBuilder()
+                .add("greeting", "Hello, world!")
+                .build()
+
+        def incomingMessage = new Message.Builder()
+                .id(UUID.fromString("2c5ea4c0-4067-11e9-8bad-9b1deb4d3b7d"))
+                .body(incomingBody)
+                .build()
+
+        def emittedBody = Json.createObjectBuilder()
+                .add("answer", "Hello, again!")
+                .build()
+
+        def emittedMessage = new Message.Builder()
+                .id(UUID.fromString("df6db9ec-8522-4577-9171-989f0859a249"))
+                .body(emittedBody)
+                .build()
+
+        def step = Json.createObjectBuilder()
+                .add("id", "step_1")
+                .add("comp_id", "testcomponent")
+                .add("function", "test")
+                .add("snapshot", Json.createObjectBuilder().add("timestamp", "19700101").build())
+                .add("is_passthrough", true)
+                .build()
+
+        ExecutionContext ctx = new ExecutionContext(
+                new Step(step, true),
+                incomingMessage,
+                Utils.buildAmqpProperties(originalHeaders));
+
+        when:
+        def result = ctx.createPublisheableMessage(emittedMessage)
+
+        then:
+        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"answer":"Hello, again!"},"attachments":{},"passthrough":{}}'
+    }
+
     def "should create passthrough in the message by putting incoming message into it"() {
         given:
         def originalHeaders = [
