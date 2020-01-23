@@ -23,6 +23,8 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_EXEC_ID);
         bindRequiredStringEnvVar(Constants.ENV_VAR_USER_ID);
         bindRequiredStringEnvVar(Constants.ENV_VAR_COMP_ID);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_CONTAINER_ID);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_WORKSPACE_ID);
 
         bindRequiredStringEnvVar(Constants.ENV_VAR_AMQP_URI);
         bindRequiredStringEnvVar(Constants.ENV_VAR_LISTEN_MESSAGES_ON);
@@ -31,6 +33,15 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_ERROR_ROUTING_KEY);
         bindRequiredStringEnvVar(Constants.ENV_VAR_REBOUND_ROUTING_KEY);
         bindRequiredStringEnvVar(Constants.ENV_VAR_SNAPSHOT_ROUTING_KEY);
+
+        bindOptionalStringEnvVar(Constants.ENV_VAR_COMP_NAME);
+        bindOptionalStringEnvVar(Constants.ENV_VAR_CONTRACT_ID);
+        bindOptionalStringEnvVar(Constants.ENV_VAR_EXEC_TYPE);
+        bindOptionalStringEnvVar(Constants.ENV_VAR_EXECUTION_RESULT_ID);
+        bindOptionalStringEnvVar(Constants.ENV_VAR_FLOW_VERSION);
+        bindOptionalStringEnvVar(Constants.ENV_VAR_TASK_USER_EMAIL);
+        bindOptionalStringEnvVar(Constants.ENV_VAR_TENANT_ID);
+        bindOptionalStringEnvVar(Constants.ENV_VAR_WORKSPACE_ID);
 
 
         // optional env vars
@@ -57,6 +68,19 @@ public class SailorEnvironmentModule extends AbstractModule {
         bind(String.class)
                 .annotatedWith(Names.named(name))
                 .toInstance(Utils.getEnvVar(name));
+    }
+
+    void bindOptionalStringEnvVar(final String name) {
+
+        final String value = Utils.getOptionalEnvVar(name);
+
+        if (value == null) {
+            return;
+        }
+
+        bind(String.class)
+                .annotatedWith(Names.named(name))
+                .toInstance(value);
     }
 
     void bindOptionalIntegerEnvVar(final String name, int defaultValue) {

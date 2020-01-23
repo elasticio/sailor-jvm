@@ -3,6 +3,7 @@ package io.elastic.sailor.impl;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.contrib.json.classic.JsonLayout;
 import io.elastic.sailor.Constants;
+import io.elastic.sailor.ContainerContext;
 import org.slf4j.MDC;
 
 import java.net.InetAddress;
@@ -20,6 +21,8 @@ public class BunyanJsonLayout extends JsonLayout {
     public static final String PARENT_MESSAGE_ID = "parentMessageId";
     public static final String MESSAGE = "msg";
 
+    public static ContainerContext containerContext;
+
     @Override
     protected void addCustomDataToJsonMap(Map<String, Object> map, ILoggingEvent event) {
         super.addCustomDataToJsonMap(map, event);
@@ -28,6 +31,8 @@ public class BunyanJsonLayout extends JsonLayout {
         final String threadId = MDC.get(Constants.MDC_THREAD_ID);
         final String messageId = MDC.get(Constants.MDC_MESSAGE_ID);
         final String parentMessageId = MDC.get(Constants.MDC_PARENT_MESSAGE_ID);
+
+        putFromContainerContext(map);
 
         if (threadId != null) {
             map.put(THREAD_ID, threadId);
@@ -53,5 +58,23 @@ public class BunyanJsonLayout extends JsonLayout {
         } catch (UnknownHostException e) {
             // ignore
         }
+    }
+
+    private void putFromContainerContext(final Map<String, Object> map) {
+
+        if (BunyanJsonLayout.containerContext == null) {
+            return;
+        }
+
+        map.put(Constants.ENV_VAR_CONTAINER_ID, BunyanJsonLayout.containerContext.getContainerId());
+        map.put(Constants.ENV_VAR_API_USERNAME, BunyanJsonLayout.containerContext.getApiUserName());
+        map.put(Constants.ENV_VAR_COMP_NAME, BunyanJsonLayout.containerContext.getComponentName());
+        map.put(Constants.ENV_VAR_CONTRACT_ID, BunyanJsonLayout.containerContext.getContractId());
+        map.put(Constants.ENV_VAR_EXEC_TYPE, BunyanJsonLayout.containerContext.getExecType());
+        map.put(Constants.ENV_VAR_EXECUTION_RESULT_ID, BunyanJsonLayout.containerContext.getExecResultId());
+        map.put(Constants.ENV_VAR_FLOW_VERSION, BunyanJsonLayout.containerContext.getFlowVersion());
+        map.put(Constants.ENV_VAR_TASK_USER_EMAIL, BunyanJsonLayout.containerContext.getFlowUserEmail());
+        map.put(Constants.ENV_VAR_TENANT_ID, BunyanJsonLayout.containerContext.getTenantId());
+        map.put(Constants.ENV_VAR_WORKSPACE_ID, BunyanJsonLayout.containerContext.getWorkspaceId());
     }
 }
