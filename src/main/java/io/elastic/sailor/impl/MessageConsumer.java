@@ -22,17 +22,20 @@ public class MessageConsumer extends DefaultConsumer {
     private final MessageProcessor processor;
     private final Module module;
     private final Step step;
+    private final ContainerContext containerContext;
 
     public MessageConsumer(Channel channel,
                            CryptoServiceImpl cipher,
                            MessageProcessor processor,
                            Module module,
-                           @Named(Constants.NAME_STEP_JSON) Step step) {
+                           Step step,
+                           final ContainerContext containerContext) {
         super(channel);
         this.cipher = cipher;
         this.processor = processor;
         this.module = module;
         this.step = step;
+        this.containerContext = containerContext;
     }
 
     @Override
@@ -42,16 +45,10 @@ public class MessageConsumer extends DefaultConsumer {
         ExecutionContext executionContext = null;
         long deliveryTag = envelope.getDeliveryTag();
 
-        final String threadId = Utils.getThreadId(properties);
-        final Object messageId = getHeaderValue(properties, Constants.AMQP_HEADER_MESSAGE_ID);
-        final Object parentMessageId = getHeaderValue(properties, Constants.AMQP_HEADER_PARENT_MESSAGE_ID);
 
-        MDC.put(Constants.MDC_THREAD_ID, threadId);
-        MDC.put(Constants.MDC_MESSAGE_ID, messageId.toString());
-        MDC.put(Constants.MDC_PARENT_MESSAGE_ID, parentMessageId.toString());
+        logger.info("Consumer {} received message: deliveryTag={}", consumerTag, deliveryTag);
 
-        logger.info("Consumer {} received message: deliveryTag={}, messageId={}, parentMessageId={}, threadId={}",
-                consumerTag, deliveryTag, messageId, parentMessageId, threadId);
+        putIntoMDC(properties);
 
         try {
             executionContext = createExecutionContext(body, properties);
@@ -75,6 +72,18 @@ public class MessageConsumer extends DefaultConsumer {
         }
     }
 
+    private void putIntoMDC(final AMQP.BasicProperties properties) {
+        final String threadId = Utils.getThreadId(properties);
+        final Object messageId = getHeaderValue(properties, Constants.AMQP_HEADER_MESSAGE_ID);
+        final Object parentMessageId = getHeaderValue(properties, Constants.AMQP_HEADER_PARENT_MESSAGE_ID);
+
+        MDC.put(Constants.MDC_THREAD_ID, threadId);
+        MDC.put(Constants.MDC_MESSAGE_ID, messageId.toString());
+        MDC.put(Constants.MDC_PARENT_MESSAGE_ID, parentMessageId.toString());
+
+        logger.info("messageId={}, parentMessageId={}, threadId={}", messageId, parentMessageId, threadId);
+    }
+
     private static void removeFromMDC(final String key) {
         try {
             MDC.remove(key);
@@ -90,7 +99,7 @@ public class MessageConsumer extends DefaultConsumer {
 
         final Message message = Utils.createMessage(payload);
 
-        return new ExecutionContext(this.step, message, properties);
+        return new ExecutionContext(this.step, message, properties, this.containerContext.getContainerId());
     }
 
 
