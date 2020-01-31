@@ -1,5 +1,6 @@
 package io.elastic.sailor.impl;
 
+import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.contrib.json.classic.JsonLayout;
 import io.elastic.sailor.Constants;
@@ -14,12 +15,20 @@ import java.util.Map;
 
 public class BunyanJsonLayout extends JsonLayout {
 
+    public static final String LEVEL = "level";
+    public static final String LEVEL_STRING = "level_str";
     public static final String TIME = "time";
     public static final String HOSTNAME = "hostname";
     public static final String THREAD_ID = "threadId";
     public static final String MESSAGE_ID = "messageId";
     public static final String PARENT_MESSAGE_ID = "parentMessageId";
     public static final String MESSAGE = "msg";
+
+    private static int BUNYAN_LEVEL_TRACE = 10;
+    private static int BUNYAN_LEVEL_DEBUG = 20;
+    private static int BUNYAN_LEVEL_INFO = 30;
+    private static int BUNYAN_LEVEL_WARN = 40;
+    private static int BUNYAN_LEVEL_ERROR = 50;
 
     public static ContainerContext containerContext;
 
@@ -46,6 +55,8 @@ public class BunyanJsonLayout extends JsonLayout {
             map.put(PARENT_MESSAGE_ID, parentMessageId);
         }
 
+        map.put(LEVEL, getBunyanLevel(event));
+        map.put(LEVEL_STRING, event.getLevel().levelStr);
         map.put(BunyanJsonLayout.TIME, time);
         map.remove(JsonLayout.TIMESTAMP_ATTR_NAME);
 
@@ -76,5 +87,23 @@ public class BunyanJsonLayout extends JsonLayout {
         map.put(Constants.ENV_VAR_TASK_USER_EMAIL, BunyanJsonLayout.containerContext.getFlowUserEmail());
         map.put(Constants.ENV_VAR_TENANT_ID, BunyanJsonLayout.containerContext.getTenantId());
         map.put(Constants.ENV_VAR_WORKSPACE_ID, BunyanJsonLayout.containerContext.getWorkspaceId());
+    }
+
+    public int getBunyanLevel(final ILoggingEvent event) {
+        final Level level = event.getLevel();
+
+        if (level == Level.TRACE) {
+            return BUNYAN_LEVEL_TRACE;
+        } else if (level == Level.DEBUG) {
+            return BUNYAN_LEVEL_DEBUG;
+        } else if (level == Level.INFO) {
+            return BUNYAN_LEVEL_INFO;
+        } else if (level == Level.WARN) {
+            return BUNYAN_LEVEL_WARN;
+        } else if (level == Level.ERROR) {
+            return BUNYAN_LEVEL_ERROR;
+        }
+
+        return BUNYAN_LEVEL_INFO;
     }
 }
