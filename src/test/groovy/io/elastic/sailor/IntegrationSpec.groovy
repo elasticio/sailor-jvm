@@ -483,7 +483,7 @@ class IntegrationSpec extends Specification {
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
 
-        result.properties.headers.size() == 11
+        result.properties.headers.size() == 12
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == headers.function
@@ -495,6 +495,7 @@ class IntegrationSpec extends Specification {
         result.properties.headers.messageId.toString() == result.message.id.toString()
         result.properties.headers.parentMessageId.toString() == messageId
         result.properties.headers.threadId.toString() == traceId
+        result.properties.headers.containerId.toString() == 'container_12345'
 
         then: "Emitted message is received"
         result.message.headers.isEmpty()
