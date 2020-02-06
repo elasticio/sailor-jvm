@@ -354,7 +354,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 new Step(step, true),
                 incomingMessage,
-                Utils.buildAmqpProperties(originalHeaders));
+                Utils.buildAmqpProperties(originalHeaders),
+                "container_12345");
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -401,7 +402,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 new Step(step, true),
                 incomingMessage,
-                Utils.buildAmqpProperties(originalHeaders));
+                Utils.buildAmqpProperties(originalHeaders),
+                "container_12345");
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -469,7 +471,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 new Step(step, true),
                 incomingMessage,
-                Utils.buildAmqpProperties(originalHeaders));
+                Utils.buildAmqpProperties(originalHeaders),
+                "container_12345");
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
