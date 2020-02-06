@@ -3,6 +3,7 @@ package io.elastic.sailor.impl
 import io.elastic.api.HttpReply
 import io.elastic.api.Message
 import io.elastic.sailor.AmqpService
+import io.elastic.sailor.ContainerContext
 import io.elastic.sailor.ExecutionContext
 import io.elastic.sailor.TestUtils
 import io.elastic.sailor.Utils
@@ -15,7 +16,7 @@ class HttpReplyCallbackSpec extends Specification {
     def cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 
     def ctx = new ExecutionContext(
-            TestUtils.createStep(), new Message.Builder().build(), Utils.buildAmqpProperties([:]))
+            TestUtils.createStep(), new Message.Builder().build(), Utils.buildAmqpProperties([:]), "container_123")
 
     def callback = new HttpReplyCallback(ctx, amqp, cipher)
 

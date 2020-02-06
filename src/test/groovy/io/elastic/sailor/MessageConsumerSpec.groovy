@@ -58,7 +58,7 @@ class MessageConsumerSpec extends Specification {
 
     def setup() {
         component = new HelloWorldAction()
-        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep())
+        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext())
     }
 
 

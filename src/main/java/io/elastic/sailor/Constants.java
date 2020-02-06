@@ -47,6 +47,15 @@ public final class Constants {
     public static final String ENV_VAR_EXEC_ID = "ELASTICIO_EXEC_ID";
     public static final String ENV_VAR_USER_ID = "ELASTICIO_USER_ID";
     public static final String ENV_VAR_COMP_ID = "ELASTICIO_COMP_ID";
+    public static final String ENV_VAR_CONTAINER_ID = "ELASTICIO_CONTAINER_ID";
+    public static final String ENV_VAR_COMP_NAME = "ELASTICIO_COMP_NAME";
+    public static final String ENV_VAR_CONTRACT_ID = "ELASTICIO_CONTRACT_ID";
+    public static final String ENV_VAR_EXEC_TYPE = "ELASTICIO_EXEC_TYPE";
+    public static final String ENV_VAR_EXECUTION_RESULT_ID = "ELASTICIO_EXECUTION_RESULT_ID";
+    public static final String ENV_VAR_FLOW_VERSION = "ELASTICIO_FLOW_VERSION";
+    public static final String ENV_VAR_TASK_USER_EMAIL = "ELASTICIO_TASK_USER_EMAIL";
+    public static final String ENV_VAR_TENANT_ID = "ELASTICIO_TENANT_ID";
+    public static final String ENV_VAR_WORKSPACE_ID = "ELASTICIO_WORKSPACE_ID";
     public static final String ENV_VAR_RABBITMQ_PREFETCH_SAILOR = "ELASTICIO_RABBITMQ_PREFETCH_SAILOR";
     public static final String ENV_VAR_STARTUP_REQUIRED = "ELASTICIO_STARTUP_REQUIRED";
     public static final String ENV_VAR_API_REQUEST_RETRY_ATTEMPTS =
@@ -65,4 +74,10 @@ public final class Constants {
     public final static String AMQP_HEADER_COMPONENT_ID = "compId";
     public final static String AMQP_HEADER_FUNCTION = "function";
     public final static String AMQP_HEADER_START_TIMESTAMP = "start";
+    public static final String AMQP_HEADER_THREAD_ID = "threadId";
+    public static final String AMQP_HEADER_CONTAINER_ID = "containerId";
+
+    public static final String MDC_THREAD_ID = AMQP_HEADER_THREAD_ID;
+    public static final String MDC_MESSAGE_ID = AMQP_HEADER_MESSAGE_ID;
+    public static final String MDC_PARENT_MESSAGE_ID = AMQP_HEADER_PARENT_MESSAGE_ID;
 }

@@ -43,6 +43,9 @@ class IntegrationSpec extends Specification {
     def traceId = prefix + '_trace_id_123456'
 
     @Shared
+    def threadId = prefix + '_thread_id_123456'
+
+    @Shared
     def messageId = UUID.randomUUID().toString()
 
     @Shared
@@ -59,6 +62,8 @@ class IntegrationSpec extends Specification {
         System.setProperty(Constants.ENV_VAR_USER_ID, '5559edd38968ec0736000002')
         System.setProperty(Constants.ENV_VAR_COMP_ID, '5559edd38968ec0736000456')
         System.setProperty(Constants.ENV_VAR_EXEC_ID, 'some-exec-id')
+        System.setProperty(Constants.ENV_VAR_CONTAINER_ID, 'container_12345')
+        System.setProperty(Constants.ENV_VAR_WORKSPACE_ID, "workspace_123")
 
         System.setProperty(Constants.ENV_VAR_AMQP_URI, 'amqp://guest:guest@localhost:5672')
         System.setProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON, prefix + ':messages')
@@ -198,7 +203,7 @@ class IntegrationSpec extends Specification {
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
 
-        result.properties.headers.size() == 10
+        result.properties.headers.size() == 12
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == headers.function
@@ -206,7 +211,93 @@ class IntegrationSpec extends Specification {
         result.properties.headers.userId.toString() == "5559edd38968ec0736000002"
         result.properties.headers.taskId.toString() == headers.taskId
         result.properties.headers.execId.toString() == headers.execId
+        result.properties.headers.containerId.toString() == 'container_12345'
         result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        result.properties.headers.threadId.toString() == traceId
+        result.properties.headers.messageId.toString() == result.message.id.toString()
+        result.properties.headers.parentMessageId.toString() == messageId
+
+        then: "Emitted message is received"
+        result.message.headers.isEmpty()
+        JSON.stringify(result.message.body) == '{"echo":{"message":"Just do it!"}}'
+
+        cleanup:
+        sailor.amqp.cancelConsumer()
+        amqp.publishChannel.basicCancel(consumerTag)
+    }
+
+    def "run sailor successfully with threads"() {
+        def blockingVar = new BlockingVariable(5)
+        setup:
+        System.setProperty(Constants.ENV_VAR_FUNCTION, 'helloworldaction')
+
+        def headers = [
+                'execId'  : 'some-exec-id',
+                'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
+                'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
+                'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
+                start     : System.currentTimeMillis(),
+                messageId: messageId,
+                (Constants.AMQP_META_HEADER_TRACE_ID): traceId,
+                (Constants.AMQP_HEADER_THREAD_ID): threadId
+        ]
+
+        def options = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .priority(1)
+                .deliveryMode(2)
+                .build()
+
+        def msg = new Message.Builder()
+                .body(Json.createObjectBuilder().add('message', 'Just do it!').build())
+                .build()
+
+        byte[] payload = cipher.encryptMessage(msg).getBytes();
+
+        amqp.publishChannel.basicPublish(
+                System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
+                System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
+                options,
+                payload);
+
+        def consumer = new DefaultConsumer(amqp.publishChannel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body)
+                    throws IOException {
+
+                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                def bodyString = new String(body, "UTF-8");
+                def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
+                blockingVar.set([message:message, properties:properties]);
+            }
+        }
+
+        def consumerTag = amqp.publishChannel.basicConsume(dataQueue, consumer)
+
+        when:
+
+        sailor = Sailor.createAndStartSailor()
+
+
+        then: "AMQP properties headers are all set"
+        def result = blockingVar.get()
+
+        result.properties.headers.size() == 12
+        result.properties.headers.start != null
+        result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
+        result.properties.headers.function.toString() == headers.function
+        result.properties.headers.stepId.toString() == "step_1"
+        result.properties.headers.userId.toString() == "5559edd38968ec0736000002"
+        result.properties.headers.taskId.toString() == headers.taskId
+        result.properties.headers.execId.toString() == headers.execId
+        result.properties.headers.containerId.toString() == 'container_12345'
+        result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        result.properties.headers.threadId.toString() == threadId
         result.properties.headers.messageId.toString() == result.message.id.toString()
         result.properties.headers.parentMessageId.toString() == messageId
 
@@ -292,7 +383,7 @@ class IntegrationSpec extends Specification {
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
 
-        result.properties.headers.size() == 10
+        result.properties.headers.size() == 12
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == headers.function
@@ -300,9 +391,11 @@ class IntegrationSpec extends Specification {
         result.properties.headers.userId.toString() == "5559edd38968ec0736000002"
         result.properties.headers.taskId.toString() == headers.taskId
         result.properties.headers.execId.toString() == headers.execId
+        result.properties.headers.containerId.toString() == 'container_12345'
         result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
         result.properties.headers.messageId.toString() == result.message.id.toString()
         result.properties.headers.parentMessageId.toString() == messageId
+        result.properties.headers.threadId.toString() == traceId
 
         then: "Emitted message is received"
         result.message.headers.isEmpty()
@@ -378,6 +471,7 @@ class IntegrationSpec extends Specification {
         result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
         result.properties.headers.messageId.toString() == result.message.id.toString()
         result.properties.headers.parentMessageId.toString() == messageId
+        result.properties.headers.containerId.toString() == 'container_12345'
 
         then: "Emitted message is received"
         result.message.headers.isEmpty()
@@ -461,6 +555,7 @@ class IntegrationSpec extends Specification {
         result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
         result.properties.headers.messageId.toString() != null
         result.properties.headers.parentMessageId.toString() == messageId
+        result.properties.headers.containerId.toString() == 'container_12345'
 
         then: "Emitted message is received"
         def message = JSON.parseObject(result.message)
@@ -535,6 +630,7 @@ class IntegrationSpec extends Specification {
         result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
         result.properties.headers.messageId.toString() != null
         result.properties.headers.parentMessageId.toString() == messageId
+        result.properties.headers.containerId.toString() == 'container_12345'
 
         then: "Emitted error received"
         def errorJson = JSON.parseObject(result.error);

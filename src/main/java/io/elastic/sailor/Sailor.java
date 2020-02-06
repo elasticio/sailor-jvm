@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import io.elastic.api.Module;
+import io.elastic.sailor.impl.BunyanJsonLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +58,7 @@ public class Sailor {
     @Inject
     public void setContainerContext(ContainerContext containerContext) {
         this.containerContext = containerContext;
+        BunyanJsonLayout.containerContext = containerContext;
     }
 
     public void start() throws IOException {
