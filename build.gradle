@@ -13,7 +13,7 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 signing {
-    required { isReleaseVersion && gradle.taskGraph.hasTask("uploadArchives") }
+    required { isReleaseVersion }
     sign configurations.archives
 }
 
@@ -31,12 +31,15 @@ dependencies {
     compile "org.apache.httpcomponents:httpclient:4.5.3"
     compile "com.google.inject:guice:4.1.0"
     compile "com.google.inject.extensions:guice-assistedinject:4.1.0"
+    compile "ch.qos.logback.contrib:logback-json-classic:0.1.5"
+    compile "ch.qos.logback.contrib:logback-jackson:0.1.5"
+    compile "com.fasterxml.jackson.core:jackson-databind:2.9.5"
 
     testRuntime 'org.codehaus.groovy:groovy-all:2.0.5'
     testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
     testCompile "com.github.rest-driver:rest-client-driver:2.0.0"
     testCompile "org.eclipse.jetty:jetty-server:9.4.1.v20170120"
-
+    testCompile 'com.github.tomakehurst:wiremock-standalone:2.20.0'
 }
 
 uploadArchives {
@@ -118,8 +121,8 @@ artifacts {
     archives javadocJar
 }
 
-task wrapper(type: Wrapper) {
-    gradleVersion = '2.0'
+wrapper {
+    gradleVersion = '5.4.1'
 }
 
 jar {

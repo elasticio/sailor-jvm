@@ -2,8 +2,11 @@ package io.elastic.sailor.impl
 
 import com.github.restdriver.clientdriver.ClientDriverRequest
 import com.github.restdriver.clientdriver.ClientDriverRule
-import io.elastic.sailor.impl.HttpUtils
+import com.github.tomakehurst.wiremock.http.Fault
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.apache.http.auth.UsernamePasswordCredentials
+import com.github.tomakehurst.wiremock.WireMockServer
+import static com.github.tomakehurst.wiremock.client.WireMock.*
 import org.junit.Rule
 import spock.lang.Specification
 
@@ -62,7 +65,8 @@ class HttpUtilsSpec extends Specification {
         def result = HttpUtils.postJson(
                 "http://localhost:12345/v1/exec/result/55e5eeb460a8e2070000001e",
                 body,
-                new UsernamePasswordCredentials("homer.simpson@example.org", "secret"))
+                new UsernamePasswordCredentials("homer.simpson@example.org", "secret"),
+                0)
 
         then:
 
@@ -112,6 +116,59 @@ class HttpUtilsSpec extends Specification {
         then:
 
         result.toString() == '{"id":"1","email":"homer.simpson@example.org"}'
+    }
+
+    def "should retry getting json"() {
+
+        def wireMockServer = new WireMockServer(12346);
+
+        setup:
+        wireMockServer.start()
+
+        configureFor("localhost", 12346)
+
+        stubFor(get(urlEqualTo("/econnreset")).inScenario("retry")
+                .whenScenarioStateIs(Scenario.STARTED)
+                .willReturn(aResponse().withFault(Fault.CONNECTION_RESET_BY_PEER))
+                .willSetStateTo("next request"))
+
+        stubFor(get(urlEqualTo("/econnreset")).inScenario("retry")
+                .whenScenarioStateIs("next request")
+                .willReturn(
+                    aResponse().withStatus(200).withBody('{"id":"1","email":"homer.simpson@example.org"}')
+        ))
+
+        when:
+        def result = HttpUtils.getJson(
+                "http://localhost:12346/econnreset",
+                new UsernamePasswordCredentials("admin", "secret"), 2)
+
+        then:
+        result.toString() == '{"id":"1","email":"homer.simpson@example.org"}'
+
+        cleanup:
+        wireMockServer.stop()
+    }
+
+    def "should send delete successfully"() {
+
+        setup:
+        driver.addExpectation(
+                onRequestTo("/v1/users/1234567")
+                        .withMethod(ClientDriverRequest.Method.DELETE)
+                        .withBasicAuth("admin", "secret"),
+                giveResponse('{"message":"ok"}', 'application/json')
+                        .withStatus(200));
+
+        when:
+        def result = HttpUtils.delete(
+                "http://localhost:12345/v1/users/1234567",
+                new UsernamePasswordCredentials("admin", "secret"),
+                0)
+
+        then:
+
+        result.toString() == '{"message":"ok"}'
     }
 
     def "should fail to post json if user info not present in the url"() {

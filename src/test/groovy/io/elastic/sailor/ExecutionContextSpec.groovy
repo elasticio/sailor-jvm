@@ -20,7 +20,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
                 new Message.Builder().build(),
-                Utils.buildAmqpProperties(originalHeaders));
+                Utils.buildAmqpProperties(originalHeaders),
+                "container_123");
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -47,7 +48,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
                 new Message.Builder().build(),
-                Utils.buildAmqpProperties(originalHeaders));
+                Utils.buildAmqpProperties(originalHeaders),
+                "container_123");
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -77,7 +79,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
                 new Message.Builder().build(),
-                Utils.buildAmqpProperties(originalHeaders));
+                Utils.buildAmqpProperties(originalHeaders),
+                "container_123");
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -110,7 +113,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
                 msg,
-                props);
+                props,
+                "container_123");
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -140,7 +144,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
                 msg,
-                props);
+                props,
+                "container_123");
         def uuid = UUID.randomUUID()
 
         when:
@@ -179,7 +184,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
                 new Message.Builder().build(),
-                Utils.buildAmqpProperties(originalHeaders));
+                Utils.buildAmqpProperties(originalHeaders),
+                "container_123");
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -204,7 +210,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
                 new Message.Builder().build(),
-                Utils.buildAmqpProperties(originalHeaders));
+                Utils.buildAmqpProperties(originalHeaders),
+                "container_123");
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -241,7 +248,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 new Step(step),
                 new Message.Builder().build(),
-                Utils.buildAmqpProperties(originalHeaders));
+                Utils.buildAmqpProperties(originalHeaders),
+                "container_123");
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -299,7 +307,8 @@ class ExecutionContextSpec extends Specification {
         ExecutionContext ctx = new ExecutionContext(
                 new Step(step),
                 new Message.Builder().passthrough(passthroughSoFar).build(),
-                Utils.buildAmqpProperties(originalHeaders));
+                Utils.buildAmqpProperties(originalHeaders),
+                "container_123");
 
         when:
         def result = ctx.createPublisheableMessage(emittedMsg)

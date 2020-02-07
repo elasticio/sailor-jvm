@@ -8,6 +8,7 @@ import io.elastic.api.InitParameters;
 import io.elastic.api.Module;
 import io.elastic.api.ShutdownParameters;
 import io.elastic.api.StartupParameters;
+import io.elastic.sailor.impl.BunyanJsonLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,6 +61,7 @@ public class Sailor {
     @Inject
     public void setContainerContext(final ContainerContext containerContext) {
         this.containerContext = containerContext;
+        BunyanJsonLayout.containerContext = containerContext;
     }
 
     @Inject

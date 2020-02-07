@@ -39,6 +39,7 @@ public class SailorTestModule extends AbstractModule {
         bindRequiredIntegerEnvVar(Constants.ENV_VAR_REBOUND_LIMIT, 5);
         bindRequiredIntegerEnvVar(Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION, 10000);
 
+        bindRequiredStringEnvVar(Constants.ENV_VAR_CONTAINER_ID, "container_123");
         bindRequiredStringEnvVar(Constants.ENV_VAR_STEP_ID, "step_1");
         bindRequiredStringEnvVar(Constants.ENV_VAR_FLOW_ID, "5559edd38968ec0736000003");
         bindRequiredStringEnvVar(Constants.ENV_VAR_EXEC_ID, "some-exec-id");
@@ -51,6 +52,8 @@ public class SailorTestModule extends AbstractModule {
         bind(Boolean.class)
                 .annotatedWith(Names.named(Constants.ENV_VAR_HOOK_SHUTDOWN))
                 .toInstance(false);
+
+        bindRequiredIntegerEnvVar(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS, 5);
 
     }
 

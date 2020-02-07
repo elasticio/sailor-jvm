@@ -18,22 +18,24 @@ import java.nio.charset.Charset;
 public class MessageConsumer extends DefaultConsumer {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
-    private static final String MDC_TRACE_ID = "traceId";
     private final CryptoServiceImpl cipher;
     private final MessageProcessor processor;
     private final Module module;
     private final Step step;
+    private final ContainerContext containerContext;
 
     public MessageConsumer(Channel channel,
                            CryptoServiceImpl cipher,
                            MessageProcessor processor,
                            Module module,
-                           @Named(Constants.NAME_STEP_JSON) Step step) {
+                           Step step,
+                           final ContainerContext containerContext) {
         super(channel);
         this.cipher = cipher;
         this.processor = processor;
         this.module = module;
         this.step = step;
+        this.containerContext = containerContext;
     }
 
     @Override
@@ -43,16 +45,10 @@ public class MessageConsumer extends DefaultConsumer {
         ExecutionContext executionContext = null;
         long deliveryTag = envelope.getDeliveryTag();
 
-        final Object messageId = getHeaderValue(properties, Constants.AMQP_HEADER_MESSAGE_ID);
-        final Object parentMessageId = getHeaderValue(properties, Constants.AMQP_HEADER_PARENT_MESSAGE_ID);
-        final Object traceId = getHeaderValue(properties, Constants.AMQP_META_HEADER_TRACE_ID);
 
-        if (traceId != null) {
-            MDC.put(MDC_TRACE_ID, traceId.toString());
-        }
+        logger.info("Consumer {} received message: deliveryTag={}", consumerTag, deliveryTag);
 
-        logger.info("Consumer {} received message: deliveryTag={}, messageId={}, parentMessageId={}, traceId={}",
-                consumerTag, deliveryTag, messageId, parentMessageId, traceId);
+        putIntoMDC(properties);
 
         try {
             executionContext = createExecutionContext(body, properties);
@@ -69,12 +65,30 @@ public class MessageConsumer extends DefaultConsumer {
         } catch (Exception e) {
             logger.error("Failed to process message for delivery tag:" + deliveryTag, e);
         } finally {
-            try {
-                MDC.remove(MDC_TRACE_ID);
-            }catch(Exception e) {
-                logger.warn("Failed to remove {} from MDC", MDC_TRACE_ID, e);
-            }
+            removeFromMDC(Constants.MDC_THREAD_ID);
+            removeFromMDC(Constants.MDC_MESSAGE_ID);
+            removeFromMDC(Constants.MDC_PARENT_MESSAGE_ID);
             ackOrReject(stats, deliveryTag);
+        }
+    }
+
+    private void putIntoMDC(final AMQP.BasicProperties properties) {
+        final String threadId = Utils.getThreadId(properties);
+        final Object messageId = getHeaderValue(properties, Constants.AMQP_HEADER_MESSAGE_ID);
+        final Object parentMessageId = getHeaderValue(properties, Constants.AMQP_HEADER_PARENT_MESSAGE_ID);
+
+        MDC.put(Constants.MDC_THREAD_ID, threadId);
+        MDC.put(Constants.MDC_MESSAGE_ID, messageId.toString());
+        MDC.put(Constants.MDC_PARENT_MESSAGE_ID, parentMessageId.toString());
+
+        logger.info("messageId={}, parentMessageId={}, threadId={}", messageId, parentMessageId, threadId);
+    }
+
+    private static void removeFromMDC(final String key) {
+        try {
+            MDC.remove(key);
+        }catch(Exception e) {
+            logger.warn("Failed to remove {} from MDC", key, e);
         }
     }
 
@@ -85,7 +99,7 @@ public class MessageConsumer extends DefaultConsumer {
 
         final Message message = Utils.createMessage(payload);
 
-        return new ExecutionContext(this.step, message, properties);
+        return new ExecutionContext(this.step, message, properties, this.containerContext.getContainerId());
     }
 
 

@@ -118,4 +118,20 @@ public class Utils {
                 .forEach(s -> result.add(s.getKey(), s.getValue()));
         return result.build();
     }
+
+    public static String getThreadId(final AMQP.BasicProperties properties) {
+        final Map<String, Object> headers = properties.getHeaders();
+        final Object threadId = headers.get(Constants.AMQP_HEADER_THREAD_ID);
+        final Object traceId = headers.get(Constants.AMQP_META_HEADER_TRACE_ID);
+
+        if (threadId != null) {
+            return threadId.toString();
+        }
+
+        if (traceId != null) {
+            return traceId.toString();
+        }
+
+        return "unknown";
+    }
 }

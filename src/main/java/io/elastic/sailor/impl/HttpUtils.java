@@ -6,6 +6,7 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
 import org.apache.http.StatusLine;
+
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.methods.*;
@@ -20,7 +21,9 @@ import org.slf4j.LoggerFactory;
 
 import javax.json.JsonObject;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.UnsupportedEncodingException;
+import java.net.SocketException;
 import java.net.URL;
 import java.net.URLDecoder;
 
@@ -29,20 +32,35 @@ public class HttpUtils {
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class.getName());
 
     public static String postJson(String url, JsonObject body) throws IOException {
+        return postJson(url, body, 0);
+    }
 
-        return postJson(url, body, null);
+    public static JsonObject getJson(String url, final UsernamePasswordCredentials credentials) {
+        return getJson(url, credentials, 0);
+    }
+
+    public static JsonObject putJson(final String url,
+                                     final JsonObject body,
+                                     final UsernamePasswordCredentials credentials) {
+        return putJson(url, body, credentials, 0);
+    }
+
+    public static String postJson(String url, JsonObject body, int retryCount) throws IOException {
+
+        return postJson(url, body, null, retryCount);
     }
 
     public static String postJson(final String url,
                                   final JsonObject body,
-                                  final UsernamePasswordCredentials credentials) {
+                                  final UsernamePasswordCredentials credentials,
+                                  final int retryCount) {
 
 
         final HttpPost httpPost = new HttpPost(url);
         httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpPost.setEntity(createStringEntity(body));
 
-        final String result = sendHttpRequest(httpPost, credentials);
+        final String result = sendHttpRequest(httpPost, credentials, retryCount);
 
         logger.info("Successfully posted json {} bytes length", body.toString().length());
 
@@ -50,13 +68,13 @@ public class HttpUtils {
     }
 
     public static JsonObject getJson(final String url,
-                                     final UsernamePasswordCredentials credentials) {
+                                     final UsernamePasswordCredentials credentials, int retryCount) {
 
         final HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
 
-        final String content = sendHttpRequest(httpGet, credentials);
+        final String content = sendHttpRequest(httpGet, credentials, retryCount);
 
         return JSON.parseObject(content);
     }
@@ -64,13 +82,14 @@ public class HttpUtils {
 
     public static JsonObject putJson(final String url,
                                      final JsonObject body,
-                                     final UsernamePasswordCredentials credentials) {
+                                     final UsernamePasswordCredentials credentials,
+                                     final int retryCount) {
 
         final HttpPut httpPut = new HttpPut(url);
         httpPut.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpPut.setEntity(createStringEntity(body));
 
-        final String content = sendHttpRequest(httpPut, credentials);
+        final String content = sendHttpRequest(httpPut, credentials, retryCount);
 
         logger.info("Successfully put json {} bytes length", body.toString().length());
 
@@ -80,12 +99,13 @@ public class HttpUtils {
 
 
     public static JsonObject delete(final String url,
-                                    final UsernamePasswordCredentials credentials) {
+                                    final UsernamePasswordCredentials credentials,
+                                    final int retryCount) {
 
         final HttpDelete httpDelete = new HttpDelete(url);
         httpDelete.addHeader(HTTP.CONTENT_TYPE, "application/json");
 
-        final String content = sendHttpRequest(httpDelete, credentials);
+        final String content = sendHttpRequest(httpDelete, credentials, retryCount);
 
         logger.info("Successfully sent delete");
 
@@ -100,10 +120,27 @@ public class HttpUtils {
         }
     }
 
-    public static String sendHttpRequest(final HttpUriRequest request,
-                                         final UsernamePasswordCredentials credentials) {
+    private static String sendHttpRequest(final HttpUriRequest request,
+                                          final UsernamePasswordCredentials credentials,
+                                          final int retryCount) {
 
-        CloseableHttpClient httpClient = HttpClients.createDefault();
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setRetryHandler((exception, executionCount, context) -> {
+                    if (executionCount >= retryCount) {
+                        // Do not retry if over max retry count
+                        return false;
+                    }
+                    if (exception instanceof InterruptedIOException) {
+                        // Timeout
+                        return true;
+                    }
+                    if (exception instanceof SocketException) {
+                        return true;
+                    }
+
+                    return false;
+                })
+                .build();
 
         logger.info("Sending {} request to {}", request.getMethod(), request.getURI());
         try {
