@@ -2,6 +2,8 @@ package io.elastic.sailor;
 
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -11,6 +13,8 @@ import java.util.Map;
 import java.util.UUID;
 
 public class ExecutionContext {
+
+    private static final Logger logger = LoggerFactory.getLogger(ExecutionContext.class);
 
     private final Step step;
     private final Message message;
@@ -106,12 +110,14 @@ public class ExecutionContext {
 
         final JsonObjectBuilder passthroughBuilder = createPassthroughBuilder();
 
-        if (!this.step.isPutIncomingMessageIntoPassThrough()) {
-            passthroughBuilder.add(this.step.getId(), messageAsJson);
-        } else {
+        if (this.step.isPutIncomingMessageIntoPassThrough()) {
+            logger.info("Pass-through mode detected: incoming message");
+
             final Object previousStepId = this.amqpProperties.getHeaders().get(Constants.AMQP_HEADER_STEP_ID);
 
             if (previousStepId != null) {
+                logger.info("Adding message of step '{}' into pass-through", previousStepId);
+
                 final JsonObject incomingMessageWithoutPassThrough = Utils.pick(this.message.toJsonObject(),
                         Message.PROPERTY_ID,
                         Message.PROPERTY_HEADERS,
@@ -120,6 +126,10 @@ public class ExecutionContext {
 
                 passthroughBuilder.add(previousStepId.toString(), incomingMessageWithoutPassThrough);
             }
+        } else {
+
+            logger.info("Adding message of step '{}' into pass-through", this.step.getId());
+            passthroughBuilder.add(this.step.getId(), messageAsJson);
         }
 
         result.add(Message.PROPERTY_PASSTHROUGH, passthroughBuilder);
