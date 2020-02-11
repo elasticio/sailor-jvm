@@ -6,11 +6,7 @@ apply plugin: 'maven'
 apply plugin: 'signing'
 
 group = 'io.elastic'
-<<<<<<< HEAD
-version = '2.1.3-SNAPSHOT'
-=======
 version = '2.2.0-SNAPSHOT'
->>>>>>> Persisting startup state
 ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
 
 sourceCompatibility = 1.8
