@@ -21,16 +21,19 @@ public class ApiClientImpl implements ApiClient {
     private final String apiKey;
     private final String apiBaseUri;
     private final int retryCount;
+    private boolean putIncomingMessageIntoPassThrough;
 
     @Inject
     public ApiClientImpl(@Named(Constants.ENV_VAR_API_URI) final String apiUri,
                          @Named(Constants.ENV_VAR_API_USERNAME) final String apiUser,
                          @Named(Constants.ENV_VAR_API_KEY) final String apiKey,
-                         @Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount) {
+                         @Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount,
+                         @Named(Constants.ENV_VAR_NO_SELF_PASSTRHOUGH) boolean putIncomingMessageIntoPassThrough) {
         this.apiUser = apiUser;
         this.apiKey = apiKey;
         this.apiBaseUri = String.format("%s/v1", apiUri);
         this.retryCount = retryCount;
+        this.putIncomingMessageIntoPassThrough = putIncomingMessageIntoPassThrough;
     }
 
     @Override
@@ -44,7 +47,7 @@ public class ApiClientImpl implements ApiClient {
 
         final JsonObject step = HttpUtils.getJson(uri, credentials, this.retryCount);
 
-        return new Step(step);
+        return new Step(step, putIncomingMessageIntoPassThrough);
     }
 
     @Override

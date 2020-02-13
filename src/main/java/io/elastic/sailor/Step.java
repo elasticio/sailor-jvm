@@ -12,14 +12,20 @@ public final class Step {
     private final JsonObject cfg;
     private final JsonObject snapshot;
     private final boolean passThroughRequired;
+    private final boolean putIncomingMessageIntoPassThrough;
 
     public Step(final JsonObject data) {
+        this(data, false);
+    }
+
+    public Step(final JsonObject data, final boolean putIncomingMessageIntoPassThrough) {
         this.id = getAsRequiredString(data, Constants.STEP_PROPERTY_ID);
         this.compId = getAsRequiredString(data, Constants.STEP_PROPERTY_COMP_ID);
         this.function = getAsRequiredString(data, Constants.STEP_PROPERTY_FUNCTION);
         this.cfg = getAsNullSafeObject(data, Constants.STEP_PROPERTY_CFG);
         this.snapshot = getAsNullSafeObject(data, Constants.STEP_PROPERTY_SNAPSHOT);
         this.passThroughRequired = data.getBoolean(Constants.STEP_PROPERTY_PASSTHROUGH, false);
+        this.putIncomingMessageIntoPassThrough = putIncomingMessageIntoPassThrough;
     }
 
     public String getId() {
@@ -44,6 +50,10 @@ public final class Step {
 
     public boolean isPassThroughRequired() {
         return passThroughRequired;
+    }
+
+    public boolean isPutIncomingMessageIntoPassThrough() {
+        return putIncomingMessageIntoPassThrough;
     }
 
     private static String getAsRequiredString(
