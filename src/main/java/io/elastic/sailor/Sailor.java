@@ -27,6 +27,7 @@ public class Sailor {
     private Step step;
     private ContainerContext containerContext;
     private ApiClient apiClient;
+    private boolean isShutdownRequired;
 
     public static void main(String[] args) throws IOException {
         createAndStartSailor();
@@ -69,8 +70,13 @@ public class Sailor {
         this.apiClient = apiClient;
     }
 
+    @Inject
+    public void setShutdownRequired(@Named(Constants.ENV_VAR_HOOK_SHUTDOWN) final boolean shutdownRequired) {
+        this.isShutdownRequired = shutdownRequired;
+    }
+
     public void startOrShutdown() {
-        if (containerContext.isShutdownRequired()) {
+        if (this.isShutdownRequired) {
             shutdown();
             return;
         }
@@ -134,7 +140,7 @@ public class Sailor {
     }
 
     public void shutdown() {
-        logger.info("Shutting down component module");
+        logger.info("Shutting down component");
 
         final String flowId = containerContext.getFlowId();
         final JsonObject cfg = this.step.getCfg();
@@ -151,7 +157,7 @@ public class Sailor {
 
         this.apiClient.deleteStartupState(flowId);
 
-        logger.info("Component module shut down successfully");
+        logger.info("Component shut down successfully");
     }
 
     private void reportException(final Exception e) {

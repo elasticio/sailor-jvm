@@ -166,7 +166,7 @@ class IntegrationSpec extends Specification {
                             .add(Constants.STEP_PROPERTY_PASSTHROUGH, true)
                             .build()
                 }
-                if ("/v1/sailor-support/hooks/task/${flowId}/startup/data".toString().equals(target)) {
+                if ("/sailor-support/hooks/task/${flowId}/startup/data".toString().equals(target)) {
                     if (baseRequest.getMethod().equalsIgnoreCase("post")) {
                         def payload = Json.createReader(baseRequest.getInputStream()).readObject()
                         IntegrationSpec.this.startupPayload = payload

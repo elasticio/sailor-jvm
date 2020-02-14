@@ -32,14 +32,14 @@ public class ApiClientImpl implements ApiClient {
                          @Named(Constants.ENV_VAR_NO_SELF_PASSTRHOUGH) boolean putIncomingMessageIntoPassThrough) {
         this.apiUser = apiUser;
         this.apiKey = apiKey;
-        this.apiBaseUri = String.format("%s/v1", apiUri);
+        this.apiBaseUri = String.format("%s", apiUri);
         this.retryCount = retryCount;
         this.putIncomingMessageIntoPassThrough = putIncomingMessageIntoPassThrough;
     }
 
     @Override
     public Step retrieveFlowStep(final String taskId, final String stepId) {
-        final String uri = String.format("%s/tasks/%s/steps/%s", this.apiBaseUri, taskId, stepId);
+        final String uri = String.format("%s/v1/tasks/%s/steps/%s", this.apiBaseUri, taskId, stepId);
 
         logger.info("Retrieving step data for user {} at: {}", this.apiUser, uri);
 
@@ -53,7 +53,7 @@ public class ApiClientImpl implements ApiClient {
 
     @Override
     public JsonObject updateAccount(final String accountId, final JsonObject body) {
-        final String uri = String.format("%s/accounts/%s", this.apiBaseUri, accountId);
+        final String uri = String.format("%s/v1/accounts/%s", this.apiBaseUri, accountId);
 
         logger.info("Updating account for user {} at: {}", this.apiUser, uri);
 
