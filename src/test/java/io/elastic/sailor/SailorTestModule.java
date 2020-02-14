@@ -53,6 +53,10 @@ public class SailorTestModule extends AbstractModule {
                 .annotatedWith(Names.named(Constants.ENV_VAR_NO_SELF_PASSTRHOUGH))
                 .toInstance(false);
 
+        bind(Boolean.class)
+                .annotatedWith(Names.named(Constants.ENV_VAR_HOOK_SHUTDOWN))
+                .toInstance(false);
+
         bindRequiredIntegerEnvVar(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS, 5);
 
     }

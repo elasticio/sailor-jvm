@@ -60,6 +60,7 @@ public class SailorEnvironmentModule extends AbstractModule {
 
         bindOptionalYesNoEnvVar(Constants.ENV_VAR_STARTUP_REQUIRED);
         bindOptionalYesNoEnvVar(Constants.ENV_VAR_NO_SELF_PASSTRHOUGH);
+        bindOptionalYesNoEnvVar(Constants.ENV_VAR_HOOK_SHUTDOWN);
 
 
     }

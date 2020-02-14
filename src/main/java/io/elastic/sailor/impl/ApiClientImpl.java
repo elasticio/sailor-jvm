@@ -10,6 +10,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
 import javax.json.JsonObject;
 
 @Singleton
@@ -61,5 +62,34 @@ public class ApiClientImpl implements ApiClient {
 
         return HttpUtils.putJson(uri, body, credentials, this.retryCount);
 
+    }
+
+    @Override
+    public void storeStartupState(final String flowId, final JsonObject body) {
+        final String uri = getStartupStateUrl(flowId);
+
+        final UsernamePasswordCredentials credentials
+                = new UsernamePasswordCredentials(this.apiUser, this.apiKey);
+
+        HttpUtils.postJson(uri, body, credentials, this.retryCount);
+    }
+
+    @Override
+    public JsonObject retrieveStartupState(final String flowId) {
+        return Json.createObjectBuilder().build();
+    }
+
+    @Override
+    public void deleteStartupState(final String flowId) {
+        final String uri = getStartupStateUrl(flowId);
+
+        final UsernamePasswordCredentials credentials
+                = new UsernamePasswordCredentials(this.apiUser, this.apiKey);
+
+        HttpUtils.delete(uri, credentials, this.retryCount);
+    }
+
+    private String getStartupStateUrl(final String flowId) {
+        return String.format("%s/sailor-support/hooks/task/%s/startup/data", this.apiBaseUri, flowId);
     }
 }
