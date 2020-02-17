@@ -107,8 +107,6 @@ public class Sailor {
         headers.put(Constants.AMQP_HEADER_STEP_ID, containerContext.getStepId());
         headers.put(Constants.AMQP_HEADER_COMPONENT_ID, containerContext.getCompId());
         headers.put(Constants.AMQP_HEADER_FUNCTION, containerContext.getFunction());
-        headers.put(Constants.AMQP_HEADER_START_TIMESTAMP, System.currentTimeMillis());
-
         amqp.sendError(e, Utils.buildAmqpProperties(headers), null);
     }
 }
