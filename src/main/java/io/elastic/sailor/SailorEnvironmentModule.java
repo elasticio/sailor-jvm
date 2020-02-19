@@ -26,14 +26,6 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_CONTAINER_ID);
         bindRequiredStringEnvVar(Constants.ENV_VAR_WORKSPACE_ID);
 
-        bindRequiredStringEnvVar(Constants.ENV_VAR_AMQP_URI);
-        bindRequiredStringEnvVar(Constants.ENV_VAR_LISTEN_MESSAGES_ON);
-        bindRequiredStringEnvVar(Constants.ENV_VAR_PUBLISH_MESSAGES_TO);
-        bindRequiredStringEnvVar(Constants.ENV_VAR_DATA_ROUTING_KEY);
-        bindRequiredStringEnvVar(Constants.ENV_VAR_ERROR_ROUTING_KEY);
-        bindRequiredStringEnvVar(Constants.ENV_VAR_REBOUND_ROUTING_KEY);
-        bindRequiredStringEnvVar(Constants.ENV_VAR_SNAPSHOT_ROUTING_KEY);
-
         bindOptionalStringEnvVar(Constants.ENV_VAR_COMP_NAME);
         bindOptionalStringEnvVar(Constants.ENV_VAR_CONTRACT_ID);
         bindOptionalStringEnvVar(Constants.ENV_VAR_EXEC_TYPE);

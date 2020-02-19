@@ -21,32 +21,30 @@ import java.util.Map;
 public class Sailor {
 
     private static final Logger logger = LoggerFactory.getLogger(Sailor.class);
-
-    private AmqpService amqp;
     private ModuleBuilder moduleBuilder;
     private Step step;
     private ContainerContext containerContext;
     private ApiClient apiClient;
     private boolean isShutdownRequired;
+    private AmqpService amqp;
 
     public static void main(String[] args) throws IOException {
         createAndStartSailor();
     }
 
     static Sailor createAndStartSailor() throws IOException {
-        Injector injector = Guice.createInjector(
-                new SailorModule(), new SailorEnvironmentModule());
+
+        com.google.inject.Module[] modules = new com.google.inject.Module[] {
+                new SailorModule(), new SailorEnvironmentModule()
+        };
+
+        Injector injector = Guice.createInjector(modules);
 
         final Sailor sailor = injector.getInstance(Sailor.class);
 
-        sailor.startOrShutdown();
+        sailor.startOrShutdown(injector);
 
         return sailor;
-    }
-
-    @Inject
-    public void setAMQP(final AmqpService amqp) {
-        this.amqp = amqp;
     }
 
     @Inject
@@ -75,17 +73,18 @@ public class Sailor {
         this.isShutdownRequired = shutdownRequired;
     }
 
-    public void startOrShutdown() {
+    public void startOrShutdown(final Injector injector) {
         if (this.isShutdownRequired) {
             shutdown();
             return;
         }
 
-        start();
+        start(injector.createChildInjector(new AmqpAwareModule(), new AmqpEnvironmentModule()));
     }
 
-    public void start() {
+    public void start(final Injector injector) {
 
+        amqp = injector.getInstance(AmqpService.class);
         logger.info("Connecting to AMQP");
         amqp.connect();
 

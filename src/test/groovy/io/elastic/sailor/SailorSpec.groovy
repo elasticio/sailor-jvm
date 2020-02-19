@@ -1,22 +1,30 @@
 package io.elastic.sailor
 
+import com.google.inject.AbstractModule
 import com.google.inject.Guice
 import com.google.inject.Injector
 import io.elastic.sailor.component.HelloWorldAction
+import io.elastic.sailor.impl.ApiClientImpl
 
 class SailorSpec extends ApiAwareSpecification {
 
     def amqp = Mock(AmqpService)
     def componentBuilder = Mock(ModuleBuilder)
+    def injector
 
     def sailor;
 
     def setup() {
 
-        Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule())
+        injector = Guice.createInjector(new SailorModule(), new SailorTestModule(), new AbstractModule() {
+            @Override
+            protected void configure() {
+                bind(AmqpService.class).toInstance(amqp);
+            }
+        })
 
         sailor = injector.getInstance(Sailor.class)
-        sailor.setAMQP(amqp)
+        sailor.amqp = amqp
         sailor.setModuleBuilder(componentBuilder)
         sailor.setStep(TestUtils.createStep())
     }
@@ -26,7 +34,7 @@ class SailorSpec extends ApiAwareSpecification {
         def component = new HelloWorldAction()
 
         when:
-        sailor.start()
+        sailor.start(injector)
 
         then:
         1 * componentBuilder.build() >> component
@@ -36,7 +44,7 @@ class SailorSpec extends ApiAwareSpecification {
 
     def "it should fail and report exception"() {
         when:
-        sailor.start()
+        sailor.start(injector)
 
         then:
         1 * componentBuilder.build() >> { throw new RuntimeException("OMG. I can't build the component") }
