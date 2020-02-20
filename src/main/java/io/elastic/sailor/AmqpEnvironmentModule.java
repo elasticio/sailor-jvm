@@ -17,6 +17,8 @@ public class AmqpEnvironmentModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_ERROR_ROUTING_KEY);
         bindRequiredStringEnvVar(Constants.ENV_VAR_REBOUND_ROUTING_KEY);
         bindRequiredStringEnvVar(Constants.ENV_VAR_SNAPSHOT_ROUTING_KEY);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD);
+        bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_IV);
     }
 
     void bindRequiredStringEnvVar(final String name) {
