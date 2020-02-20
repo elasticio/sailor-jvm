@@ -63,6 +63,9 @@ class IntegrationSpec extends Specification {
     @Shared
     def shutdownFlowId
 
+    @Shared
+    Server server
+
     def setupSpec() {
 
         System.setProperty(Constants.ENV_VAR_API_URI, 'http://localhost:8182')
@@ -138,7 +141,7 @@ class IntegrationSpec extends Specification {
 
         amqp.publishChannel.queuePurge(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
 
-        Server server = new Server(8182);
+        server = new Server(8182);
         server.setHandler(new AbstractHandler() {
             @Override
             public void handle(String target, Request baseRequest,
@@ -190,6 +193,10 @@ class IntegrationSpec extends Specification {
         });
 
         server.start()
+    }
+
+    def cleanupSpec() {
+        server.stop()
     }
 
     def cleanup() {
@@ -662,7 +669,7 @@ class IntegrationSpec extends Specification {
         shutdownFlowId == System.getProperty(Constants.ENV_VAR_FLOW_ID)
 
         cleanup:
-        sailor.amqp.cancelConsumer()
+        sailor.amqp == null
         amqp.publishChannel.basicCancel(consumerTag)
     }
 

@@ -11,9 +11,9 @@ class MessageProcessorSpec extends ApiAwareSpecification {
     MessageProcessor processor
 
     def setupSpec() {
-        Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule());
+        Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule(), new AmqpAwareModule())
 
-        processor = injector.getInstance(MessageProcessor.class);
+        processor = injector.getInstance(MessageProcessor.class)
     }
 
     def "should create instance"() {

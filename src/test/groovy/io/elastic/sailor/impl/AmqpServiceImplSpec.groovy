@@ -5,6 +5,7 @@ import com.google.inject.Injector
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import io.elastic.api.Message
+import io.elastic.sailor.AmqpAwareModule
 import io.elastic.sailor.ApiAwareSpecification
 import io.elastic.sailor.SailorModule
 import io.elastic.sailor.SailorTestModule
@@ -26,7 +27,7 @@ class AmqpServiceImplSpec extends ApiAwareSpecification {
     def amqp;
 
     def setupSpec() {
-        Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule())
+        Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule(), new AmqpAwareModule())
 
         amqp = injector.getInstance(AmqpServiceImpl.class)
     }
