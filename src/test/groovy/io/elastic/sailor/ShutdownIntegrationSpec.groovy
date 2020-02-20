@@ -65,8 +65,6 @@ class ShutdownIntegrationSpec extends Specification {
         System.setProperty(Constants.ENV_VAR_API_URI, 'http://localhost:8182')
         System.setProperty(Constants.ENV_VAR_API_USERNAME, 'test@test.com')
         System.setProperty(Constants.ENV_VAR_API_KEY, '5559edd')
-        System.setProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD, 'testCryptoPassword')
-        System.setProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_IV, 'iv=any16_symbols')
         System.setProperty(Constants.ENV_VAR_FLOW_ID, flowId)
         System.setProperty(Constants.ENV_VAR_STEP_ID, 'step_1')
         System.setProperty(Constants.ENV_VAR_USER_ID, '5559edd38968ec0736000002')
