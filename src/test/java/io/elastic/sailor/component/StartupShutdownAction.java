@@ -11,7 +11,7 @@ import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import java.util.Collections;
 
-public class StartupShutdownAction implements Module {
+public class StartupShutdownAction implements Function {
 
     public static final String SUBSCRIPTION_ID = "my_startup_subscription_123456";
 

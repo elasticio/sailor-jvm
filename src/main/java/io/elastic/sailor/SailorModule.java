@@ -3,10 +3,7 @@ package io.elastic.sailor;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Named;
-import com.google.inject.name.Names;
-import io.elastic.api.EventEmitter;
 import io.elastic.sailor.impl.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,7 +17,7 @@ public class SailorModule extends AbstractModule {
 
         bind(ApiClient.class).to(ApiClientImpl.class);
 
-        bind(ModuleBuilder.class).to(ModuleBuilderImpl.class);
+        bind(FunctionBuilder.class).to(FunctionBuilderImpl.class);
     }
 
 

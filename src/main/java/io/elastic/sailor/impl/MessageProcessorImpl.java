@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
+import io.elastic.api.Function;
 import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +23,7 @@ public class MessageProcessorImpl implements MessageProcessor {
     }
 
     public ExecutionStats processMessage(final ExecutionContext executionContext,
-                                         final Module module) {
+                                         final Function function) {
 
         final Message incomingMessage = executionContext.getMessage();
         final Step step = executionContext.getStep();
@@ -65,7 +65,7 @@ public class MessageProcessorImpl implements MessageProcessor {
                 .build();
 
         try {
-            module.execute(params);
+            function.execute(params);
         } catch (RuntimeException e) {
             logger.error("Component execution failed", e);
             eventEmitter.emitException(e);

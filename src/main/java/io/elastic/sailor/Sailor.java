@@ -4,10 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import io.elastic.api.InitParameters;
-import io.elastic.api.Module;
-import io.elastic.api.ShutdownParameters;
-import io.elastic.api.StartupParameters;
+import io.elastic.api.*;
 import io.elastic.sailor.impl.BunyanJsonLayout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +18,7 @@ import java.util.Map;
 public class Sailor {
 
     private static final Logger logger = LoggerFactory.getLogger(Sailor.class);
-    private ModuleBuilder moduleBuilder;
+    private FunctionBuilder functionBuilder;
     private Step step;
     private ContainerContext containerContext;
     private ApiClient apiClient;
@@ -49,8 +46,8 @@ public class Sailor {
     }
 
     @Inject
-    public void setModuleBuilder(final ModuleBuilder moduleBuilder) {
-        this.moduleBuilder = moduleBuilder;
+    public void setFunctionBuilder(final FunctionBuilder functionBuilder) {
+        this.functionBuilder = functionBuilder;
     }
 
     @Inject
@@ -92,22 +89,22 @@ public class Sailor {
         try {
             logger.info("Processing flow step: {}", this.step.getId());
             logger.info("Component id to be executed: {}", this.step.getCompId());
-            logger.info("Module to be executed: {}", this.step.getFunction());
+            logger.info("Function to be executed: {}", this.step.getFunction());
 
             final JsonObject cfg = this.step.getCfg();
 
-            final Module module = moduleBuilder.build();
+            final Function function = functionBuilder.build();
 
-            startupModule(module, cfg);
+            startupModule(function, cfg);
 
-            logger.info("Initializing module for execution");
+            logger.info("Initializing function for execution");
             final InitParameters initParameters = new InitParameters.Builder()
                     .configuration(cfg)
                     .build();
-            module.init(initParameters);
+            function.init(initParameters);
 
             logger.info("Subscribing to queues");
-            amqp.subscribeConsumer(module);
+            amqp.subscribeConsumer(function);
         } catch (Exception e) {
             reportException(e);
         }
@@ -115,14 +112,14 @@ public class Sailor {
         logger.info("Sailor started");
     }
 
-    private void startupModule(final Module module, final JsonObject cfg) {
+    private void startupModule(final Function function, final JsonObject cfg) {
 
         if (containerContext.isStartupRequired()) {
-            logger.info("Starting up component module");
+            logger.info("Starting up component function");
             final StartupParameters startupParameters = new StartupParameters.Builder()
                     .configuration(cfg)
                     .build();
-            JsonObject state = module.startup(startupParameters);
+            JsonObject state = function.startup(startupParameters);
 
             if (state == null || state.isEmpty()) {
                 state = Json.createObjectBuilder().build();
@@ -144,7 +141,7 @@ public class Sailor {
 
         final String flowId = containerContext.getFlowId();
         final JsonObject cfg = this.step.getCfg();
-        final Module module = moduleBuilder.build();
+        final Function function = functionBuilder.build();
 
         final JsonObject state = this.apiClient.retrieveStartupState(flowId);
 
@@ -153,7 +150,7 @@ public class Sailor {
                 .state(state)
                 .build();
 
-        module.shutdown(shutdownParameters);
+        function.shutdown(shutdownParameters);
 
         this.apiClient.deleteStartupState(flowId);
 

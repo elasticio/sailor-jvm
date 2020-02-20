@@ -6,7 +6,7 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-public class StartupInitAction implements Module {
+public class StartupInitAction implements Function {
 
     private JsonObjectBuilder builder;
 

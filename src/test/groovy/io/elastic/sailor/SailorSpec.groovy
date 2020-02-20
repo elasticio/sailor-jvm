@@ -2,14 +2,12 @@ package io.elastic.sailor
 
 import com.google.inject.AbstractModule
 import com.google.inject.Guice
-import com.google.inject.Injector
 import io.elastic.sailor.component.HelloWorldAction
-import io.elastic.sailor.impl.ApiClientImpl
 
 class SailorSpec extends ApiAwareSpecification {
 
     def amqp = Mock(AmqpService)
-    def componentBuilder = Mock(ModuleBuilder)
+    def componentBuilder = Mock(FunctionBuilder)
     def injector
 
     def sailor;
@@ -25,7 +23,7 @@ class SailorSpec extends ApiAwareSpecification {
 
         sailor = injector.getInstance(Sailor.class)
         sailor.amqp = amqp
-        sailor.setModuleBuilder(componentBuilder)
+        sailor.setFunctionBuilder(componentBuilder)
         sailor.setStep(TestUtils.createStep())
     }
 

@@ -1,12 +1,11 @@
 package io.elastic.sailor.impl;
 
-import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
+import io.elastic.api.Function;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
 import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -20,20 +19,20 @@ public class MessageConsumer extends DefaultConsumer {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
     private final CryptoServiceImpl cipher;
     private final MessageProcessor processor;
-    private final Module module;
+    private final Function function;
     private final Step step;
     private final ContainerContext containerContext;
 
     public MessageConsumer(Channel channel,
                            CryptoServiceImpl cipher,
                            MessageProcessor processor,
-                           Module module,
+                           Function function,
                            Step step,
                            final ContainerContext containerContext) {
         super(channel);
         this.cipher = cipher;
         this.processor = processor;
-        this.module = module;
+        this.function = function;
         this.step = step;
         this.containerContext = containerContext;
     }
@@ -61,7 +60,7 @@ public class MessageConsumer extends DefaultConsumer {
         ExecutionStats stats = null;
 
         try {
-            stats = processor.processMessage(executionContext, this.module);
+            stats = processor.processMessage(executionContext, this.function);
         } catch (Exception e) {
             logger.error("Failed to process message for delivery tag:" + deliveryTag, e);
         } finally {
