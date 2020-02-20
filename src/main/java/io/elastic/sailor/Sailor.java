@@ -29,6 +29,7 @@ public class Sailor {
     private AmqpService amqp;
 
     public static void main(String[] args) throws IOException {
+        logger.info("About to init Sailor");
         createAndStartSailor();
     }
 
@@ -37,7 +38,7 @@ public class Sailor {
         com.google.inject.Module[] modules = new com.google.inject.Module[] {
                 new SailorModule(), new SailorEnvironmentModule()
         };
-
+        
         Injector injector = Guice.createInjector(modules);
 
         final Sailor sailor = injector.getInstance(Sailor.class);
