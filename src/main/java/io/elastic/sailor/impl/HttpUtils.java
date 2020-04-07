@@ -62,6 +62,10 @@ public class HttpUtils {
 
         final String result = sendHttpRequest(httpPost, credentials, retryCount);
 
+        if (result == null) {
+            throw new RuntimeException("Null response received");
+        }
+
         logger.info("Successfully posted json {} bytes length", body.toString().length());
 
         return result;
@@ -75,6 +79,10 @@ public class HttpUtils {
         httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
 
         final String content = sendHttpRequest(httpGet, credentials, retryCount);
+
+        if (content == null) {
+            throw new RuntimeException("Null response received");
+        }
 
         return JSON.parseObject(content);
     }
@@ -91,6 +99,10 @@ public class HttpUtils {
 
         final String content = sendHttpRequest(httpPut, credentials, retryCount);
 
+        if (content == null) {
+            throw new RuntimeException("Null response received");
+        }
+
         logger.info("Successfully put json {} bytes length", body.toString().length());
 
         return JSON.parseObject(content);
@@ -98,18 +110,18 @@ public class HttpUtils {
 
 
 
-    public static JsonObject delete(final String url,
+    public static void delete(final String url,
                                     final UsernamePasswordCredentials credentials,
                                     final int retryCount) {
 
         final HttpDelete httpDelete = new HttpDelete(url);
         httpDelete.addHeader(HTTP.CONTENT_TYPE, "application/json");
 
-        final String content = sendHttpRequest(httpDelete, credentials, retryCount);
+        sendHttpRequest(httpDelete, credentials, retryCount);
 
         logger.info("Successfully sent delete");
 
-        return JSON.parseObject(content);
+        return;
     }
 
     private static StringEntity createStringEntity(final JsonObject body) {
@@ -155,7 +167,7 @@ public class HttpUtils {
 
             final HttpEntity responseEntity = response.getEntity();
             if (responseEntity == null) {
-                throw new RuntimeException("Null response received");
+                return null;
             }
 
             final String result = EntityUtils.toString(responseEntity);

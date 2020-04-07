@@ -160,15 +160,12 @@ class HttpUtilsSpec extends Specification {
                 giveResponse('{"message":"ok"}', 'application/json')
                         .withStatus(200));
 
-        when:
-        def result = HttpUtils.delete(
+        expect:
+        HttpUtils.delete(
                 "http://localhost:12345/v1/users/1234567",
                 new UsernamePasswordCredentials("admin", "secret"),
                 0)
 
-        then:
-
-        result.toString() == '{"message":"ok"}'
     }
 
     def "should fail to post json if user info not present in the url"() {
