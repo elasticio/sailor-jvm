@@ -76,7 +76,18 @@ public class ApiClientImpl implements ApiClient {
 
     @Override
     public JsonObject retrieveStartupState(final String flowId) {
-        return Json.createObjectBuilder().build();
+        final String uri = getStartupStateUrl(flowId);
+
+        final UsernamePasswordCredentials credentials
+                = new UsernamePasswordCredentials(this.apiUser, this.apiKey);
+
+        final JsonObject state = HttpUtils.getJson(uri, credentials, this.retryCount);
+
+        if (state == null) {
+            return Json.createObjectBuilder().build();
+        }
+
+        return state;
     }
 
     @Override

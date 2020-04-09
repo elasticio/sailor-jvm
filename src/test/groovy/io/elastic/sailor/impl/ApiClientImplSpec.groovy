@@ -69,4 +69,36 @@ class ApiClientImplSpec extends Specification {
 
         result.toString() == '{"id":"55083c567aea6f030000001a","keys":{"apiSecret":"barbaz"}}'
     }
+
+    def "should retrieve startup state"() {
+        setup:
+
+        driver.addExpectation(
+                onRequestTo("/sailor-support/hooks/task/55083c567aea6f030000001a/startup/data")
+                        .withMethod(ClientDriverRequest.Method.GET)
+                        .withBasicAuth("homer.simpson@example.org", "secret"),
+                giveResponse('{"webhookId": "12345"}', 'application/json')
+                        .withStatus(200));
+
+        when:
+        def result = client.retrieveStartupState("55083c567aea6f030000001a")
+
+        then:
+
+        result.toString() == '{"webhookId":"12345"}'
+    }
+
+    def "should delete startup state"() {
+        setup:
+
+        driver.addExpectation(
+                onRequestTo("/sailor-support/hooks/task/55083c567aea6f030000001a/startup/data")
+                        .withMethod(ClientDriverRequest.Method.DELETE)
+                        .withBasicAuth("homer.simpson@example.org", "secret"),
+                giveResponse('{"webhookId": "12345"}', 'application/json')
+                        .withStatus(200));
+
+        expect:
+        client.deleteStartupState("55083c567aea6f030000001a")
+    }
 }
