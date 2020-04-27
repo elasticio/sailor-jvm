@@ -145,14 +145,10 @@ public class Sailor {
 
         final JsonObject state = this.apiClient.retrieveStartupState(flowId);
 
-        logger.info("State: {}", state);
-
         final ShutdownParameters shutdownParameters = new ShutdownParameters.Builder()
                 .configuration(cfg)
                 .state(state)
                 .build();
-
-        logger.info("ShutdownParameters: {}", shutdownParameters);
 
         function.shutdown(shutdownParameters);
 
