@@ -82,7 +82,7 @@ public class ContainerContext {
     }
 
     @Inject
-    public void setStartupRequired(@Named(Constants.ENV_VAR_STARTUP_REQUIRED)  boolean startupRequired) {
+    public void setStartupRequired(@Named(Constants.ENV_VAR_STARTUP_REQUIRED) final boolean startupRequired) {
         isStartupRequired = startupRequired;
     }
 

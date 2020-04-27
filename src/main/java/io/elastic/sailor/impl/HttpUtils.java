@@ -1,7 +1,12 @@
 package io.elastic.sailor.impl;
 
 import io.elastic.api.JSON;
-import org.apache.http.*;
+import io.elastic.sailor.UnexpectedStatusCodeException;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpRequest;
+import org.apache.http.StatusLine;
+
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.methods.*;
@@ -42,14 +47,28 @@ public class HttpUtils {
 
     public static String postJson(String url, JsonObject body, int retryCount) throws IOException {
 
+        return postJson(url, body, null, retryCount);
+    }
+
+    public static String postJson(final String url,
+                                  final JsonObject body,
+                                  final UsernamePasswordCredentials credentials,
+                                  final int retryCount) {
+
 
         final HttpPost httpPost = new HttpPost(url);
         httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpPost.setEntity(createStringEntity(body));
 
+        final String result = sendHttpRequest(httpPost, credentials, retryCount);
+
+        if (result == null) {
+            throw new RuntimeException("Null response received");
+        }
+
         logger.info("Successfully posted json {} bytes length", body.toString().length());
 
-        return sendHttpRequest(httpPost, null, retryCount);
+        return result;
     }
 
     public static JsonObject getJson(final String url,
@@ -60,6 +79,10 @@ public class HttpUtils {
         httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
 
         final String content = sendHttpRequest(httpGet, credentials, retryCount);
+
+        if (content == null) {
+            throw new RuntimeException("Null response received");
+        }
 
         return JSON.parseObject(content);
     }
@@ -76,9 +99,29 @@ public class HttpUtils {
 
         final String content = sendHttpRequest(httpPut, credentials, retryCount);
 
+        if (content == null) {
+            throw new RuntimeException("Null response received");
+        }
+
         logger.info("Successfully put json {} bytes length", body.toString().length());
 
         return JSON.parseObject(content);
+    }
+
+
+
+    public static void delete(final String url,
+                                    final UsernamePasswordCredentials credentials,
+                                    final int retryCount) {
+
+        final HttpDelete httpDelete = new HttpDelete(url);
+        httpDelete.addHeader(HTTP.CONTENT_TYPE, "application/json");
+
+        sendHttpRequest(httpDelete, credentials, retryCount);
+
+        logger.info("Successfully sent delete");
+
+        return;
     }
 
     private static StringEntity createStringEntity(final JsonObject body) {
@@ -119,12 +162,12 @@ public class HttpUtils {
             final int statusCode = statusLine.getStatusCode();
             logger.info("Got {} response", statusCode);
             if (statusCode >= 400) {
-                throw new RuntimeException(String.format("Got %s response", statusCode));
+                throw new UnexpectedStatusCodeException(statusCode);
             }
 
             final HttpEntity responseEntity = response.getEntity();
             if (responseEntity == null) {
-                throw new RuntimeException("Null response received");
+                return null;
             }
 
             final String result = EntityUtils.toString(responseEntity);

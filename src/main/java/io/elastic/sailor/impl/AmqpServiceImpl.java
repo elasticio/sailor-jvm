@@ -8,7 +8,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
+import io.elastic.api.Function;
 import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 
@@ -140,9 +140,9 @@ public class AmqpServiceImpl implements AmqpService {
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public void subscribeConsumer(final Module module) {
+    public void subscribeConsumer(final Function function) {
         final MessageConsumer consumer = new MessageConsumer(
-                subscribeChannel, cipher, this.messageProcessor, module, step, this.containerContext);
+                subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext);
 
         try {
             consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);

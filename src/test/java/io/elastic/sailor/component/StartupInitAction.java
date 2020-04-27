@@ -1,27 +1,25 @@
 package io.elastic.sailor.component;
 
-import io.elastic.api.ExecutionParameters;
-import io.elastic.api.Message;
-import io.elastic.api.Module;
+import io.elastic.api.*;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 
-public class StartupInitAction implements Module {
+public class StartupInitAction implements Function {
 
     private JsonObjectBuilder builder;
 
     @Override
-    public JsonObject startup(JsonObject configuration) {
+    public JsonObject startup(final StartupParameters parameters) {
         builder = Json.createObjectBuilder()
-                .add("startup", configuration);
+                .add("startup", parameters.getConfiguration());
         return Json.createObjectBuilder().build();
     }
 
     @Override
-    public void init(JsonObject configuration) {
-        builder.add("init", configuration);
+    public void init(InitParameters parameters) {
+        builder.add("init", parameters.getConfiguration());
     }
 
     public void execute(ExecutionParameters parameters) {

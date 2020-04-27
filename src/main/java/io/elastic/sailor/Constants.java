@@ -58,6 +58,7 @@ public final class Constants {
     public static final String ENV_VAR_WORKSPACE_ID = "ELASTICIO_WORKSPACE_ID";
     public static final String ENV_VAR_RABBITMQ_PREFETCH_SAILOR = "ELASTICIO_RABBITMQ_PREFETCH_SAILOR";
     public static final String ENV_VAR_STARTUP_REQUIRED = "ELASTICIO_STARTUP_REQUIRED";
+    public static final String ENV_VAR_HOOK_SHUTDOWN = "ELASTICIO_HOOK_SHUTDOWN";
     public static final String ENV_VAR_API_REQUEST_RETRY_ATTEMPTS =
             "ELASTICIO_API_REQUEST_RETRY_ATTEMPTS";
     public static final String ENV_VAR_NO_SELF_PASSTRHOUGH =

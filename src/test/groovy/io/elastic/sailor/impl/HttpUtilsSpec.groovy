@@ -21,7 +21,7 @@ class HttpUtilsSpec extends Specification {
     @Rule
     public ClientDriverRule driver = new ClientDriverRule(12345);
 
-    def "should post json successfully"() {
+    def "should post json successfully when credentials are inside url"() {
 
         setup:
         def body = Json.createObjectBuilder()
@@ -40,6 +40,33 @@ class HttpUtilsSpec extends Specification {
         def result = HttpUtils.postJson(
                 "http://homer.simpson%40example.org:secret@localhost:12345/v1/exec/result/55e5eeb460a8e2070000001e",
                 body)
+
+        then:
+
+        result == '{"status":"done"}'
+    }
+
+    def "should post json successfully"() {
+
+        setup:
+        def body = Json.createObjectBuilder()
+                .add('foo', 'barbaz')
+                .build()
+
+        driver.addExpectation(
+                onRequestTo("/v1/exec/result/55e5eeb460a8e2070000001e")
+                        .withMethod(ClientDriverRequest.Method.POST)
+                        .withBasicAuth("homer.simpson@example.org", "secret")
+                        .withBody(equalToIgnoringCase('{"foo":"barbaz"}'), "application/json"),
+                giveResponse('{"status":"done"}', 'application/json')
+                        .withStatus(200));
+
+        when:
+        def result = HttpUtils.postJson(
+                "http://localhost:12345/v1/exec/result/55e5eeb460a8e2070000001e",
+                body,
+                new UsernamePasswordCredentials("homer.simpson@example.org", "secret"),
+                0)
 
         then:
 
@@ -108,8 +135,8 @@ class HttpUtilsSpec extends Specification {
         stubFor(get(urlEqualTo("/econnreset")).inScenario("retry")
                 .whenScenarioStateIs("next request")
                 .willReturn(
-                    aResponse().withStatus(200).withBody('{"id":"1","email":"homer.simpson@example.org"}')
-        ))
+                        aResponse().withStatus(200).withBody('{"id":"1","email":"homer.simpson@example.org"}')
+                ))
 
         when:
         def result = HttpUtils.getJson(
@@ -121,6 +148,24 @@ class HttpUtilsSpec extends Specification {
 
         cleanup:
         wireMockServer.stop()
+    }
+
+    def "should send delete successfully"() {
+
+        setup:
+        driver.addExpectation(
+                onRequestTo("/v1/users/1234567")
+                        .withMethod(ClientDriverRequest.Method.DELETE)
+                        .withBasicAuth("admin", "secret"),
+                giveResponse('{"message":"ok"}', 'application/json')
+                        .withStatus(200));
+
+        expect:
+        HttpUtils.delete(
+                "http://localhost:12345/v1/users/1234567",
+                new UsernamePasswordCredentials("admin", "secret"),
+                0)
+
     }
 
     def "should fail to post json if user info not present in the url"() {

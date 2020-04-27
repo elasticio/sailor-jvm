@@ -10,6 +10,7 @@ import org.apache.http.auth.UsernamePasswordCredentials;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.json.Json;
 import javax.json.JsonObject;
 
 @Singleton
@@ -31,14 +32,14 @@ public class ApiClientImpl implements ApiClient {
                          @Named(Constants.ENV_VAR_NO_SELF_PASSTRHOUGH) boolean putIncomingMessageIntoPassThrough) {
         this.apiUser = apiUser;
         this.apiKey = apiKey;
-        this.apiBaseUri = String.format("%s/v1", apiUri);
+        this.apiBaseUri = String.format("%s", apiUri);
         this.retryCount = retryCount;
         this.putIncomingMessageIntoPassThrough = putIncomingMessageIntoPassThrough;
     }
 
     @Override
     public Step retrieveFlowStep(final String taskId, final String stepId) {
-        final String uri = String.format("%s/tasks/%s/steps/%s", this.apiBaseUri, taskId, stepId);
+        final String uri = String.format("%s/v1/tasks/%s/steps/%s", this.apiBaseUri, taskId, stepId);
 
         logger.info("Retrieving step data for user {} at: {}", this.apiUser, uri);
 
@@ -52,7 +53,7 @@ public class ApiClientImpl implements ApiClient {
 
     @Override
     public JsonObject updateAccount(final String accountId, final JsonObject body) {
-        final String uri = String.format("%s/accounts/%s", this.apiBaseUri, accountId);
+        final String uri = String.format("%s/v1/accounts/%s", this.apiBaseUri, accountId);
 
         logger.info("Updating account for user {} at: {}", this.apiUser, uri);
 
@@ -61,5 +62,45 @@ public class ApiClientImpl implements ApiClient {
 
         return HttpUtils.putJson(uri, body, credentials, this.retryCount);
 
+    }
+
+    @Override
+    public void storeStartupState(final String flowId, final JsonObject body) {
+        final String uri = getStartupStateUrl(flowId);
+
+        final UsernamePasswordCredentials credentials
+                = new UsernamePasswordCredentials(this.apiUser, this.apiKey);
+
+        HttpUtils.postJson(uri, body, credentials, this.retryCount);
+    }
+
+    @Override
+    public JsonObject retrieveStartupState(final String flowId) {
+        final String uri = getStartupStateUrl(flowId);
+
+        final UsernamePasswordCredentials credentials
+                = new UsernamePasswordCredentials(this.apiUser, this.apiKey);
+
+        final JsonObject state = HttpUtils.getJson(uri, credentials, this.retryCount);
+
+        if (state == null) {
+            return Json.createObjectBuilder().build();
+        }
+
+        return state;
+    }
+
+    @Override
+    public void deleteStartupState(final String flowId) {
+        final String uri = getStartupStateUrl(flowId);
+
+        final UsernamePasswordCredentials credentials
+                = new UsernamePasswordCredentials(this.apiUser, this.apiKey);
+
+        HttpUtils.delete(uri, credentials, this.retryCount);
+    }
+
+    private String getStartupStateUrl(final String flowId) {
+        return String.format("%s/sailor-support/hooks/task/%s/startup/data", this.apiBaseUri, flowId);
     }
 }

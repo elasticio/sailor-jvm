@@ -1,8 +1,8 @@
 package io.elastic.sailor;
 
 import com.rabbitmq.client.AMQP;
+import io.elastic.api.Function;
 import io.elastic.api.Message;
-import io.elastic.api.Module;
 
 public interface AmqpService {
 
@@ -10,7 +10,7 @@ public interface AmqpService {
 
     void disconnect();
 
-    void subscribeConsumer(Module module);
+    void subscribeConsumer(Function function);
 
     void cancelConsumer();
 

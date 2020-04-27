@@ -2,9 +2,9 @@ package io.elastic.sailor.component;
 
 
 import io.elastic.api.ExecutionParameters;
-import io.elastic.api.Module;
+import io.elastic.api.Function;
 
-public class ErroneousAction implements Module {
+public class ErroneousAction implements Function {
 
     @Override
     public void execute(ExecutionParameters parameters) {
