@@ -52,6 +52,14 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindOptionalYesNoEnvVar(Constants.ENV_VAR_NO_SELF_PASSTRHOUGH);
         bindOptionalYesNoEnvVar(Constants.ENV_VAR_HOOK_SHUTDOWN);
 
+        bindOptionalIntegerEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_ATTEMPTS, Integer.MAX_VALUE);
+
+        // 100 ms
+        bindOptionalLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_DELAY, 100L);
+
+        // 5 mins
+        bindOptionalLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY, 5 * 60 * 1000L);
+
 
     }
 
@@ -80,6 +88,12 @@ public class SailorEnvironmentModule extends AbstractModule {
                 .toInstance(getOptionalIntegerValue(name, defaultValue));
     }
 
+    void bindOptionalLongEnvVar(final String name, long defaultValue) {
+        bind(Long.class)
+                .annotatedWith(Names.named(name))
+                .toInstance(getOptionalLongValue(name, defaultValue));
+    }
+
     void bindOptionalYesNoEnvVar(final String name) {
         bind(Boolean.class)
                 .annotatedWith(Names.named(name))
@@ -91,6 +105,16 @@ public class SailorEnvironmentModule extends AbstractModule {
 
         if (value != null) {
             return Integer.parseInt(value);
+        }
+
+        return defaultValue;
+    }
+
+    private static long getOptionalLongValue(final String key, long defaultValue) {
+        final String value = Utils.getOptionalEnvVar(key);
+
+        if (value != null) {
+            return Long.parseLong(value);
         }
 
         return defaultValue;

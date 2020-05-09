@@ -1,6 +1,7 @@
 package io.elastic.sailor
 
 import com.rabbitmq.client.AMQP
+import com.rabbitmq.client.Channel
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
 import io.elastic.api.HttpReply
@@ -9,6 +10,7 @@ import io.elastic.api.Message
 import io.elastic.sailor.component.StartupShutdownAction
 import io.elastic.sailor.impl.AmqpServiceImpl
 import io.elastic.sailor.impl.CryptoServiceImpl
+import io.elastic.sailor.impl.MessagePublisherImpl
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
@@ -66,6 +68,9 @@ class IntegrationSpec extends Specification {
     @Shared
     Server server
 
+    @Shared
+    Channel publishChannel
+
     def setupSpec() {
 
         System.setProperty(Constants.ENV_VAR_API_URI, 'http://localhost:8182')
@@ -106,11 +111,10 @@ class IntegrationSpec extends Specification {
         amqp = new AmqpServiceImpl(cipher)
 
         amqp.setAmqpUri(System.getProperty(Constants.ENV_VAR_AMQP_URI))
-        amqp.setPublishExchangeName(System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO))
         amqp.setSubscribeExchangeName(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
         amqp.setPrefetchCount(1)
 
-        amqp.connect()
+        amqp.connectAndSubscribe()
 
         amqp.subscribeChannel.exchangeDeclare(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON), 'direct', true, false, [:])
@@ -122,24 +126,31 @@ class IntegrationSpec extends Specification {
                 System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY)
         )
 
-        amqp.publishChannel.exchangeDeclare(
-                System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO), 'direct', true, false, [:])
-        amqp.publishChannel.queueDeclare(dataQueue, true, false, false, [:])
-        amqp.publishChannel.queueDeclare(errorsQueue, true, false, false, [:])
+        def messagePublisher = new MessagePublisherImpl(
+                System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
+                Integer.MAX_VALUE,
+                100, 5 * 60 * 1000, amqp)
 
-        amqp.publishChannel.queueBind(
+        publishChannel = messagePublisher.getPublishChannel()
+
+        publishChannel.exchangeDeclare(
+                System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO), 'direct', true, false, [:])
+        publishChannel.queueDeclare(dataQueue, true, false, false, [:])
+        publishChannel.queueDeclare(errorsQueue, true, false, false, [:])
+
+        publishChannel.queueBind(
                 dataQueue,
                 System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
                 System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY)
         )
 
-        amqp.publishChannel.queueBind(
+        publishChannel.queueBind(
                 errorsQueue,
                 System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
                 System.getProperty(Constants.ENV_VAR_ERROR_ROUTING_KEY)
         )
 
-        amqp.publishChannel.queuePurge(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
+        publishChannel.queuePurge(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
 
         server = new Server(8182);
         server.setHandler(new AbstractHandler() {
@@ -214,10 +225,10 @@ class IntegrationSpec extends Specification {
         def headers = [
                 'execId'  : 'some-exec-id',
                 'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
-                'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
                 'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
                 start     : System.currentTimeMillis(),
                 messageId: messageId,
+                "source": "Integration Test",
                 (Constants.AMQP_META_HEADER_TRACE_ID): traceId
         ]
 
@@ -235,13 +246,13 @@ class IntegrationSpec extends Specification {
 
         byte[] payload = cipher.encryptMessage(msg).getBytes();
 
-        amqp.publishChannel.basicPublish(
+        publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
                 System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
                 options,
                 payload);
 
-        def consumer = new DefaultConsumer(amqp.publishChannel) {
+        def consumer = new DefaultConsumer(publishChannel) {
             @Override
             public void handleDelivery(String consumerTag,
                                        Envelope envelope,
@@ -249,14 +260,14 @@ class IntegrationSpec extends Specification {
                                        byte[] body)
                     throws IOException {
 
-                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
                 def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
                 blockingVar.set([message:message, properties:properties]);
             }
         }
 
-        def consumerTag = amqp.publishChannel.basicConsume(dataQueue, consumer)
+        def consumerTag = publishChannel.basicConsume(dataQueue, consumer)
 
         when:
 
@@ -266,10 +277,11 @@ class IntegrationSpec extends Specification {
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
 
+        println result.properties
         result.properties.headers.size() == 12
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
-        result.properties.headers.function.toString() == headers.function
+        result.properties.headers.function.toString() == System.getProperty(Constants.ENV_VAR_FUNCTION)
         result.properties.headers.stepId.toString() == "step_1"
         result.properties.headers.userId.toString() == "5559edd38968ec0736000002"
         result.properties.headers.taskId.toString() == headers.taskId
@@ -286,7 +298,7 @@ class IntegrationSpec extends Specification {
 
         cleanup:
         sailor.amqp.cancelConsumer()
-        amqp.publishChannel.basicCancel(consumerTag)
+        publishChannel.basicCancel(consumerTag)
     }
 
     def "run sailor successfully with threads"() {
@@ -319,13 +331,13 @@ class IntegrationSpec extends Specification {
 
         byte[] payload = cipher.encryptMessage(msg).getBytes();
 
-        amqp.publishChannel.basicPublish(
+        publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
                 System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
                 options,
                 payload);
 
-        def consumer = new DefaultConsumer(amqp.publishChannel) {
+        def consumer = new DefaultConsumer(publishChannel) {
             @Override
             public void handleDelivery(String consumerTag,
                                        Envelope envelope,
@@ -333,14 +345,14 @@ class IntegrationSpec extends Specification {
                                        byte[] body)
                     throws IOException {
 
-                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
                 def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
                 blockingVar.set([message:message, properties:properties]);
             }
         }
 
-        def consumerTag = amqp.publishChannel.basicConsume(dataQueue, consumer)
+        def consumerTag = publishChannel.basicConsume(dataQueue, consumer)
 
         when:
 
@@ -370,7 +382,7 @@ class IntegrationSpec extends Specification {
 
         cleanup:
         sailor.amqp.cancelConsumer()
-        amqp.publishChannel.basicCancel(consumerTag)
+        publishChannel.basicCancel(consumerTag)
     }
 
     def "run sailor successfully and pass through"() {
@@ -413,13 +425,13 @@ class IntegrationSpec extends Specification {
 
         byte[] payload = cipher.encryptJsonObject(msg).getBytes();
 
-        amqp.publishChannel.basicPublish(
+        publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
                 System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
                 options,
                 payload);
 
-        def consumer = new DefaultConsumer(amqp.publishChannel) {
+        def consumer = new DefaultConsumer(publishChannel) {
             @Override
             public void handleDelivery(String consumerTag,
                                        Envelope envelope,
@@ -427,7 +439,7 @@ class IntegrationSpec extends Specification {
                                        byte[] body)
                     throws IOException {
 
-                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
                 def decryptedJson = IntegrationSpec.this.cipher.decryptMessageContent(bodyString)
                 def message = Utils.createMessage(decryptedJson)
@@ -436,7 +448,7 @@ class IntegrationSpec extends Specification {
             }
         }
 
-        def consumerTag = amqp.publishChannel.basicConsume(dataQueue, consumer)
+        def consumerTag = publishChannel.basicConsume(dataQueue, consumer)
 
         when:
 
@@ -468,7 +480,7 @@ class IntegrationSpec extends Specification {
 
         cleanup:
         sailor.amqp.cancelConsumer()
-        amqp.publishChannel.basicCancel(consumerTag)
+        publishChannel.basicCancel(consumerTag)
     }
 
     def "should execute startup/init successfully"() {
@@ -501,13 +513,13 @@ class IntegrationSpec extends Specification {
 
         byte[] payload = cipher.encryptMessage(msg).getBytes();
 
-        amqp.publishChannel.basicPublish(
+        publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
                 System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
                 options,
                 payload);
 
-        def consumer = new DefaultConsumer(amqp.publishChannel) {
+        def consumer = new DefaultConsumer(publishChannel) {
             @Override
             public void handleDelivery(String consumerTag,
                                        Envelope envelope,
@@ -515,14 +527,14 @@ class IntegrationSpec extends Specification {
                                        byte[] body)
                     throws IOException {
 
-                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
                 def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
                 blockingVar.set([message:message, properties:properties]);
             }
         }
 
-        def consumerTag = amqp.publishChannel.basicConsume(dataQueue, consumer)
+        def consumerTag = publishChannel.basicConsume(dataQueue, consumer)
 
         when:
 
@@ -548,7 +560,7 @@ class IntegrationSpec extends Specification {
 
         cleanup:
         sailor.amqp.cancelConsumer()
-        amqp.publishChannel.basicCancel(consumerTag)
+        publishChannel.basicCancel(consumerTag)
     }
 
     def "should execute startup successfully"() {
@@ -581,13 +593,13 @@ class IntegrationSpec extends Specification {
 
         byte[] payload = cipher.encryptMessage(msg).getBytes();
 
-        amqp.publishChannel.basicPublish(
+        publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
                 System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
                 options,
                 payload);
 
-        def consumer = new DefaultConsumer(amqp.publishChannel) {
+        def consumer = new DefaultConsumer(publishChannel) {
             @Override
             public void handleDelivery(String consumerTag,
                                        Envelope envelope,
@@ -595,14 +607,14 @@ class IntegrationSpec extends Specification {
                                        byte[] body)
                     throws IOException {
 
-                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
                 def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
                 blockingVar.set([message:message, properties:properties]);
             }
         }
 
-        def consumerTag = amqp.publishChannel.basicConsume(dataQueue, consumer)
+        def consumerTag = publishChannel.basicConsume(dataQueue, consumer)
 
         when:
 
@@ -628,7 +640,7 @@ class IntegrationSpec extends Specification {
 
         cleanup:
         sailor.amqp.cancelConsumer()
-        amqp.publishChannel.basicCancel(consumerTag)
+        publishChannel.basicCancel(consumerTag)
     }
 
     def "should execute shutdown successfully"() {
@@ -637,7 +649,7 @@ class IntegrationSpec extends Specification {
         System.setProperty(Constants.ENV_VAR_HOOK_SHUTDOWN, "1");
         System.setProperty(Constants.ENV_VAR_FUNCTION, 'startupShutdownAction')
 
-        def consumer = new DefaultConsumer(amqp.publishChannel) {
+        def consumer = new DefaultConsumer(publishChannel) {
             @Override
             public void handleDelivery(String consumerTag,
                                        Envelope envelope,
@@ -645,14 +657,14 @@ class IntegrationSpec extends Specification {
                                        byte[] body)
                     throws IOException {
 
-                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
                 def message = JSON.parseObject(bodyString)
                 blockingVar.set([message:message, properties:properties]);
             }
         }
 
-        def consumerTag = amqp.publishChannel.basicConsume(dataQueue, consumer)
+        def consumerTag = publishChannel.basicConsume(dataQueue, consumer)
 
         when:
 
@@ -670,7 +682,7 @@ class IntegrationSpec extends Specification {
 
         cleanup:
         sailor.amqp == null
-        amqp.publishChannel.basicCancel(consumerTag)
+        publishChannel.basicCancel(consumerTag)
     }
 
     def "should send http reply successfully"() {
@@ -682,8 +694,8 @@ class IntegrationSpec extends Specification {
         def replyQueueName = prefix + 'request_reply_queue'
         def replyQueueRoutingKey = prefix + 'request_reply_routing_key'
 
-        amqp.publishChannel.queueDeclare(replyQueueName, true, false, false, [:])
-        amqp.publishChannel.queueBind(
+        publishChannel.queueDeclare(replyQueueName, true, false, false, [:])
+        publishChannel.queueBind(
                 replyQueueName,
                 System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
                 replyQueueRoutingKey)
@@ -714,13 +726,13 @@ class IntegrationSpec extends Specification {
 
         byte[] payload = cipher.encryptMessage(msg).getBytes();
 
-        amqp.publishChannel.basicPublish(
+        publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
                 System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
                 options,
                 payload);
 
-        def consumer = new DefaultConsumer(amqp.publishChannel) {
+        def consumer = new DefaultConsumer(publishChannel) {
             @Override
             public void handleDelivery(String consumerTag,
                                        Envelope envelope,
@@ -728,14 +740,14 @@ class IntegrationSpec extends Specification {
                                        byte[] body)
                     throws IOException {
 
-                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
                 def message = IntegrationSpec.this.cipher.decrypt(bodyString);
                 blockingVar.set([message:message, properties:properties]);
             }
         }
 
-        def consumerTag = amqp.publishChannel.basicConsume(replyQueueName, consumer)
+        def consumerTag = publishChannel.basicConsume(replyQueueName, consumer)
 
         when:
 
@@ -756,7 +768,7 @@ class IntegrationSpec extends Specification {
 
         cleanup:
         sailor.amqp.cancelConsumer()
-        amqp.publishChannel.basicCancel(consumerTag)
+        publishChannel.basicCancel(consumerTag)
     }
 
     def "publish init errors to RabbitMQ"() {
@@ -788,13 +800,13 @@ class IntegrationSpec extends Specification {
 
         byte[] payload = cipher.encryptMessage(msg).getBytes();
 
-        amqp.publishChannel.basicPublish(
+        publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
                 System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
                 options,
                 payload);
 
-        def consumer = new DefaultConsumer(amqp.publishChannel) {
+        def consumer = new DefaultConsumer(publishChannel) {
             @Override
             public void handleDelivery(String consumerTag,
                                        Envelope envelope,
@@ -802,14 +814,14 @@ class IntegrationSpec extends Specification {
                                        byte[] body)
                     throws IOException {
 
-                IntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def errorJson = JSON.parseObject(new String(body, "UTF-8"))
                 def error = IntegrationSpec.this.cipher.decrypt(errorJson.getString('error'));
                 blockingVar.set([error:error, properties:properties]);
             }
         }
 
-        def consumerTag = amqp.publishChannel.basicConsume(errorsQueue, consumer)
+        def consumerTag = publishChannel.basicConsume(errorsQueue, consumer)
 
         when:
 
@@ -831,6 +843,6 @@ class IntegrationSpec extends Specification {
 
         cleanup:
         sailor.amqp.cancelConsumer()
-        amqp.publishChannel.basicCancel(consumerTag)
+        publishChannel.basicCancel(consumerTag)
     }
 }

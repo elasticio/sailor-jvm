@@ -15,23 +15,26 @@ public class ReboundCallback extends CountingCallbackImpl {
     private static final String HEADER_REBOUND_ITERATION = "reboundIteration";
 
     private ExecutionContext executionContext;
-    private AmqpService amqp;
+    private MessagePublisher messagePublisher;
     private CryptoServiceImpl cipher;
     private Integer reboundLimit;
     private Integer reboundInitialExpiration;
+    private String routingKey;
 
     @Inject
     public ReboundCallback(
             @Assisted ExecutionContext executionContext,
-            AmqpService amqp,
+            MessagePublisher messagePublisher,
             CryptoServiceImpl cipher,
             @Named(Constants.ENV_VAR_REBOUND_LIMIT) Integer reboundLimit,
-            @Named(Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION) Integer reboundInitialExpiration) {
+            @Named(Constants.ENV_VAR_REBOUND_INITIAL_EXPIRATION) Integer reboundInitialExpiration,
+            @Named(Constants.ENV_VAR_REBOUND_ROUTING_KEY) String routingKey) {
         this.executionContext = executionContext;
-        this.amqp = amqp;
+        this.messagePublisher = messagePublisher;
         this.cipher = cipher;
         this.reboundLimit = reboundLimit;
         this.reboundInitialExpiration = reboundInitialExpiration;
+        this.routingKey = routingKey;
     }
 
     public void receiveData(Object data) {
@@ -49,7 +52,7 @@ public class ReboundCallback extends CountingCallbackImpl {
         headers.put(HEADER_REBOUND_ITERATION, reboundIteration);
 
         final Integer expiration = getReboundExpiration(reboundIteration);
-        amqp.sendRebound(payload, makeReboundOptions(headers, expiration));
+        messagePublisher.publish(routingKey, payload, makeReboundOptions(headers, expiration));
     }
 
     private int getReboundIteration() {

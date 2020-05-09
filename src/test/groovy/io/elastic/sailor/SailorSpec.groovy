@@ -7,6 +7,7 @@ import io.elastic.sailor.component.HelloWorldAction
 class SailorSpec extends ApiAwareSpecification {
 
     def amqp = Mock(AmqpService)
+    def errorPublisher = Mock(ErrorPublisher)
     def componentBuilder = Mock(FunctionBuilder)
     def injector
 
@@ -18,11 +19,11 @@ class SailorSpec extends ApiAwareSpecification {
             @Override
             protected void configure() {
                 bind(AmqpService.class).toInstance(amqp);
+                bind(ErrorPublisher.class).toInstance(errorPublisher);
             }
         })
 
         sailor = injector.getInstance(Sailor.class)
-        sailor.amqp = amqp
         sailor.setFunctionBuilder(componentBuilder)
         sailor.setStep(TestUtils.createStep())
     }
@@ -36,7 +37,7 @@ class SailorSpec extends ApiAwareSpecification {
 
         then:
         1 * componentBuilder.build() >> component
-        1 * amqp.connect()
+        1 * amqp.connectAndSubscribe()
         1 * amqp.subscribeConsumer(component)
     }
 
@@ -46,8 +47,8 @@ class SailorSpec extends ApiAwareSpecification {
 
         then:
         1 * componentBuilder.build() >> { throw new RuntimeException("OMG. I can't build the component") }
-        1 * amqp.connect()
-        1 * amqp.sendError(
+        1 * amqp.connectAndSubscribe()
+        1 * errorPublisher.publish(
                 {
 
                     it.message == "OMG. I can't build the component"

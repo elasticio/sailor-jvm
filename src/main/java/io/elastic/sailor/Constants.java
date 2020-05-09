@@ -63,6 +63,9 @@ public final class Constants {
             "ELASTICIO_API_REQUEST_RETRY_ATTEMPTS";
     public static final String ENV_VAR_NO_SELF_PASSTRHOUGH =
             "ELASTICIO_NO_SELF_PASSTRHOUGH";
+    public static final String ENV_VAR_AMQP_PUBLISH_RETRY_ATTEMPTS = "ELASTICIO_AMQP_PUBLISH_RETRY_ATTEMPTS";
+    public static final String ENV_VAR_AMQP_PUBLISH_RETRY_DELAY = "ELASTICIO_AMQP_PUBLISH_RETRY_DELAY";
+    public static final String ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY = "ELASTICIO_AMQP_PUBLISH_MAX_RETRY_DELAY";
 
     public static final String AMQP_META_HEADER_PREFIX = "x-eio-meta-";
     public static final String AMQP_META_HEADER_TRACE_ID = Constants.AMQP_META_HEADER_PREFIX + "trace-id";

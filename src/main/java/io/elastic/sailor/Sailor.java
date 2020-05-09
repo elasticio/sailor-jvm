@@ -24,6 +24,7 @@ public class Sailor {
     private ApiClient apiClient;
     private boolean isShutdownRequired;
     private AmqpService amqp;
+    private ErrorPublisher errorPublisher;
 
     public static void main(String[] args) throws IOException {
         logger.info("About to init Sailor");
@@ -84,7 +85,9 @@ public class Sailor {
 
         amqp = injector.getInstance(AmqpService.class);
         logger.info("Connecting to AMQP");
-        amqp.connect();
+        amqp.connectAndSubscribe();
+
+        errorPublisher = injector.getInstance(ErrorPublisher.class);
 
         try {
             logger.info("Processing flow step: {}", this.step.getId());
@@ -165,6 +168,6 @@ public class Sailor {
         headers.put("stepId", containerContext.getStepId());
         headers.put("compId", containerContext.getCompId());
 
-        amqp.sendError(e, Utils.buildAmqpProperties(headers), null);
+        this.errorPublisher.publish(e, Utils.buildAmqpProperties(headers), null);
     }
 }

@@ -5,6 +5,7 @@ import io.elastic.api.*;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.impl.AmqpServiceImpl;
 import io.elastic.sailor.impl.CryptoServiceImpl;
+import io.elastic.sailor.impl.MessagePublisherImpl;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -48,13 +49,17 @@ public class StartupShutdownAction implements Function {
                 configuration.getString(Constants.ENV_VAR_MESSAGE_CRYPTO_IV));
 
         final AmqpServiceImpl amqp = new AmqpServiceImpl(cipher);
+        final String publishExchangeName = configuration.getString(Constants.ENV_VAR_PUBLISH_MESSAGES_TO);
+        final String dataRoutingKey = configuration.getString(Constants.ENV_VAR_DATA_ROUTING_KEY);
 
         amqp.setAmqpUri(configuration.getString(Constants.ENV_VAR_AMQP_URI));
-        amqp.setPublishExchangeName(configuration.getString(Constants.ENV_VAR_PUBLISH_MESSAGES_TO));
-        amqp.setDataRoutingKey(configuration.getString(Constants.ENV_VAR_DATA_ROUTING_KEY));
         amqp.setPrefetchCount(1);
 
-        amqp.connect();
+        amqp.connectAndSubscribe();
+
+
+        final MessagePublisherImpl publisher = new MessagePublisherImpl(
+                publishExchangeName, Integer.MAX_VALUE, 0,0, amqp);
 
         final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
@@ -69,7 +74,7 @@ public class StartupShutdownAction implements Function {
                 .add("configuration", configuration)
                 .build();
 
-        amqp.sendData(JSON.stringify(payload).getBytes(), properties);
+        publisher.publish(dataRoutingKey, JSON.stringify(payload).getBytes(), properties);
 
     }
 }

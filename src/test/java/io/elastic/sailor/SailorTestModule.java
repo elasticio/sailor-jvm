@@ -59,6 +59,10 @@ public class SailorTestModule extends AbstractModule {
 
         bindRequiredIntegerEnvVar(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS, 5);
 
+        bindRequiredIntegerEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_ATTEMPTS, Integer.MAX_VALUE);
+        bindRequiredLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_DELAY, 100L);
+        bindRequiredLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY, 5 * 60 * 1000L);
+
     }
 
     void bindRequiredStringEnvVar(final String name, final String value) {
@@ -69,6 +73,12 @@ public class SailorTestModule extends AbstractModule {
 
     void bindRequiredIntegerEnvVar(final String name, final Integer value) {
         bind(Integer.class)
+                .annotatedWith(Names.named(name))
+                .toInstance(value);
+    }
+
+    void bindRequiredLongEnvVar(final String name, final Long value) {
+        bind(Long.class)
                 .annotatedWith(Names.named(name))
                 .toInstance(value);
     }
