@@ -42,10 +42,6 @@ class ShutdownIntegrationSpec extends Specification {
 
     @Shared
     def stepCfg
-    def threadId = prefix + '_thread_id_123456'
-
-    @Shared
-    def messageId = UUID.randomUUID().toString()
 
     @Shared
     def sailor;
