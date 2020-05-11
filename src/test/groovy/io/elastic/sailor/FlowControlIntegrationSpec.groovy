@@ -59,12 +59,6 @@ class FlowControlIntegrationSpec extends Specification {
     def sailor;
 
     @Shared
-    def startupPayload
-
-    @Shared
-    def shutdownFlowId
-
-    @Shared
     Server server
 
     @Shared
@@ -186,16 +180,12 @@ class FlowControlIntegrationSpec extends Specification {
                 if ("/sailor-support/hooks/task/${flowId}/startup/data".toString().equals(target)) {
                     if (baseRequest.getMethod().equalsIgnoreCase("post")) {
                         def payload = Json.createReader(baseRequest.getInputStream()).readObject()
-                        FlowControlIntegrationSpec.this.startupPayload = payload
                         return Json.createObjectBuilder()
                                 .add("taskId", flowId)
                                 .add("payload", payload)
                                 .build()
                     }
                     else {
-                        if (baseRequest.getMethod().equalsIgnoreCase("delete")) {
-                            FlowControlIntegrationSpec.this.shutdownFlowId = flowId
-                        }
                         return Json.createObjectBuilder()
                                 .add("method", baseRequest.getMethod())
                                 .build()
@@ -216,8 +206,6 @@ class FlowControlIntegrationSpec extends Specification {
     def cleanup() {
         System.clearProperty(Constants.ENV_VAR_STARTUP_REQUIRED)
         System.clearProperty(Constants.ENV_VAR_HOOK_SHUTDOWN)
-        startupPayload = null
-        shutdownFlowId = null
     }
 
     def "should retry messages"() {
@@ -256,6 +244,7 @@ class FlowControlIntegrationSpec extends Specification {
                 payload)
 
         amqp.subscribeChannel.queuePurge(dataQueue)
+        amqp.subscribeChannel.queuePurge(errorsQueue)
 
         1.upto(3) {
             publishChannel.basicPublish(
