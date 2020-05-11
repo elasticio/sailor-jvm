@@ -21,7 +21,7 @@ class MessagePublisherImplSpec extends Specification {
 
     def publisher = new MessagePublisherImpl(exchangeName, 3, 1, 35, amqp)
 
-    def "should  publish and receive confirmation successfuly"() {
+    def "should  publish and receive confirmation successfully"() {
         setup:
         def message = "Hello world".getBytes()
 
