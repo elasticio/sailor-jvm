@@ -190,7 +190,7 @@ class ShutdownIntegrationSpec extends Specification {
     }
 
     def "should execute shutdown successfully"() {
-        def blockingVar = new BlockingVariable(5)
+        def blockingVar = new BlockingVariable(20)
         setup:
         System.setProperty(Constants.ENV_VAR_HOOK_SHUTDOWN, "1");
         System.setProperty(Constants.ENV_VAR_FUNCTION, 'startupShutdownAction')
