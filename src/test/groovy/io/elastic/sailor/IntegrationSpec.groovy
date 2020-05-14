@@ -278,7 +278,7 @@ class IntegrationSpec extends Specification {
         def result = blockingVar.get()
 
         println result.properties
-        result.properties.headers.size() == 12
+        result.properties.headers.size() == 13
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == System.getProperty(Constants.ENV_VAR_FUNCTION)
@@ -287,6 +287,7 @@ class IntegrationSpec extends Specification {
         result.properties.headers.taskId.toString() == headers.taskId
         result.properties.headers.execId.toString() == headers.execId
         result.properties.headers.containerId.toString() == 'container_12345'
+        result.properties.headers.workspaceId.toString() == 'workspace_123'
         result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
         result.properties.headers.threadId.toString() == traceId
         result.properties.headers.messageId.toString() == result.message.id.toString()
@@ -362,7 +363,7 @@ class IntegrationSpec extends Specification {
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
 
-        result.properties.headers.size() == 12
+        result.properties.headers.size() == 13
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == headers.function
@@ -371,6 +372,7 @@ class IntegrationSpec extends Specification {
         result.properties.headers.taskId.toString() == headers.taskId
         result.properties.headers.execId.toString() == headers.execId
         result.properties.headers.containerId.toString() == 'container_12345'
+        result.properties.headers.workspaceId.toString() == 'workspace_123'
         result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
         result.properties.headers.threadId.toString() == threadId
         result.properties.headers.messageId.toString() == result.message.id.toString()
@@ -458,7 +460,7 @@ class IntegrationSpec extends Specification {
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
 
-        result.properties.headers.size() == 12
+        result.properties.headers.size() == 13
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == headers.function
@@ -467,6 +469,7 @@ class IntegrationSpec extends Specification {
         result.properties.headers.taskId.toString() == headers.taskId
         result.properties.headers.execId.toString() == headers.execId
         result.properties.headers.containerId.toString() == 'container_12345'
+        result.properties.headers.workspaceId.toString() == 'workspace_123'
         result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
         result.properties.headers.messageId.toString() == result.message.id.toString()
         result.properties.headers.parentMessageId.toString() == messageId
@@ -833,7 +836,14 @@ class IntegrationSpec extends Specification {
         result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
         result.properties.headers.messageId.toString() != null
         result.properties.headers.parentMessageId.toString() == messageId
-        result.properties.headers.containerId.toString() == 'container_12345'
+        result.properties.headers.containerId.toString() == System.getProperty(Constants.ENV_VAR_CONTAINER_ID)
+        result.properties.headers.workspaceId.toString() == System.getProperty(Constants.ENV_VAR_WORKSPACE_ID)
+        result.properties.headers.execId.toString() == System.getProperty(Constants.ENV_VAR_EXEC_ID)
+        result.properties.headers.taskId.toString() == System.getProperty(Constants.ENV_VAR_FLOW_ID)
+        result.properties.headers.userId.toString() == System.getProperty(Constants.ENV_VAR_USER_ID)
+        result.properties.headers.stepId.toString() == System.getProperty(Constants.ENV_VAR_STEP_ID)
+        result.properties.headers.compId.toString() == System.getProperty(Constants.ENV_VAR_COMP_ID)
+        result.properties.headers.function.toString() == System.getProperty(Constants.ENV_VAR_FUNCTION)
 
         then: "Emitted error received"
         def errorJson = JSON.parseObject(result.error);

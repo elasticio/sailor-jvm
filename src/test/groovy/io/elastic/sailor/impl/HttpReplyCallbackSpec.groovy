@@ -19,7 +19,7 @@ class HttpReplyCallbackSpec extends Specification {
     def headers = Utils.buildAmqpProperties(["reply_to": "reply_queue_123"])
 
     def ctx = new ExecutionContext(
-            TestUtils.createStep(), new Message.Builder().build(), headers, "container_123")
+            TestUtils.createStep(), new Message.Builder().build(), headers, new ContainerContext())
 
     def callback = new HttpReplyCallback(ctx, publisher, cipher)
 

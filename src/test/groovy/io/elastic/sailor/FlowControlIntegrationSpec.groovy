@@ -280,7 +280,7 @@ class FlowControlIntegrationSpec extends Specification {
         def result = blockingVar.get()
 
         println result.properties
-        result.properties.headers.size() == 12
+        result.properties.headers.size() == 13
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == System.getProperty(Constants.ENV_VAR_FUNCTION)
@@ -289,6 +289,7 @@ class FlowControlIntegrationSpec extends Specification {
         result.properties.headers.taskId.toString() == headers.taskId
         result.properties.headers.execId.toString() == headers.execId
         result.properties.headers.containerId.toString() == 'container_12345'
+        result.properties.headers.workspaceId.toString() == 'workspace_123'
         result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
         result.properties.headers.threadId.toString() == traceId
 

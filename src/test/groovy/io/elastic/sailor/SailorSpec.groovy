@@ -54,9 +54,15 @@ class SailorSpec extends ApiAwareSpecification {
                     it.message == "OMG. I can't build the component"
                 },
                 {
-                    it.headers == ['stepId':'step_1', 'compId':'5559edd38968ec0736000456',
-                                   'userId':'5559edd38968ec0736000002', 'taskId':'5559edd38968ec0736000003',
-                                   'execId':'some-exec-id']
+                    it.headers == ['stepId':'step_1',
+                                   'compId':'5559edd38968ec0736000456',
+                                   'userId':'5559edd38968ec0736000002',
+                                   'taskId':'5559edd38968ec0736000003',
+                                   'execId':'some-exec-id',
+                                   'workspaceId': 'workspace_123',
+                                   'containerId': 'container_123',
+                                   'function': 'myFunction']
+
                 },
                 null)
     }

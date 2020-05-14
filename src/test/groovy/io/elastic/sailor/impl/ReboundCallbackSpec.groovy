@@ -13,7 +13,7 @@ import spock.lang.Unroll
 class ReboundCallbackSpec extends Specification{
 
     ExecutionContext ctx = new ExecutionContext(
-            TestUtils.createStep(), new Message.Builder().build(), Utils.buildAmqpProperties([:]), "container_123")
+            TestUtils.createStep(), new Message.Builder().build(), Utils.buildAmqpProperties([:]), new ContainerContext())
 
     CryptoServiceImpl cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 

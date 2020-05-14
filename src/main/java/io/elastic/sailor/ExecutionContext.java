@@ -19,17 +19,17 @@ public class ExecutionContext {
     private final Step step;
     private final Message message;
     private final AMQP.BasicProperties amqpProperties;
-    private final String containerId;
+    private final ContainerContext containerContext;
 
     public ExecutionContext(
             final Step step,
             final Message message,
             final AMQP.BasicProperties amqpProperties,
-            final String containerId) {
+            final ContainerContext containerContext) {
         this.step = step;
         this.message = message;
         this.amqpProperties = amqpProperties;
-        this.containerId = containerId;
+        this.containerContext = containerContext;
     }
 
     public Step getStep() {
@@ -42,7 +42,8 @@ public class ExecutionContext {
 
         final Map<String, Object> headers = amqpProperties.getHeaders();
         result.put(Constants.AMQP_HEADER_THREAD_ID, Utils.getThreadId(amqpProperties));
-        result.put(Constants.AMQP_HEADER_CONTAINER_ID, this.containerId);
+        result.put(Constants.AMQP_HEADER_CONTAINER_ID, this.containerContext.getContainerId());
+        result.put(Constants.AMQP_HEADER_WORKSPACE_ID, this.containerContext.getWorkspaceId());
         result.put(Constants.AMQP_HEADER_EXEC_ID, headers.get(Constants.AMQP_HEADER_EXEC_ID));
         result.put(Constants.AMQP_HEADER_TASK_ID, headers.get(Constants.AMQP_HEADER_TASK_ID));
         result.put(Constants.AMQP_HEADER_USER_ID, headers.get(Constants.AMQP_HEADER_USER_ID));

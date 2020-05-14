@@ -31,7 +31,6 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindOptionalStringEnvVar(Constants.ENV_VAR_FLOW_VERSION);
         bindOptionalStringEnvVar(Constants.ENV_VAR_TASK_USER_EMAIL);
         bindOptionalStringEnvVar(Constants.ENV_VAR_TENANT_ID);
-        bindOptionalStringEnvVar(Constants.ENV_VAR_WORKSPACE_ID);
 
 
         // optional env vars

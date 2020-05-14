@@ -171,7 +171,7 @@ public class ContainerContext {
         return workspaceId;
     }
 
-    @Inject(optional = true)
+    @Inject
     public void setWorkspaceId(@Named(Constants.ENV_VAR_WORKSPACE_ID) String workspaceId) {
         this.workspaceId = workspaceId;
     }

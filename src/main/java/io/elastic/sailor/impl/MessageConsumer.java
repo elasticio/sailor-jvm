@@ -98,7 +98,7 @@ public class MessageConsumer extends DefaultConsumer {
 
         final Message message = Utils.createMessage(payload);
 
-        return new ExecutionContext(this.step, message, properties, this.containerContext.getContainerId());
+        return new ExecutionContext(this.step, message, properties, this.containerContext);
     }
 
 
