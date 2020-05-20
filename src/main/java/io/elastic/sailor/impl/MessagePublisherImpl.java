@@ -11,6 +11,8 @@ import io.elastic.sailor.MessagePublisher;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
 public class MessagePublisherImpl implements MessagePublisher {
@@ -45,12 +47,13 @@ public class MessagePublisherImpl implements MessagePublisher {
         logger.info("Message headers: {}", options.getHeaders());
 
         boolean retryPublish = true;
-        int currentPublishAttempt = 1;
+        int retryCount = 0;
 
         while (retryPublish) {
             final Channel publishChannel = getPublishChannel();
+            final AMQP.BasicProperties properties = getRetryProperties(options, retryCount);
             try {
-                publishChannel.basicPublish(this.publishExchangeName, routingKey, options, payload);
+                publishChannel.basicPublish(this.publishExchangeName, routingKey, properties, payload);
             } catch (IOException e) {
                 throw new RuntimeException(String.format("Failed to publish message to exchange %s", publishExchangeName), e);
             }
@@ -58,19 +61,31 @@ public class MessagePublisherImpl implements MessagePublisher {
             retryPublish = !waitForConfirms(publishChannel);
 
             if (retryPublish) {
-                sleep(currentPublishAttempt);
+                sleep(retryCount + 1);
 
-                if (currentPublishAttempt >= this.publishMaxRetries) {
+                if (retryCount >= this.publishMaxRetries) {
                     throw new IllegalStateException(
                             String.format("Failed to publish the message to a queue after %s retries. " +
                                     "The limit of %s retries reached.",
-                                    currentPublishAttempt, this.publishMaxRetries));
+                                    retryCount, this.publishMaxRetries));
                 }
-                currentPublishAttempt++;
+                retryCount++;
             }
 
             logger.info("Successfully published data to {}", this.publishExchangeName);
         }
+    }
+
+    private AMQP.BasicProperties getRetryProperties(final AMQP.BasicProperties properties, final int retryCount) {
+        if (retryCount < 1) {
+            return properties;
+        }
+
+        final Map<String, Object> retryHeaders = new HashMap();
+        retryHeaders.putAll(properties.getHeaders());
+        retryHeaders.put(Constants.AMQP_HEADER_RETRY, retryCount);
+
+        return properties.builder().headers(retryHeaders).build();
     }
 
     private boolean waitForConfirms(Channel publishChannel) {

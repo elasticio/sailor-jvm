@@ -47,7 +47,9 @@ class MessagePublisherImplSpec extends Specification {
         1 * amqp.getConnection() >> connection
         1 * connection.createChannel() >> channel
         1 * channel.confirmSelect()
-        3 * channel.basicPublish(exchangeName, routingKey, headers, message)
+        1 * channel.basicPublish(exchangeName, routingKey, Utils.buildAmqpProperties(["flow_id": "flow_123"]), message)
+        1 * channel.basicPublish(exchangeName, routingKey, Utils.buildAmqpProperties(["flow_id": "flow_123", "retry": 1]), message)
+        1 * channel.basicPublish(exchangeName, routingKey, Utils.buildAmqpProperties(["flow_id": "flow_123", "retry": 2]), message)
         2 * channel.waitForConfirms(_) >> false
         1 * channel.waitForConfirms(_) >> true
     }
@@ -63,8 +65,11 @@ class MessagePublisherImplSpec extends Specification {
         1 * amqp.getConnection() >> connection
         1 * connection.createChannel() >> channel
         1 * channel.confirmSelect()
-        3 * channel.basicPublish(exchangeName, routingKey, headers, message)
-        3 * channel.waitForConfirms(_) >> false
+        1 * channel.basicPublish(exchangeName, routingKey, Utils.buildAmqpProperties(["flow_id": "flow_123"]), message)
+        1 * channel.basicPublish(exchangeName, routingKey, Utils.buildAmqpProperties(["flow_id": "flow_123", "retry": 1]), message)
+        1 * channel.basicPublish(exchangeName, routingKey, Utils.buildAmqpProperties(["flow_id": "flow_123", "retry": 2]), message)
+        1 * channel.basicPublish(exchangeName, routingKey, Utils.buildAmqpProperties(["flow_id": "flow_123", "retry": 3]), message)
+        4 * channel.waitForConfirms(_) >> false
         def e = thrown(IllegalStateException)
         e.message == "Failed to publish the message to a queue after 3 retries. The limit of 3 retries reached."
     }

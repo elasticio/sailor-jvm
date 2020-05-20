@@ -83,6 +83,7 @@ public final class Constants {
     public static final String AMQP_HEADER_THREAD_ID = "threadId";
     public static final String AMQP_HEADER_CONTAINER_ID = "containerId";
     public static final String AMQP_HEADER_WORKSPACE_ID = "workspaceId";
+    public static final String AMQP_HEADER_RETRY = "retry";
 
     public static final String MDC_THREAD_ID = AMQP_HEADER_THREAD_ID;
     public static final String MDC_MESSAGE_ID = AMQP_HEADER_MESSAGE_ID;
