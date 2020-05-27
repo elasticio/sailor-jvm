@@ -24,6 +24,7 @@ public class Sailor {
     private ApiClient apiClient;
     private boolean isShutdownRequired;
     private AmqpService amqp;
+    private ErrorPublisher errorPublisher;
 
     public static void main(String[] args) throws IOException {
         logger.info("About to init Sailor");
@@ -84,7 +85,9 @@ public class Sailor {
 
         amqp = injector.getInstance(AmqpService.class);
         logger.info("Connecting to AMQP");
-        amqp.connect();
+        amqp.connectAndSubscribe();
+
+        errorPublisher = injector.getInstance(ErrorPublisher.class);
 
         try {
             logger.info("Processing flow step: {}", this.step.getId());
@@ -159,12 +162,15 @@ public class Sailor {
 
     private void reportException(final Exception e) {
         final Map<String, Object> headers = new HashMap<String, Object>();
-        headers.put("execId", containerContext.getExecId());
-        headers.put("taskId", containerContext.getFlowId());
-        headers.put("userId", containerContext.getUserId());
-        headers.put("stepId", containerContext.getStepId());
-        headers.put("compId", containerContext.getCompId());
+        headers.put(Constants.AMQP_HEADER_CONTAINER_ID, containerContext.getContainerId());
+        headers.put(Constants.AMQP_HEADER_WORKSPACE_ID, containerContext.getWorkspaceId());
+        headers.put(Constants.AMQP_HEADER_EXEC_ID, containerContext.getExecId());
+        headers.put(Constants.AMQP_HEADER_TASK_ID, containerContext.getFlowId());
+        headers.put(Constants.AMQP_HEADER_USER_ID, containerContext.getUserId());
+        headers.put(Constants.AMQP_HEADER_STEP_ID, containerContext.getStepId());
+        headers.put(Constants.AMQP_HEADER_COMPONENT_ID, containerContext.getCompId());
+        headers.put(Constants.AMQP_HEADER_FUNCTION, containerContext.getFunction());
 
-        amqp.sendError(e, Utils.buildAmqpProperties(headers), null);
+        this.errorPublisher.publish(e, Utils.buildAmqpProperties(headers), null);
     }
 }

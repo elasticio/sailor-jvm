@@ -2,34 +2,39 @@ package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
+import com.rabbitmq.client.AMQP;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.HttpReply;
-import io.elastic.sailor.AmqpService;
 import io.elastic.sailor.ExecutionContext;
+import io.elastic.sailor.MessagePublisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import java.io.*;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 public class HttpReplyCallback implements EventEmitter.Callback {
 
     private static final Logger logger = LoggerFactory.getLogger(DataCallback.class);
 
-    private AmqpService amqp;
+    private MessagePublisher messagePublisher;;
     private CryptoServiceImpl cipher;
     private ExecutionContext executionContext;
 
     @Inject
     public HttpReplyCallback(
             final @Assisted ExecutionContext executionContext,
-            final AmqpService amqp,
+            final MessagePublisher messagePublisher,
             final CryptoServiceImpl cipher) {
         this.executionContext = executionContext;
-        this.amqp = amqp;
+        this.messagePublisher = messagePublisher;
         this.cipher = cipher;
     }
 
@@ -48,7 +53,7 @@ public class HttpReplyCallback implements EventEmitter.Callback {
         // encrypt
         byte[] encryptedPayload = cipher.encryptJsonObject(payload).getBytes();
 
-        amqp.sendHttpReply(encryptedPayload, executionContext.buildAmqpProperties());
+        sendHttpReply(encryptedPayload, executionContext.buildAmqpProperties());
     }
 
     private String getContentAsString(final HttpReply reply) {
@@ -70,5 +75,16 @@ public class HttpReplyCallback implements EventEmitter.Callback {
         }
 
         return output.toString();
+    }
+
+    private void sendHttpReply(byte[] payload, AMQP.BasicProperties options) {
+        final Map<String, Object> headers = options.getHeaders();
+        final Object routingKey = headers.get("reply_to");
+
+        if (routingKey == null) {
+            throw new RuntimeException(
+                    "Component emitted 'httpReply' event but 'reply_to' was not found in AMQP headers");
+        }
+        messagePublisher.publish(routingKey.toString(), payload, options);
     }
 }

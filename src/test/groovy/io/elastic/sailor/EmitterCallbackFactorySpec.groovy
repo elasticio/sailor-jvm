@@ -17,7 +17,7 @@ class EmitterCallbackFactorySpec extends ApiAwareSpecification {
     EmitterCallbackFactory factory;
 
     ExecutionContext ctx = new ExecutionContext(
-            TestUtils.createStep(), new Message.Builder().build(), Utils.buildAmqpProperties([:]), "container_123");
+            TestUtils.createStep(), new Message.Builder().build(), Utils.buildAmqpProperties([:]), new ContainerContext());
 
     def setupSpec() {
         Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule(), new AmqpAwareModule());

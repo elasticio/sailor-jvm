@@ -63,6 +63,9 @@ public final class Constants {
             "ELASTICIO_API_REQUEST_RETRY_ATTEMPTS";
     public static final String ENV_VAR_NO_SELF_PASSTRHOUGH =
             "ELASTICIO_NO_SELF_PASSTRHOUGH";
+    public static final String ENV_VAR_AMQP_PUBLISH_RETRY_ATTEMPTS = "ELASTICIO_AMQP_PUBLISH_RETRY_ATTEMPTS";
+    public static final String ENV_VAR_AMQP_PUBLISH_RETRY_DELAY = "ELASTICIO_AMQP_PUBLISH_RETRY_DELAY";
+    public static final String ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY = "ELASTICIO_AMQP_PUBLISH_MAX_RETRY_DELAY";
 
     public static final String AMQP_META_HEADER_PREFIX = "x-eio-meta-";
     public static final String AMQP_META_HEADER_TRACE_ID = Constants.AMQP_META_HEADER_PREFIX + "trace-id";
@@ -79,6 +82,8 @@ public final class Constants {
     public final static String AMQP_HEADER_START_TIMESTAMP = "start";
     public static final String AMQP_HEADER_THREAD_ID = "threadId";
     public static final String AMQP_HEADER_CONTAINER_ID = "containerId";
+    public static final String AMQP_HEADER_WORKSPACE_ID = "workspaceId";
+    public static final String AMQP_HEADER_RETRY = "retry";
 
     public static final String MDC_THREAD_ID = AMQP_HEADER_THREAD_ID;
     public static final String MDC_MESSAGE_ID = AMQP_HEADER_MESSAGE_ID;

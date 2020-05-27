@@ -4,6 +4,7 @@ import io.elastic.api.Message
 import io.elastic.sailor.AmqpService
 import io.elastic.sailor.ContainerContext
 import io.elastic.sailor.ExecutionContext
+import io.elastic.sailor.MessagePublisher
 import io.elastic.sailor.TestUtils
 import io.elastic.sailor.Utils
 import spock.lang.Specification
@@ -12,13 +13,13 @@ import spock.lang.Unroll
 class ReboundCallbackSpec extends Specification{
 
     ExecutionContext ctx = new ExecutionContext(
-            TestUtils.createStep(), new Message.Builder().build(), Utils.buildAmqpProperties([:]), "container_123")
+            TestUtils.createStep(), new Message.Builder().build(), Utils.buildAmqpProperties([:]), new ContainerContext())
 
     CryptoServiceImpl cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 
-    AmqpService amqp = Mock()
+    MessagePublisher publisher = Mock()
 
-    def callback = new ReboundCallback(ctx, amqp, cipher, 5, 1500)
+    def callback = new ReboundCallback(ctx, publisher, cipher, 5, 1500, "reboundRoutingKey")
 
 
     @Unroll

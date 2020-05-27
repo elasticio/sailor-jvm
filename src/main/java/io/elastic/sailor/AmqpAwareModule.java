@@ -11,6 +11,8 @@ public class AmqpAwareModule extends AbstractModule {
     protected void configure() {
         bind(AmqpService.class).to(AmqpServiceImpl.class);
         bind(MessageProcessor.class).to(MessageProcessorImpl.class);
+        bind(MessagePublisher.class).to(MessagePublisherImpl.class);
+        bind(ErrorPublisher.class).to(ErrorPublisherImpl.class);
 
 
         install(new FactoryModuleBuilder()

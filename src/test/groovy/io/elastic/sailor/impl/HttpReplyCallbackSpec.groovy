@@ -5,20 +5,23 @@ import io.elastic.api.Message
 import io.elastic.sailor.AmqpService
 import io.elastic.sailor.ContainerContext
 import io.elastic.sailor.ExecutionContext
+import io.elastic.sailor.MessagePublisher
 import io.elastic.sailor.TestUtils
 import io.elastic.sailor.Utils
 import spock.lang.Shared
 import spock.lang.Specification
 
 class HttpReplyCallbackSpec extends Specification {
-    def amqp = Mock(AmqpService)
+    def publisher = Mock(MessagePublisher)
     @Shared
     def cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 
-    def ctx = new ExecutionContext(
-            TestUtils.createStep(), new Message.Builder().build(), Utils.buildAmqpProperties([:]), "container_123")
+    def headers = Utils.buildAmqpProperties(["reply_to": "reply_queue_123"])
 
-    def callback = new HttpReplyCallback(ctx, amqp, cipher)
+    def ctx = new ExecutionContext(
+            TestUtils.createStep(), new Message.Builder().build(), headers, new ContainerContext())
+
+    def callback = new HttpReplyCallback(ctx, publisher, cipher)
 
     def "should  successfully"() {
         setup:
@@ -31,6 +34,6 @@ class HttpReplyCallbackSpec extends Specification {
         callback.receive(reply)
 
         then:
-        1 * amqp.sendHttpReply(_, _)
+        1 * publisher.publish("reply_queue_123", _, _)
     }
 }

@@ -1,14 +1,13 @@
 package io.elastic.sailor
 
 import com.rabbitmq.client.AMQP
+import com.rabbitmq.client.Channel
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
-import io.elastic.api.HttpReply
 import io.elastic.api.JSON
-import io.elastic.api.Message
-import io.elastic.sailor.component.StartupShutdownAction
 import io.elastic.sailor.impl.AmqpServiceImpl
 import io.elastic.sailor.impl.CryptoServiceImpl
+import io.elastic.sailor.impl.MessagePublisherImpl
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
@@ -43,10 +42,6 @@ class ShutdownIntegrationSpec extends Specification {
 
     @Shared
     def stepCfg
-    def threadId = prefix + '_thread_id_123456'
-
-    @Shared
-    def messageId = UUID.randomUUID().toString()
 
     @Shared
     def sailor;
@@ -59,6 +54,9 @@ class ShutdownIntegrationSpec extends Specification {
 
     @Shared
     Server server
+
+    @Shared
+    Channel publishChannel
 
     def setupSpec() {
 
@@ -92,11 +90,10 @@ class ShutdownIntegrationSpec extends Specification {
         amqp = new AmqpServiceImpl(cipher)
 
         amqp.setAmqpUri(stepCfg.getString(Constants.ENV_VAR_AMQP_URI))
-        amqp.setPublishExchangeName(stepCfg.getString(Constants.ENV_VAR_PUBLISH_MESSAGES_TO))
         amqp.setSubscribeExchangeName(stepCfg.getString(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
         amqp.setPrefetchCount(1)
 
-        amqp.connect()
+        amqp.connectAndSubscribe()
 
         amqp.subscribeChannel.exchangeDeclare(
                 stepCfg.getString(Constants.ENV_VAR_LISTEN_MESSAGES_ON), 'direct', true, false, [:])
@@ -108,17 +105,24 @@ class ShutdownIntegrationSpec extends Specification {
                 stepCfg.getString(Constants.ENV_VAR_DATA_ROUTING_KEY)
         )
 
-        amqp.publishChannel.exchangeDeclare(
-                stepCfg.getString(Constants.ENV_VAR_PUBLISH_MESSAGES_TO), 'direct', true, false, [:])
-        amqp.publishChannel.queueDeclare(dataQueue, true, false, false, [:])
+        def messagePublisher = new MessagePublisherImpl(
+                System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
+                Integer.MAX_VALUE,
+                100, 5 * 60 * 1000, amqp)
 
-        amqp.publishChannel.queueBind(
+        publishChannel = messagePublisher.getPublishChannel()
+
+        publishChannel.exchangeDeclare(
+                stepCfg.getString(Constants.ENV_VAR_PUBLISH_MESSAGES_TO), 'direct', true, false, [:])
+        publishChannel.queueDeclare(dataQueue, true, false, false, [:])
+
+        publishChannel.queueBind(
                 dataQueue,
                 stepCfg.getString(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
                 stepCfg.getString(Constants.ENV_VAR_DATA_ROUTING_KEY)
         )
 
-        amqp.publishChannel.queuePurge(stepCfg.getString(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
+        publishChannel.queuePurge(stepCfg.getString(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
 
         server = new Server(8182);
 
@@ -186,12 +190,12 @@ class ShutdownIntegrationSpec extends Specification {
     }
 
     def "should execute shutdown successfully"() {
-        def blockingVar = new BlockingVariable(5)
+        def blockingVar = new BlockingVariable(20)
         setup:
         System.setProperty(Constants.ENV_VAR_HOOK_SHUTDOWN, "1");
         System.setProperty(Constants.ENV_VAR_FUNCTION, 'startupShutdownAction')
 
-        def consumer = new DefaultConsumer(amqp.publishChannel) {
+        def consumer = new DefaultConsumer(publishChannel) {
             @Override
             public void handleDelivery(String consumerTag,
                                        Envelope envelope,
@@ -199,14 +203,14 @@ class ShutdownIntegrationSpec extends Specification {
                                        byte[] body)
                     throws IOException {
 
-                ShutdownIntegrationSpec.this.amqp.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                ShutdownIntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
                 def message = JSON.parseObject(bodyString)
                 blockingVar.set([message:message, properties:properties]);
             }
         }
 
-        def consumerTag = amqp.publishChannel.basicConsume(dataQueue, consumer)
+        def consumerTag = publishChannel.basicConsume(dataQueue, consumer)
 
         when:
 
@@ -224,6 +228,6 @@ class ShutdownIntegrationSpec extends Specification {
 
         cleanup:
         sailor.amqp == null
-        amqp.publishChannel.basicCancel(consumerTag)
+        publishChannel.basicCancel(consumerTag)
     }
 }

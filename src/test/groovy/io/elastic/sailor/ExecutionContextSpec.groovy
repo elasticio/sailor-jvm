@@ -21,7 +21,7 @@ class ExecutionContextSpec extends Specification {
                 TestUtils.createStep(),
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                "container_123");
+                new ContainerContext());
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -49,7 +49,7 @@ class ExecutionContextSpec extends Specification {
                 TestUtils.createStep(),
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                "container_123");
+                new ContainerContext());
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -80,7 +80,7 @@ class ExecutionContextSpec extends Specification {
                 TestUtils.createStep(),
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                "container_123");
+                new ContainerContext());
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -114,7 +114,7 @@ class ExecutionContextSpec extends Specification {
                 TestUtils.createStep(),
                 msg,
                 props,
-                "container_123");
+                new ContainerContext());
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -145,7 +145,7 @@ class ExecutionContextSpec extends Specification {
                 TestUtils.createStep(),
                 msg,
                 props,
-                "container_123");
+                new ContainerContext());
         def uuid = UUID.randomUUID()
 
         when:
@@ -185,7 +185,7 @@ class ExecutionContextSpec extends Specification {
                 TestUtils.createStep(),
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                "container_123");
+                new ContainerContext());
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -211,7 +211,7 @@ class ExecutionContextSpec extends Specification {
                 TestUtils.createStep(),
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                "container_123");
+                new ContainerContext());
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -249,7 +249,7 @@ class ExecutionContextSpec extends Specification {
                 new Step(step),
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                "container_123");
+                new ContainerContext());
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -308,7 +308,7 @@ class ExecutionContextSpec extends Specification {
                 new Step(step),
                 new Message.Builder().passthrough(passthroughSoFar).build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                "container_123");
+                new ContainerContext());
 
         when:
         def result = ctx.createPublisheableMessage(emittedMsg)
@@ -355,7 +355,7 @@ class ExecutionContextSpec extends Specification {
                 new Step(step, true),
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),
-                "container_12345");
+                new ContainerContext());
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -403,7 +403,7 @@ class ExecutionContextSpec extends Specification {
                 new Step(step, true),
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),
-                "container_12345");
+                new ContainerContext());
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -472,7 +472,7 @@ class ExecutionContextSpec extends Specification {
                 new Step(step, true),
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),
-                "container_12345");
+                new ContainerContext());
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)

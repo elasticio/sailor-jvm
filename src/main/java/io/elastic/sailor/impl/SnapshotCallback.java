@@ -2,22 +2,27 @@ package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.assistedinject.Assisted;
-import io.elastic.sailor.AmqpService;
+import com.google.inject.name.Named;
+import io.elastic.sailor.Constants;
 import io.elastic.sailor.ExecutionContext;
+import io.elastic.sailor.MessagePublisher;
 
 import javax.json.JsonObject;
 
 public class SnapshotCallback extends CountingCallbackImpl {
 
     private ExecutionContext executionDetails;
-    private AmqpService amqp;
+    private MessagePublisher messagePublisher;
+    private String routingKey;
 
     @Inject
     public SnapshotCallback(
             @Assisted ExecutionContext executionDetails,
-            AmqpService amqp) {
+            MessagePublisher messagePublisher,
+            @Named(Constants.ENV_VAR_SNAPSHOT_ROUTING_KEY) String routingKey) {
         this.executionDetails = executionDetails;
-        this.amqp = amqp;
+        this.messagePublisher = messagePublisher;
+        this.routingKey = routingKey;
     }
 
     @Override
@@ -26,6 +31,6 @@ public class SnapshotCallback extends CountingCallbackImpl {
 
         byte[] payload = snapshot.toString().getBytes();
 
-        amqp.sendSnapshot(payload, executionDetails.buildAmqpProperties());
+        messagePublisher.publish(routingKey, payload, executionDetails.buildAmqpProperties());
     }
 }

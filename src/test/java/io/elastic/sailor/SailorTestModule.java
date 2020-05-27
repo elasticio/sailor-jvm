@@ -45,6 +45,7 @@ public class SailorTestModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_EXEC_ID, "some-exec-id");
         bindRequiredStringEnvVar(Constants.ENV_VAR_USER_ID, "5559edd38968ec0736000002");
         bindRequiredStringEnvVar(Constants.ENV_VAR_COMP_ID, "5559edd38968ec0736000456");
+        bindRequiredStringEnvVar(Constants.ENV_VAR_WORKSPACE_ID, "workspace_123");
         bindRequiredStringEnvVar(Constants.ENV_VAR_FUNCTION, "myFunction");
         bind(Boolean.class)
                 .annotatedWith(Names.named(Constants.ENV_VAR_STARTUP_REQUIRED))
@@ -59,6 +60,10 @@ public class SailorTestModule extends AbstractModule {
 
         bindRequiredIntegerEnvVar(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS, 5);
 
+        bindRequiredIntegerEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_ATTEMPTS, Integer.MAX_VALUE);
+        bindRequiredLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_DELAY, 100L);
+        bindRequiredLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY, 5 * 60 * 1000L);
+
     }
 
     void bindRequiredStringEnvVar(final String name, final String value) {
@@ -69,6 +74,12 @@ public class SailorTestModule extends AbstractModule {
 
     void bindRequiredIntegerEnvVar(final String name, final Integer value) {
         bind(Integer.class)
+                .annotatedWith(Names.named(name))
+                .toInstance(value);
+    }
+
+    void bindRequiredLongEnvVar(final String name, final Long value) {
+        bind(Long.class)
                 .annotatedWith(Names.named(name))
                 .toInstance(value);
     }
