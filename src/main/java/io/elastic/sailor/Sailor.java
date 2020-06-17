@@ -6,6 +6,7 @@ import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import io.elastic.api.*;
 import io.elastic.sailor.impl.BunyanJsonLayout;
+import io.elastic.sailor.impl.GracefulShutdownHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,10 +26,12 @@ public class Sailor {
     private boolean isShutdownRequired;
     private AmqpService amqp;
     private ErrorPublisher errorPublisher;
+    public static GracefulShutdownHandler gracefulShutdownHandler;
 
     public static void main(String[] args) throws IOException {
         logger.info("About to init Sailor");
-        createAndStartSailor();
+        final Sailor sailor = createAndStartSailor();
+        Sailor.gracefulShutdownHandler = new GracefulShutdownHandler(sailor.amqp, sailor.isShutdownRequired);
     }
 
     static Sailor createAndStartSailor() throws IOException {

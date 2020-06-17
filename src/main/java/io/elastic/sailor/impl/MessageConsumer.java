@@ -41,6 +41,10 @@ public class MessageConsumer extends DefaultConsumer {
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
 
+        if (Sailor.gracefulShutdownHandler != null) {
+            Sailor.gracefulShutdownHandler.increment();
+        }
+
         ExecutionContext executionContext = null;
         long deliveryTag = envelope.getDeliveryTag();
 
@@ -68,6 +72,10 @@ public class MessageConsumer extends DefaultConsumer {
             removeFromMDC(Constants.MDC_MESSAGE_ID);
             removeFromMDC(Constants.MDC_PARENT_MESSAGE_ID);
             ackOrReject(stats, deliveryTag);
+
+            if (Sailor.gracefulShutdownHandler != null) {
+                Sailor.gracefulShutdownHandler.decrementAndExit();
+            }
         }
     }
 
