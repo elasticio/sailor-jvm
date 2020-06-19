@@ -67,7 +67,7 @@ public class MessageResolverImpl implements MessageResolver {
 
     private JsonObjectBuilder resolveMessage(final JsonObject message) {
 
-        final JsonObject headers = message.getJsonObject(Message.PROPERTY_HEADERS);
+        final JsonObject headers = getNonNullJsonObject(message, Message.PROPERTY_HEADERS);
 
         if (this.objectStorageUri == null) {
             logger.info("Object storage service URI is not set");
@@ -103,7 +103,7 @@ public class MessageResolverImpl implements MessageResolver {
         final JsonObjectBuilder builder = Json.createObjectBuilder()
                 .add(Message.PROPERTY_BODY, object)
                 .add(Message.PROPERTY_HEADERS, cleanedHeaders)
-                .add(Message.PROPERTY_ATTACHMENTS, message.getJsonObject(Message.PROPERTY_ATTACHMENTS));
+                .add(Message.PROPERTY_ATTACHMENTS, getNonNullJsonObject(message, Message.PROPERTY_ATTACHMENTS));
 
         final JsonString messageId = message.getJsonString(Message.PROPERTY_ID);
 
@@ -138,5 +138,16 @@ public class MessageResolverImpl implements MessageResolver {
     @Inject
     public void setStep(@Named(Constants.NAME_STEP_JSON) final Step step) {
         this.step = step;
+    }
+
+
+    private JsonObject getNonNullJsonObject(final JsonObject object, final String property) {
+        final JsonObject value = object.getJsonObject(property);
+
+        if (value == null) {
+            return Json.createObjectBuilder().build();
+        }
+
+        return value;
     }
 }
