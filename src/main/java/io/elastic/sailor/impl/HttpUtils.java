@@ -2,10 +2,7 @@ package io.elastic.sailor.impl;
 
 import io.elastic.api.JSON;
 import io.elastic.sailor.UnexpectedStatusCodeException;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpRequest;
-import org.apache.http.StatusLine;
+import org.apache.http.*;
 
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.UsernamePasswordCredentials;
@@ -23,6 +20,7 @@ import javax.json.JsonObject;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.UnsupportedEncodingException;
+import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.URL;
 import java.net.URLDecoder;
@@ -31,28 +29,23 @@ public class HttpUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class.getName());
 
-    public static String postJson(String url, JsonObject body) throws IOException {
-        return postJson(url, body, 0);
+    public static String postJson(String url, JsonObject body, AuthorizationHandler authorizationHandler) throws IOException {
+        return postJson(url, body, authorizationHandler,0);
     }
 
-    public static JsonObject getJson(String url, final UsernamePasswordCredentials credentials) {
-        return getJson(url, credentials, 0);
+    public static JsonObject getJson(String url, final AuthorizationHandler authorizationHandler) {
+        return getJson(url, authorizationHandler, 0);
     }
 
     public static JsonObject putJson(final String url,
                                      final JsonObject body,
-                                     final UsernamePasswordCredentials credentials) {
-        return putJson(url, body, credentials, 0);
-    }
-
-    public static String postJson(String url, JsonObject body, int retryCount) throws IOException {
-
-        return postJson(url, body, null, retryCount);
+                                     final AuthorizationHandler authorizationHandler) {
+        return putJson(url, body, authorizationHandler, 0);
     }
 
     public static String postJson(final String url,
                                   final JsonObject body,
-                                  final UsernamePasswordCredentials credentials,
+                                  final AuthorizationHandler authorizationHandler,
                                   final int retryCount) {
 
 
@@ -60,7 +53,7 @@ public class HttpUtils {
         httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpPost.setEntity(createStringEntity(body));
 
-        final String result = sendHttpRequest(httpPost, credentials, retryCount);
+        final String result = sendHttpRequest(httpPost, authorizationHandler, retryCount);
 
         if (result == null) {
             throw new RuntimeException("Null response received");
@@ -72,13 +65,14 @@ public class HttpUtils {
     }
 
     public static JsonObject getJson(final String url,
-                                     final UsernamePasswordCredentials credentials, int retryCount) {
+                                     final AuthorizationHandler authorizationHandler,
+                                     int retryCount) {
 
         final HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
 
-        final String content = sendHttpRequest(httpGet, credentials, retryCount);
+        final String content = sendHttpRequest(httpGet, authorizationHandler, retryCount);
 
         if (content == null) {
             throw new RuntimeException("Null response received");
@@ -90,14 +84,14 @@ public class HttpUtils {
 
     public static JsonObject putJson(final String url,
                                      final JsonObject body,
-                                     final UsernamePasswordCredentials credentials,
+                                     final AuthorizationHandler authorizationHandler,
                                      final int retryCount) {
 
         final HttpPut httpPut = new HttpPut(url);
         httpPut.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpPut.setEntity(createStringEntity(body));
 
-        final String content = sendHttpRequest(httpPut, credentials, retryCount);
+        final String content = sendHttpRequest(httpPut, authorizationHandler, retryCount);
 
         if (content == null) {
             throw new RuntimeException("Null response received");
@@ -111,13 +105,13 @@ public class HttpUtils {
 
 
     public static void delete(final String url,
-                                    final UsernamePasswordCredentials credentials,
+                                    final AuthorizationHandler authorizationHandler,
                                     final int retryCount) {
 
         final HttpDelete httpDelete = new HttpDelete(url);
         httpDelete.addHeader(HTTP.CONTENT_TYPE, "application/json");
 
-        sendHttpRequest(httpDelete, credentials, retryCount);
+        sendHttpRequest(httpDelete, authorizationHandler, retryCount);
 
         logger.info("Successfully sent delete");
 
@@ -133,7 +127,7 @@ public class HttpUtils {
     }
 
     private static String sendHttpRequest(final HttpUriRequest request,
-                                          final UsernamePasswordCredentials credentials,
+                                          final AuthorizationHandler authorizationHandler,
                                           final int retryCount) {
 
         CloseableHttpClient httpClient = HttpClients.custom()
@@ -156,7 +150,7 @@ public class HttpUtils {
 
         logger.info("Sending {} request to {}", request.getMethod(), request.getURI());
         try {
-            auth(request, request.getURI().toURL(), credentials);
+            authorizationHandler.authorize(request);
             final CloseableHttpResponse response = httpClient.execute(request);
             final StatusLine statusLine = response.getStatusLine();
             final int statusCode = statusLine.getStatusCode();
@@ -186,23 +180,6 @@ public class HttpUtils {
         }
     }
 
-    private static void auth(final HttpRequest request,
-                             final URL url,
-                             UsernamePasswordCredentials credentials) {
-
-        if (credentials == null) {
-            credentials = retrieveCredentialsFromUrl(url);
-        }
-
-        try {
-            final Header header = new BasicScheme()
-                    .authenticate(credentials, request, null);
-            request.addHeader(header);
-        } catch (AuthenticationException e) {
-            throw new RuntimeException(e);
-        }
-
-    }
 
     private static UsernamePasswordCredentials retrieveCredentialsFromUrl(final URL url) {
         final String userInfo = url.getUserInfo();
@@ -228,6 +205,75 @@ public class HttpUtils {
             return URLDecoder.decode(input, "UTF-8");
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public interface AuthorizationHandler {
+
+        void authorize(final HttpUriRequest request);
+    }
+
+    static abstract class AbstractBasicAuthorizationHandler implements AuthorizationHandler {
+
+        abstract UsernamePasswordCredentials createCredentials(HttpUriRequest request);
+
+        @Override
+        public void authorize(HttpUriRequest request) {
+
+            try {
+                final Header header = new BasicScheme()
+                        .authenticate(createCredentials(request), request, null);
+                request.addHeader(header);
+            } catch (AuthenticationException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public static class BasicAuthorizationHandler extends AbstractBasicAuthorizationHandler {
+        private UsernamePasswordCredentials credentials;
+
+        public BasicAuthorizationHandler(final String username, final String password) {
+            this.credentials = new UsernamePasswordCredentials(username, password);
+        }
+
+        @Override
+        UsernamePasswordCredentials createCredentials(final HttpUriRequest request) {
+            return credentials;
+        }
+
+        public String getUsername() {
+            return credentials.getUserName();
+        }
+    }
+
+    public static class BasicURLAuthorizationHandler extends AbstractBasicAuthorizationHandler {
+
+        @Override
+        UsernamePasswordCredentials createCredentials(final HttpUriRequest request) {
+            final URL url = getRequestURL(request);
+            return retrieveCredentialsFromUrl(url);
+        }
+
+        private URL getRequestURL(final HttpUriRequest request) {
+            try {
+                return request.getURI().toURL();
+            } catch (MalformedURLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
+    public static class BearerAuthorizationHandler implements AuthorizationHandler {
+        private String token;
+
+        public BearerAuthorizationHandler(final String token) {
+            this.token = token;
+        }
+
+        @Override
+        public void authorize(HttpUriRequest request) {
+            request.addHeader(HttpHeaders.AUTHORIZATION, "Bearer " + token);
         }
     }
 }

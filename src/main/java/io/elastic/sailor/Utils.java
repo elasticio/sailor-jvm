@@ -129,4 +129,18 @@ public class Utils {
 
         return "unknown";
     }
+
+    public static JsonObject omit(final JsonObject obj, String... properties) {
+        if (properties == null) {
+            throw new IllegalArgumentException("Properties must not be null");
+        }
+        final List<String> propertiesList = Arrays.asList(properties);
+
+        final JsonObjectBuilder result = Json.createObjectBuilder();
+        obj.entrySet()
+                .stream()
+                .filter(s -> !propertiesList.contains(s.getKey()))
+                .forEach(s -> result.add(s.getKey(), s.getValue()));
+        return result.build();
+    }
 }

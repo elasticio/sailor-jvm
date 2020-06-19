@@ -122,11 +122,8 @@ public class Service {
 
         logger.info("Sending response");
 
-        try {
-            String response = HttpUtils.postJson(url, payload, retryCnt);
-            logger.info("Received response from server: {}", response.toString());
-        } catch (IOException e) {
-            logger.info("Failed to send response: {}", e.getMessage());
-        }
+        String response = HttpUtils.postJson(url, payload, new HttpUtils.BasicURLAuthorizationHandler(), retryCnt);
+
+        logger.info("Received response from server: {}", response.toString());
     }
 }

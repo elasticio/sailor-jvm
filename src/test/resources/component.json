@@ -52,6 +52,11 @@
                 }
             },
             "dynamicMetadata": "io.elastic.sailor.component.SimpleMetadataProvider"
+        },
+        "doNotAutoResolveObjectReferences": {
+            "main": "io.elastic.sailor.component.HelloWorldAction",
+            "title": "Test action",
+            "autoResolveObjectReferences": false
         }
     }
 }

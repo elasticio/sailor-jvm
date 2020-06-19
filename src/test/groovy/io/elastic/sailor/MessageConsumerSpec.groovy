@@ -17,6 +17,7 @@ class MessageConsumerSpec extends Specification {
 
     Channel channel = Mock()
     MessageProcessor processor = Mock()
+    MessageResolver messageResolver = Mock()
 
     @Shared
     CryptoServiceImpl cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
@@ -38,6 +39,9 @@ class MessageConsumerSpec extends Specification {
 
     def component
 
+    @Shared
+    def msg
+
     def setupSpec() {
 
         headers = ["execId": "exec1", "taskId": "task2", "userId": "user3"] as Map
@@ -52,13 +56,13 @@ class MessageConsumerSpec extends Specification {
                 .add("content", "Hello world!")
                 .build()
 
-        def msg = new Message.Builder().body(body).build();
+        msg = new Message.Builder().body(body).build();
         encryptedMessage = cipher.encryptMessage(msg)
     }
 
     def setup() {
         component = new HelloWorldAction()
-        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext())
+        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver)
     }
 
 
@@ -68,6 +72,7 @@ class MessageConsumerSpec extends Specification {
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
 
         then:
+        1 * messageResolver.resolve(encryptedMessage.getBytes()) >> msg
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
@@ -85,6 +90,7 @@ class MessageConsumerSpec extends Specification {
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
 
         then:
+        1 * messageResolver.resolve(encryptedMessage.getBytes()) >> msg
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
@@ -101,6 +107,7 @@ class MessageConsumerSpec extends Specification {
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
 
         then:
+        1 * messageResolver.resolve(encryptedMessage.getBytes()) >> msg
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null

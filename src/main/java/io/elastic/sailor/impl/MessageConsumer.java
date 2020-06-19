@@ -10,9 +10,7 @@ import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import javax.json.JsonObject;
 import java.io.IOException;
-import java.nio.charset.Charset;
 
 public class MessageConsumer extends DefaultConsumer {
 
@@ -22,19 +20,22 @@ public class MessageConsumer extends DefaultConsumer {
     private final Function function;
     private final Step step;
     private final ContainerContext containerContext;
+    private final MessageResolver messageResolver;
 
     public MessageConsumer(Channel channel,
                            CryptoServiceImpl cipher,
                            MessageProcessor processor,
                            Function function,
                            Step step,
-                           final ContainerContext containerContext) {
+                           final ContainerContext containerContext,
+                           final MessageResolver messageResolver) {
         super(channel);
         this.cipher = cipher;
         this.processor = processor;
         this.function = function;
         this.step = step;
         this.containerContext = containerContext;
+        this.messageResolver = messageResolver;
     }
 
     @Override
@@ -93,10 +94,7 @@ public class MessageConsumer extends DefaultConsumer {
 
     private ExecutionContext createExecutionContext(final byte[] body, final AMQP.BasicProperties properties) {
 
-        final String bodyString = new String(body, Charset.forName("UTF-8"));
-        final JsonObject payload = cipher.decryptMessageContent(bodyString);
-
-        final Message message = Utils.createMessage(payload);
+        final Message message = messageResolver.resolve(body);
 
         return new ExecutionContext(this.step, message, properties, this.containerContext);
     }

@@ -2,11 +2,11 @@ package io.elastic.sailor.impl
 
 import com.github.restdriver.clientdriver.ClientDriverRequest
 import com.github.restdriver.clientdriver.ClientDriverRule
+import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.http.Fault
 import com.github.tomakehurst.wiremock.stubbing.Scenario
-import org.apache.http.auth.UsernamePasswordCredentials
-import com.github.tomakehurst.wiremock.WireMockServer
-import static com.github.tomakehurst.wiremock.client.WireMock.*
+import io.elastic.sailor.impl.HttpUtils.BasicAuthorizationHandler
+import io.elastic.sailor.impl.HttpUtils.BasicURLAuthorizationHandler
 import org.junit.Rule
 import spock.lang.Specification
 
@@ -14,12 +14,16 @@ import javax.json.Json
 
 import static com.github.restdriver.clientdriver.RestClientDriver.giveResponse
 import static com.github.restdriver.clientdriver.RestClientDriver.onRequestTo
+import static com.github.tomakehurst.wiremock.client.WireMock.*
 import static org.hamcrest.Matchers.equalToIgnoringCase
 
 class HttpUtilsSpec extends Specification {
 
     @Rule
     public ClientDriverRule driver = new ClientDriverRule(12345);
+
+    def basicURLAuthHandler = new HttpUtils.BasicURLAuthorizationHandler();
+    def basicAuthHandler = new BasicAuthorizationHandler("homer.simpson@example.org", "secret")
 
     def "should post json successfully when credentials are inside url"() {
 
@@ -39,7 +43,8 @@ class HttpUtilsSpec extends Specification {
         when:
         def result = HttpUtils.postJson(
                 "http://homer.simpson%40example.org:secret@localhost:12345/v1/exec/result/55e5eeb460a8e2070000001e",
-                body)
+                body,
+                basicURLAuthHandler)
 
         then:
 
@@ -65,7 +70,7 @@ class HttpUtilsSpec extends Specification {
         def result = HttpUtils.postJson(
                 "http://localhost:12345/v1/exec/result/55e5eeb460a8e2070000001e",
                 body,
-                new UsernamePasswordCredentials("homer.simpson@example.org", "secret"),
+                basicAuthHandler,
                 0)
 
         then:
@@ -92,7 +97,7 @@ class HttpUtilsSpec extends Specification {
         def result = HttpUtils.putJson(
                 "http://localhost:12345/v1/accounts/55e5eeb460a8e2070000001e",
                 body,
-                new UsernamePasswordCredentials("homer.simpson@example.org", "secret"))
+                basicAuthHandler)
 
         then:
 
@@ -111,7 +116,7 @@ class HttpUtilsSpec extends Specification {
         when:
         def result = HttpUtils.getJson(
                 "http://localhost:12345/v1/users",
-                new UsernamePasswordCredentials("admin", "secret"))
+                new BasicAuthorizationHandler("admin", "secret"))
 
         then:
 
@@ -141,7 +146,7 @@ class HttpUtilsSpec extends Specification {
         when:
         def result = HttpUtils.getJson(
                 "http://localhost:12346/econnreset",
-                new UsernamePasswordCredentials("admin", "secret"), 2)
+                new BasicAuthorizationHandler("admin", "secret"), 2)
 
         then:
         result.toString() == '{"id":"1","email":"homer.simpson@example.org"}'
@@ -163,7 +168,7 @@ class HttpUtilsSpec extends Specification {
         expect:
         HttpUtils.delete(
                 "http://localhost:12345/v1/users/1234567",
-                new UsernamePasswordCredentials("admin", "secret"),
+                new BasicAuthorizationHandler("admin", "secret"),
                 0)
 
     }
@@ -173,7 +178,8 @@ class HttpUtilsSpec extends Specification {
         when:
         HttpUtils.postJson(
                 "http://localhost:10000/v1/exec/result/55e5eeb460a8e2070000001e",
-                Json.createObjectBuilder().build())
+                Json.createObjectBuilder().build(),
+                new BasicURLAuthorizationHandler())
         then:
         def e = thrown(RuntimeException)
         e.message.contains 'User info is missing in the given url: http://localhost:10000/v1/exec/result/55e5eeb460a8e2070000001e'

@@ -67,6 +67,11 @@ public final class Constants {
     public static final String ENV_VAR_AMQP_PUBLISH_RETRY_DELAY = "ELASTICIO_AMQP_PUBLISH_RETRY_DELAY";
     public static final String ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY = "ELASTICIO_AMQP_PUBLISH_MAX_RETRY_DELAY";
 
+    public static final String ENV_VAR_OBJECT_STORAGE_URI = "ELASTICIO_OBJECT_STORAGE_URI";
+    public static final String ENV_VAR_OBJECT_STORAGE_TOKEN = "ELASTICIO_OBJECT_STORAGE_TOKEN";
+
+    public static final String MESSAGE_HEADER_OBJECT_STORAGE_ID = "x-ipaas-object-storage-id";
+
     public static final String AMQP_META_HEADER_PREFIX = "x-eio-meta-";
     public static final String AMQP_META_HEADER_TRACE_ID = Constants.AMQP_META_HEADER_PREFIX + "trace-id";
 

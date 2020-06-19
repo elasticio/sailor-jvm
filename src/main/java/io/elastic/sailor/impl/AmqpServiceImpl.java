@@ -30,6 +30,7 @@ public class AmqpServiceImpl implements AmqpService {
     private Step step;
     private String consumerTag;
     private ContainerContext containerContext;
+    private MessageResolver messageResolver;
 
     @Inject
     public AmqpServiceImpl(CryptoServiceImpl cipher) {
@@ -70,6 +71,11 @@ public class AmqpServiceImpl implements AmqpService {
         this.containerContext = containerContext;
     }
 
+    @Inject
+    public void setMessageResolver(final MessageResolver messageResolver) {
+        this.messageResolver = messageResolver;
+    }
+
     public void connectAndSubscribe() {
         openConnection();
         openSubscribeChannel();
@@ -98,7 +104,7 @@ public class AmqpServiceImpl implements AmqpService {
 
     public void subscribeConsumer(final Function function) {
         final MessageConsumer consumer = new MessageConsumer(
-                subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext);
+                subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext, this.messageResolver);
 
         try {
             consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
