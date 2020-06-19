@@ -1,34 +1,27 @@
 package io.elastic.sailor.impl
 
-import com.github.restdriver.clientdriver.ClientDriverRequest
-import com.github.restdriver.clientdriver.ClientDriverRule
+
 import io.elastic.api.JSON
 import io.elastic.api.Message
 import io.elastic.sailor.ComponentDescriptorResolver
 import io.elastic.sailor.Constants
+import io.elastic.sailor.ObjectStorage
 import io.elastic.sailor.TestUtils
-import org.junit.Rule
 import spock.lang.Specification
 
 import javax.json.Json
 
-import static com.github.restdriver.clientdriver.RestClientDriver.giveResponse
-import static com.github.restdriver.clientdriver.RestClientDriver.onRequestTo
-
 class MessageResolverImplSpec extends Specification {
 
-    @Rule
-    public ClientDriverRule driver = new ClientDriverRule(12345);
-
     def crypto = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
+    def storage = Mock(ObjectStorage)
 
     def resolver
 
     def setup() {
         resolver = new MessageResolverImpl()
         resolver.setCryptoService(crypto)
-        resolver.setObjectStorageUri("http://localhost:12345")
-        resolver.setObjectStorageToken("secret_token")
+        resolver.setObjectStorage(storage)
         resolver.setComponentDescriptorResolver(new ComponentDescriptorResolver())
         resolver.setStep(TestUtils.createStep("helloworldaction"))
     }
@@ -76,50 +69,6 @@ class MessageResolverImplSpec extends Specification {
 
     }
 
-    def "should not resolve if object storage id is not set"() {
-        setup:
-        resolver.setObjectStorageUri(null)
-        def headers = Json.createObjectBuilder()
-                .add(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID, "55e5eeb460a8e2070000001e")
-                .build()
-
-        def body = Json.createObjectBuilder().build()
-
-        def id = UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee")
-        def msg = new Message.Builder().id(id).body(body).headers(headers).build()
-        def encryptedMessage = crypto.encryptMessage(msg)
-
-        when:
-        def result = resolver.resolve(encryptedMessage.getBytes())
-
-        then:
-        JSON.stringify(msg.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{},"attachments":{},"passthrough":{}}'
-        JSON.stringify(result.toJsonObject()) == JSON.stringify(msg.toJsonObject())
-
-    }
-
-    def "should not resolve if object storage auth token is not set"() {
-        setup:
-        resolver.setObjectStorageToken(null)
-        def headers = Json.createObjectBuilder()
-                .add(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID, "55e5eeb460a8e2070000001e")
-                .build()
-
-        def body = Json.createObjectBuilder().build()
-
-        def id = UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee")
-        def msg = new Message.Builder().id(id).body(body).headers(headers).build()
-        def encryptedMessage = crypto.encryptMessage(msg)
-
-        when:
-        def result = resolver.resolve(encryptedMessage.getBytes())
-
-        then:
-        JSON.stringify(msg.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{},"attachments":{},"passthrough":{}}'
-        JSON.stringify(result.toJsonObject()) == JSON.stringify(msg.toJsonObject())
-
-    }
-
     def "should resolve the object by id successfully"() {
         setup:
 
@@ -132,19 +81,13 @@ class MessageResolverImplSpec extends Specification {
         def id = UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee")
         def msg = new Message.Builder().id(id).body(body).headers(headers).build()
         def encryptedMessage = crypto.encryptMessage(msg)
-        def storageObjectEncrypted = crypto.encrypt('{"from":"storage"}')
 
-        driver.addExpectation(
-                onRequestTo("/objects/55e5eeb460a8e2070000001e")
-                        .withMethod(ClientDriverRequest.Method.GET)
-                        .withHeader("Authorization", "Bearer secret_token"),
-                giveResponse(storageObjectEncrypted, 'application/json')
-                        .withStatus(200));
 
         when:
         def result = resolver.resolve(encryptedMessage.getBytes())
 
         then:
+        1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()
         JSON.stringify(msg.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{},"attachments":{},"passthrough":{}}'
         JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"from":"storage"},"attachments":{},"passthrough":{}}'
 
@@ -187,27 +130,15 @@ class MessageResolverImplSpec extends Specification {
                 .passthrough(passthrough)
                 .build()
         def encryptedMessage = crypto.encryptMessage(msg)
-        def storageObjectEncrypted = crypto.encrypt('{"from":"storage"}')
-        def passthoughEncrypted = crypto.encrypt('{"i am":"passthough"}')
-
-        driver.addExpectation(
-                onRequestTo("/objects/55e5eeb460a8e2070000001e")
-                        .withMethod(ClientDriverRequest.Method.GET)
-                        .withHeader("Authorization", "Bearer secret_token"),
-                giveResponse(storageObjectEncrypted, 'application/json').withStatus(200));
-
-        driver.addExpectation(
-                onRequestTo("/objects/5b62c918fd98ea00112d5291")
-                        .withMethod(ClientDriverRequest.Method.GET)
-                        .withHeader("Authorization", "Bearer secret_token"),
-                giveResponse(passthoughEncrypted, 'application/json').withStatus(200));
 
         when:
         def result = resolver.resolve(encryptedMessage.getBytes())
 
         then:
+        1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()
+        1 * storage.getJsonObject("5b62c918fd98ea00112d5291") >> Json.createObjectBuilder().add("i am", "passthrough").build()
         JSON.stringify(msg.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{"hello":"world"},"attachments":{},"passthrough":{"step_1":{"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3","headers":{"x-ipaas-object-storage-id":"5b62c918fd98ea00112d5291"},"body":{"hello":"again"},"attachments":{},"passthrough":{}}}}'
-        JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"from":"storage"},"attachments":{},"passthrough":{"step_1":{"body":{"i am":"passthough"},"headers":{},"attachments":{},"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3"}}}'
+        JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"from":"storage"},"attachments":{},"passthrough":{"step_1":{"body":{"i am":"passthrough"},"headers":{},"attachments":{},"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3"}}}'
 
     }
 }

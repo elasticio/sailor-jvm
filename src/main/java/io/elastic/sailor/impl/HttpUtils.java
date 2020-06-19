@@ -64,6 +64,26 @@ public class HttpUtils {
         return result;
     }
 
+    public static String post(final String url,
+                                  final HttpEntity body,
+                                  final AuthorizationHandler authorizationHandler,
+                                  final int retryCount) {
+
+
+        final HttpPost httpPost = new HttpPost(url);
+        httpPost.setEntity(body);
+
+        final String result = sendHttpRequest(httpPost, authorizationHandler, retryCount);
+
+        if (result == null) {
+            throw new RuntimeException("Null response received");
+        }
+
+        logger.info("Successfully posted content");
+
+        return result;
+    }
+
     public static JsonObject getJson(final String url,
                                      final AuthorizationHandler authorizationHandler,
                                      int retryCount) {
@@ -126,9 +146,13 @@ public class HttpUtils {
         return;
     }
 
-    private static StringEntity createStringEntity(final JsonObject body) {
+    public static StringEntity createStringEntity(final JsonObject body) {
+        return createStringEntity(JSON.stringify(body));
+    }
+
+    public static StringEntity createStringEntity(final String content) {
         try {
-            return new StringEntity(JSON.stringify(body));
+            return new StringEntity(content);
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }

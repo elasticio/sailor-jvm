@@ -19,9 +19,8 @@ public class MessageResolverImpl implements MessageResolver {
 
     private ComponentDescriptorResolver componentDescriptorResolver;
     private Step step;
+    private ObjectStorage objectStorage;
     private CryptoServiceImpl cryptoService;
-    private String objectStorageUri;
-    private String objectStorageToken;
 
     @Override
     public Message resolve(byte[] body) {
@@ -69,16 +68,6 @@ public class MessageResolverImpl implements MessageResolver {
 
         final JsonObject headers = getNonNullJsonObject(message, Message.PROPERTY_HEADERS);
 
-        if (this.objectStorageUri == null) {
-            logger.info("Object storage service URI is not set");
-            return null;
-        }
-
-        if (this.objectStorageToken == null) {
-            logger.info("Object storage auth token is not set");
-            return null;
-        }
-
         final JsonString objectId = headers.getJsonString(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID);
 
         if (objectId == null) {
@@ -86,17 +75,7 @@ public class MessageResolverImpl implements MessageResolver {
             return null;
         }
 
-        final String objectIdStr = objectId.getString();
-
-        this.logger.info("About to retrieve object by id={}", objectIdStr);
-
-        final String endpoint = String.format("%s/objects/%s", this.objectStorageUri, objectIdStr);
-
-        final String content = HttpUtils.get(endpoint,
-                new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken),
-                5);
-
-        final JsonObject object = cryptoService.decryptMessageContent(content);
+        final JsonObject object = this.objectStorage.getJsonObject(objectId.getString());
 
         final JsonObject cleanedHeaders = Utils.omit(headers, Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID);
 
@@ -120,16 +99,6 @@ public class MessageResolverImpl implements MessageResolver {
         this.cryptoService = cryptoService;
     }
 
-    @Inject(optional = true)
-    public void setObjectStorageUri(final @Named(Constants.ENV_VAR_OBJECT_STORAGE_URI) String objectStorageUri) {
-        this.objectStorageUri = objectStorageUri;
-    }
-
-    @Inject(optional = true)
-    public void setObjectStorageToken(final @Named(Constants.ENV_VAR_OBJECT_STORAGE_TOKEN) String objectStorageToken) {
-        this.objectStorageToken = objectStorageToken;
-    }
-
     @Inject
     public void setComponentDescriptorResolver(final ComponentDescriptorResolver componentDescriptorResolver) {
         this.componentDescriptorResolver = componentDescriptorResolver;
@@ -138,6 +107,11 @@ public class MessageResolverImpl implements MessageResolver {
     @Inject
     public void setStep(@Named(Constants.NAME_STEP_JSON) final Step step) {
         this.step = step;
+    }
+
+    @Inject
+    public void setObjectStorage(ObjectStorage objectStorage) {
+        this.objectStorage = objectStorage;
     }
 
 
