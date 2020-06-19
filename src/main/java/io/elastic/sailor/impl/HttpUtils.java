@@ -68,8 +68,16 @@ public class HttpUtils {
                                      final AuthorizationHandler authorizationHandler,
                                      int retryCount) {
 
+        final String content = get(url, authorizationHandler, retryCount);
+
+        return JSON.parseObject(content);
+    }
+
+    public static String get(final String url,
+                             final AuthorizationHandler authorizationHandler,
+                             int retryCount) {
+
         final HttpGet httpGet = new HttpGet(url);
-        httpGet.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
 
         final String content = sendHttpRequest(httpGet, authorizationHandler, retryCount);
@@ -78,7 +86,7 @@ public class HttpUtils {
             throw new RuntimeException("Null response received");
         }
 
-        return JSON.parseObject(content);
+        return content;
     }
 
 

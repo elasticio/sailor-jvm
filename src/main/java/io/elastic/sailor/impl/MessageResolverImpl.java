@@ -40,15 +40,20 @@ public class MessageResolverImpl implements MessageResolver {
             return Utils.createMessage(payload);
         }
 
+        this.logger.info("About to retrieve message body from storage");
+
         final JsonObjectBuilder resolved = resolveMessage(payload);
 
         if (resolved == null) {
+            logger.info("Message will be emitted as is");
             return Utils.createMessage(payload);
         }
 
         final JsonObject passthrough = payload.getJsonObject(Message.PROPERTY_PASSTHROUGH);
 
         final JsonObjectBuilder passthroughBuilder = Json.createObjectBuilder();
+
+        this.logger.info("About to retrieve passthrough from storage");
 
         for (String stepId : passthrough.keySet()) {
             final JsonObjectBuilder resolvedStep = resolveMessage(passthrough.getJsonObject(stepId));
@@ -81,11 +86,17 @@ public class MessageResolverImpl implements MessageResolver {
             return null;
         }
 
-        final String endpoint = this.objectStorageUri + "/objects/" + objectId.getString();
+        final String objectIdStr = objectId.getString();
 
-        final JsonObject object = HttpUtils.getJson(endpoint,
+        this.logger.info("About to retrieve object by id={}", objectIdStr);
+
+        final String endpoint = String.format("%s/objects/%s", this.objectStorageUri, objectIdStr);
+
+        final String content = HttpUtils.get(endpoint,
                 new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken),
                 5);
+
+        final JsonObject object = cryptoService.decryptMessageContent(content);
 
         final JsonObject cleanedHeaders = Utils.omit(headers, Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID);
 

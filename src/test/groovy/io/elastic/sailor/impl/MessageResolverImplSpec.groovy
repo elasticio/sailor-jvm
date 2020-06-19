@@ -132,12 +132,13 @@ class MessageResolverImplSpec extends Specification {
         def id = UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee")
         def msg = new Message.Builder().id(id).body(body).headers(headers).build()
         def encryptedMessage = crypto.encryptMessage(msg)
+        def storageObjectEncrypted = crypto.encrypt('{"from":"storage"}')
 
         driver.addExpectation(
                 onRequestTo("/objects/55e5eeb460a8e2070000001e")
                         .withMethod(ClientDriverRequest.Method.GET)
                         .withHeader("Authorization", "Bearer secret_token"),
-                giveResponse('{"from":"storage"}', 'application/json')
+                giveResponse(storageObjectEncrypted, 'application/json')
                         .withStatus(200));
 
         when:
@@ -186,18 +187,20 @@ class MessageResolverImplSpec extends Specification {
                 .passthrough(passthrough)
                 .build()
         def encryptedMessage = crypto.encryptMessage(msg)
+        def storageObjectEncrypted = crypto.encrypt('{"from":"storage"}')
+        def passthoughEncrypted = crypto.encrypt('{"i am":"passthough"}')
 
         driver.addExpectation(
                 onRequestTo("/objects/55e5eeb460a8e2070000001e")
                         .withMethod(ClientDriverRequest.Method.GET)
                         .withHeader("Authorization", "Bearer secret_token"),
-                giveResponse('{"from":"storage"}', 'application/json').withStatus(200));
+                giveResponse(storageObjectEncrypted, 'application/json').withStatus(200));
 
         driver.addExpectation(
                 onRequestTo("/objects/5b62c918fd98ea00112d5291")
                         .withMethod(ClientDriverRequest.Method.GET)
                         .withHeader("Authorization", "Bearer secret_token"),
-                giveResponse('{"i am":"passthough"}', 'application/json').withStatus(200));
+                giveResponse(passthoughEncrypted, 'application/json').withStatus(200));
 
         when:
         def result = resolver.resolve(encryptedMessage.getBytes())
