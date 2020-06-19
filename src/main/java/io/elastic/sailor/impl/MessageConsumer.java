@@ -53,8 +53,8 @@ public class MessageConsumer extends DefaultConsumer {
         try {
             executionContext = createExecutionContext(body, properties);
         } catch (Exception e) {
-            logger.error("Failed to parse or resolve message to process", e);
             this.getChannel().basicReject(deliveryTag, false);
+            logger.error("Failed to parse or resolve message to process {}", Utils.getStackTrace(e));
             return;
         }
 
@@ -63,7 +63,7 @@ public class MessageConsumer extends DefaultConsumer {
         try {
             stats = processor.processMessage(executionContext, this.function);
         } catch (Exception e) {
-            logger.error("Failed to process message", e);
+            logger.error("Failed to process message: {}", Utils.getStackTrace(e));
         } finally {
             removeFromMDC(Constants.MDC_THREAD_ID);
             removeFromMDC(Constants.MDC_MESSAGE_ID);
@@ -88,7 +88,7 @@ public class MessageConsumer extends DefaultConsumer {
         try {
             MDC.remove(key);
         }catch(Exception e) {
-            logger.warn("Failed to remove {} from MDC", key, e);
+            logger.warn("Failed to remove {} from MDC: {}", key, Utils.getStackTrace(e));
         }
     }
 

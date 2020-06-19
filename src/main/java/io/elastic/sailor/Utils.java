@@ -8,6 +8,8 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -142,5 +144,12 @@ public class Utils {
                 .filter(s -> !propertiesList.contains(s.getKey()))
                 .forEach(s -> result.add(s.getKey(), s.getValue()));
         return result.build();
+    }
+
+    public static String getStackTrace(Throwable e) {
+        final StringWriter writer = new StringWriter();
+        e.printStackTrace(new PrintWriter(writer));
+
+        return writer.toString();
     }
 }
