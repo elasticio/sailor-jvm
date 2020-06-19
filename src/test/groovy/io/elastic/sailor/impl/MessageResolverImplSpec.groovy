@@ -35,11 +35,12 @@ class MessageResolverImplSpec extends Specification {
 
     def "should not resolve if object id not present"() {
         setup:
+        def headers = Json.createObjectBuilder().build()
         def body = Json.createObjectBuilder()
                 .add("hello", "world")
                 .build()
 
-        def msg = new Message.Builder().body(body).build()
+        def msg = new Message.Builder().headers(headers).body(body).build()
         def encryptedMessage = crypto.encryptMessage(msg)
 
         when:
@@ -71,6 +72,50 @@ class MessageResolverImplSpec extends Specification {
 
         then:
         JSON.stringify(result.toJsonObject()) == '{"id":"8c33707b-57cf-4001-86fe-4494cdf3d2a0","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{},"attachments":{},"passthrough":{}}'
+        JSON.stringify(result.toJsonObject()) == JSON.stringify(msg.toJsonObject())
+
+    }
+
+    def "should not resolve if object storage id is not set"() {
+        setup:
+        resolver.setObjectStorageUri(null)
+        def headers = Json.createObjectBuilder()
+                .add(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID, "55e5eeb460a8e2070000001e")
+                .build()
+
+        def body = Json.createObjectBuilder().build()
+
+        def id = UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee")
+        def msg = new Message.Builder().id(id).body(body).headers(headers).build()
+        def encryptedMessage = crypto.encryptMessage(msg)
+
+        when:
+        def result = resolver.resolve(encryptedMessage.getBytes())
+
+        then:
+        JSON.stringify(msg.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{},"attachments":{},"passthrough":{}}'
+        JSON.stringify(result.toJsonObject()) == JSON.stringify(msg.toJsonObject())
+
+    }
+
+    def "should not resolve if object storage auth token is not set"() {
+        setup:
+        resolver.setObjectStorageToken(null)
+        def headers = Json.createObjectBuilder()
+                .add(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID, "55e5eeb460a8e2070000001e")
+                .build()
+
+        def body = Json.createObjectBuilder().build()
+
+        def id = UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee")
+        def msg = new Message.Builder().id(id).body(body).headers(headers).build()
+        def encryptedMessage = crypto.encryptMessage(msg)
+
+        when:
+        def result = resolver.resolve(encryptedMessage.getBytes())
+
+        then:
+        JSON.stringify(msg.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{},"attachments":{},"passthrough":{}}'
         JSON.stringify(result.toJsonObject()) == JSON.stringify(msg.toJsonObject())
 
     }

@@ -64,8 +64,13 @@ public class MessageResolverImpl implements MessageResolver {
 
         final JsonObject headers = message.getJsonObject(Message.PROPERTY_HEADERS);
 
-        if (headers == null) {
-            logger.info("Message has no headers");
+        if (this.objectStorageUri == null) {
+            logger.info("Object storage service URI is not set");
+            return null;
+        }
+
+        if (this.objectStorageToken == null) {
+            logger.info("Object storage auth token is not set");
             return null;
         }
 
