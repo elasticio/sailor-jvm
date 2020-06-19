@@ -53,7 +53,7 @@ public class MessageConsumer extends DefaultConsumer {
         try {
             executionContext = createExecutionContext(body, properties);
         } catch (Exception e) {
-            logger.info("Failed to parse message to process {}", deliveryTag, e);
+            logger.error("Failed to parse or resolve message to process", e);
             this.getChannel().basicReject(deliveryTag, false);
             return;
         }
@@ -63,7 +63,7 @@ public class MessageConsumer extends DefaultConsumer {
         try {
             stats = processor.processMessage(executionContext, this.function);
         } catch (Exception e) {
-            logger.error("Failed to process message for delivery tag:" + deliveryTag, e);
+            logger.error("Failed to process message", e);
         } finally {
             removeFromMDC(Constants.MDC_THREAD_ID);
             removeFromMDC(Constants.MDC_MESSAGE_ID);
