@@ -8,6 +8,7 @@ import io.elastic.api.Message;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.ExecutionContext;
 import io.elastic.sailor.MessagePublisher;
+import io.elastic.sailor.MessageResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,18 +21,24 @@ public class DataCallback extends CountingCallbackImpl {
     private MessagePublisher messagePublisher;
     private CryptoServiceImpl cipher;
     private ExecutionContext executionContext;
+    private MessageResolver messageResolver;
     private String routingKey;
+    private boolean emitLightweightMessage;
 
     @Inject
     public DataCallback(
             @Assisted ExecutionContext executionContext,
             MessagePublisher messagePublisher,
             CryptoServiceImpl cipher,
-            @Named(Constants.ENV_VAR_DATA_ROUTING_KEY) String routingKey) {
+            MessageResolver messageResolver,
+            @Named(Constants.ENV_VAR_DATA_ROUTING_KEY) String routingKey,
+            @Named(Constants.ENV_VAR_EMIT_LIGHTWEIGHT_MESSAGE) boolean emitLightweightMessage) {
         this.executionContext = executionContext;
         this.messagePublisher = messagePublisher;
         this.cipher = cipher;
+        this.messageResolver = messageResolver;
         this.routingKey = routingKey;
+        this.emitLightweightMessage = emitLightweightMessage;
     }
 
     @Override
@@ -41,7 +48,11 @@ public class DataCallback extends CountingCallbackImpl {
         // payload
         final Message message = (Message) data;
 
-        final JsonObject messageAsJson = executionContext.createPublisheableMessage(message);
+        JsonObject messageAsJson = executionContext.createPublisheableMessage(message);
+
+        if (emitLightweightMessage) {
+            messageAsJson = messageResolver.externalize(messageAsJson);
+        }
 
         // encrypt
         byte[] encryptedPayload = cipher.encrypt(JSON.stringify(messageAsJson)).getBytes();

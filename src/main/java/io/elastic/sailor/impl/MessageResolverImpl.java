@@ -7,10 +7,7 @@ import io.elastic.sailor.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonString;
+import javax.json.*;
 import java.nio.charset.Charset;
 
 public class MessageResolverImpl implements MessageResolver {
@@ -62,6 +59,42 @@ public class MessageResolverImpl implements MessageResolver {
         resolved.add(Message.PROPERTY_PASSTHROUGH, passthroughBuilder);
 
         return Utils.createMessage(resolved.build());
+    }
+
+    @Override
+    public JsonObject externalize(final JsonObject message) {
+        final JsonObjectBuilder result = externalizeObject(message);
+
+        final JsonObject passthrough = message.getJsonObject(Message.PROPERTY_PASSTHROUGH);
+        final JsonObjectBuilder passthroughBuilder = Json.createObjectBuilder();
+
+        for (String stepId : passthrough.keySet()) {
+            final JsonObjectBuilder externalizedStep = externalizeObject(passthrough.getJsonObject(stepId));
+            passthroughBuilder.add(stepId, externalizedStep);
+        }
+
+        result.add(Message.PROPERTY_PASSTHROUGH, passthroughBuilder);
+
+        return result.build();
+    }
+
+    private JsonObjectBuilder externalizeObject(final JsonObject message) {
+
+        final JsonObjectBuilder result = Utils.copy(message);
+
+        final JsonObject body = message.getJsonObject(Message.PROPERTY_BODY);
+
+        final JsonObject storedObject = objectStorage.postJsonObject(body);
+
+        final JsonValue objectId = storedObject.get("objectId");
+
+        final JsonObjectBuilder headers = Utils.copy(message.getJsonObject(Message.PROPERTY_HEADERS));
+        headers.add(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID, objectId);
+
+        result.add(Message.PROPERTY_HEADERS, headers.build());
+        result.add(Message.PROPERTY_BODY, Json.createObjectBuilder().build());
+
+        return result;
     }
 
     private JsonObjectBuilder resolveMessage(final JsonObject message) {

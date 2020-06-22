@@ -132,6 +132,17 @@ public class Utils {
         return "unknown";
     }
 
+    public static JsonObjectBuilder copy(final JsonObject object) {
+
+        final JsonObjectBuilder result = Json.createObjectBuilder();
+
+        object.entrySet()
+                .stream()
+                .forEach(s -> result.add(s.getKey(), s.getValue()));
+
+        return result;
+    }
+
     public static JsonObject omit(final JsonObject obj, String... properties) {
         if (properties == null) {
             throw new IllegalArgumentException("Properties must not be null");

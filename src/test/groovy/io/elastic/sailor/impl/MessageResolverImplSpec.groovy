@@ -1,6 +1,5 @@
 package io.elastic.sailor.impl
 
-
 import io.elastic.api.JSON
 import io.elastic.api.Message
 import io.elastic.sailor.ComponentDescriptorResolver
@@ -139,6 +138,79 @@ class MessageResolverImplSpec extends Specification {
         1 * storage.getJsonObject("5b62c918fd98ea00112d5291") >> Json.createObjectBuilder().add("i am", "passthrough").build()
         JSON.stringify(msg.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{"hello":"world"},"attachments":{},"passthrough":{"step_1":{"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3","headers":{"x-ipaas-object-storage-id":"5b62c918fd98ea00112d5291"},"body":{"hello":"again"},"attachments":{},"passthrough":{}}}}'
         JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"from":"storage"},"attachments":{},"passthrough":{"step_1":{"body":{"i am":"passthrough"},"headers":{},"attachments":{},"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3"}}}'
+
+    }
+
+
+    def "should externalize successfully"() {
+        setup:
+
+        def headers = Json.createObjectBuilder().build()
+
+        def body = Json.createObjectBuilder()
+                .add("hello", "world")
+                .build()
+
+        def msg = new Message.Builder()
+                .id(UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee"))
+                .body(body)
+                .headers(headers)
+                .build()
+
+        def msgJson = msg.toJsonObject()
+
+        when:
+        def result = resolver.externalize(msgJson)
+
+        then:
+        1 * storage.postJsonObject(_) >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
+        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"body":{},"attachments":{},"passthrough":{}}'
+
+    }
+
+    def "should externalize with passthrough successfully"() {
+        setup:
+
+        def headers = Json.createObjectBuilder().build()
+
+        def body = Json.createObjectBuilder()
+                .add("hello", "world")
+                .build()
+
+        def passthroughBody = Json.createObjectBuilder()
+                .add("hello", "again")
+                .build()
+
+        def passthroughHeaders = Json.createObjectBuilder()
+                .add("foo", "bar")
+                .build()
+
+        def passthroughStep = new Message.Builder()
+                .id(UUID.fromString("82317293-fcae-4d1f-9bc9-25aa8913f9f3"))
+                .body(passthroughBody)
+                .headers(passthroughHeaders)
+                .build()
+
+        def passthrough = Json.createObjectBuilder()
+                .add("step_1", passthroughStep.toJsonObject())
+                .build()
+
+        def msg = new Message.Builder()
+                .id(UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee"))
+                .body(body)
+                .headers(headers)
+                .passthrough(passthrough)
+                .build()
+
+        def msgJson = msg.toJsonObject()
+
+        when:
+        def result = resolver.externalize(msgJson)
+
+        then:
+        1 * storage.postJsonObject(_) >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
+        1 * storage.postJsonObject(_) >> Json.createObjectBuilder().add("objectId", "588763137d802200192b485c").build()
+        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"body":{},"attachments":{},"passthrough":{"step_1":{"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3","headers":{"foo":"bar","x-ipaas-object-storage-id":"588763137d802200192b485c"},"body":{},"attachments":{},"passthrough":{}}}}'
 
     }
 }

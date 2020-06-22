@@ -22,7 +22,7 @@ import java.util.Map;
 
 public class HttpReplyCallback implements EventEmitter.Callback {
 
-    private static final Logger logger = LoggerFactory.getLogger(DataCallback.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpReplyCallback.class);
 
     private MessagePublisher messagePublisher;;
     private CryptoServiceImpl cipher;
