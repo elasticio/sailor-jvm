@@ -6,7 +6,7 @@ import javax.json.JsonObject;
 
 public interface MessageResolver {
 
-    Message resolve(byte[] body);
+    Message materialize(byte[] body);
 
     JsonObject externalize(JsonObject object);
 }

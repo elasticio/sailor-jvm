@@ -20,7 +20,7 @@ public class MessageResolverImpl implements MessageResolver {
     private CryptoServiceImpl cryptoService;
 
     @Override
-    public Message resolve(byte[] body) {
+    public Message materialize(byte[] body) {
 
         final String bodyString = new String(body, Charset.forName("UTF-8"));
         final JsonObject payload = cryptoService.decryptMessageContent(bodyString);
@@ -63,12 +63,14 @@ public class MessageResolverImpl implements MessageResolver {
 
     @Override
     public JsonObject externalize(final JsonObject message) {
+        logger.info("Externalizing message body");
         final JsonObjectBuilder result = externalizeObject(message);
 
         final JsonObject passthrough = message.getJsonObject(Message.PROPERTY_PASSTHROUGH);
         final JsonObjectBuilder passthroughBuilder = Json.createObjectBuilder();
 
         for (String stepId : passthrough.keySet()) {
+            logger.info("Externalizing passthrough step={}", stepId);
             final JsonObjectBuilder externalizedStep = externalizeObject(passthrough.getJsonObject(stepId));
             passthroughBuilder.add(stepId, externalizedStep);
         }
@@ -87,6 +89,8 @@ public class MessageResolverImpl implements MessageResolver {
         final JsonObject storedObject = objectStorage.postJsonObject(body);
 
         final JsonValue objectId = storedObject.get("objectId");
+
+        logger.info("Stored object with id={}", objectId);
 
         final JsonObjectBuilder headers = Utils.copy(message.getJsonObject(Message.PROPERTY_HEADERS));
         headers.add(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID, objectId);

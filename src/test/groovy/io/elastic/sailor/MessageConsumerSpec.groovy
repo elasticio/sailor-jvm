@@ -72,7 +72,7 @@ class MessageConsumerSpec extends Specification {
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
 
         then:
-        1 * messageResolver.resolve(encryptedMessage.getBytes()) >> msg
+        1 * messageResolver.materialize(encryptedMessage.getBytes()) >> msg
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
@@ -90,7 +90,7 @@ class MessageConsumerSpec extends Specification {
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
 
         then:
-        1 * messageResolver.resolve(encryptedMessage.getBytes()) >> msg
+        1 * messageResolver.materialize(encryptedMessage.getBytes()) >> msg
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
@@ -107,7 +107,7 @@ class MessageConsumerSpec extends Specification {
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
 
         then:
-        1 * messageResolver.resolve(encryptedMessage.getBytes()) >> msg
+        1 * messageResolver.materialize(encryptedMessage.getBytes()) >> msg
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
