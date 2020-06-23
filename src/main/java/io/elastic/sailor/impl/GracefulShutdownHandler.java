@@ -4,6 +4,7 @@ import io.elastic.sailor.AmqpService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class GracefulShutdownHandler {
@@ -13,6 +14,7 @@ public class GracefulShutdownHandler {
     private AmqpService amqp;
     private boolean isShutdownRequired;
     public AtomicInteger messagesProcessingCount = new AtomicInteger();
+    private CountDownLatch exitSignal;
 
     public GracefulShutdownHandler(final AmqpService amqp, final boolean isShutdownRequired) {
         this.amqp = amqp;
@@ -23,6 +25,9 @@ public class GracefulShutdownHandler {
 
 
     public void increment() {
+        if (this.isShutdownRequired) {
+            return;
+        }
         logger.info("Incrementing the number of messages processed");
         this.messagesProcessingCount.incrementAndGet();
     }
@@ -39,27 +44,48 @@ public class GracefulShutdownHandler {
         logger.info("Registered a graceful shutdown hook");
     }
 
-    private void prepareGracefulShutdown() {
-        if (GracefulShutdownHandler.this.isShutdownRequired) {
+    protected void prepareGracefulShutdown() {
+        if (this.isShutdownRequired) {
             return;
         }
 
-        if (GracefulShutdownHandler.this.amqp == null) {
+        if (this.amqp == null) {
             return;
         }
 
-        GracefulShutdownHandler.this.amqp.cancelConsumer();
+        this.amqp.cancelConsumer();
+
+        logger.info("Canceled all message consumers. Now waiting for all messages to be processed before exiting");
+
+        this.exitSignal = new CountDownLatch(this.messagesProcessingCount.get());
+
+        try {
+            this.exitSignal.await();
+        } catch (InterruptedException e) {
+            logger.error(e.getMessage());
+        }
+
+        logger.info("No messages are being processed anymore. Exiting with 0");
+        exit();
     }
 
-    public void decrementAndExit() {
+    public void decrement() {
 
+        if (this.isShutdownRequired) {
+            return;
+        }
         logger.info("Decrementing the number of messages processed");
         final int count = this.messagesProcessingCount.decrementAndGet();
 
-        if (count < 1) {
-            logger.info("No messages are being processed anymore. Exiting with 0");
-            System.exit(0);
+        logger.info("{} messages are currently being processed", count);
+
+        if(this.exitSignal != null){
+            this.exitSignal.countDown();
         }
+    }
+
+    protected void exit() {
+        System.exit(0);
     }
 
 }

@@ -74,7 +74,7 @@ public class MessageConsumer extends DefaultConsumer {
             ackOrReject(stats, deliveryTag);
 
             if (Sailor.gracefulShutdownHandler != null) {
-                Sailor.gracefulShutdownHandler.decrementAndExit();
+                Sailor.gracefulShutdownHandler.decrement();
             }
         }
     }
