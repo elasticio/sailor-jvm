@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class GracefulShutdownHandler {
 
-    private static final Logger logger = LoggerFactory.getLogger(Sailor.class);
+    private static final Logger logger = LoggerFactory.getLogger(GracefulShutdownHandler.class);
 
     private AmqpService amqp;
     private boolean isShutdownRequired;
@@ -39,6 +39,7 @@ public class GracefulShutdownHandler {
                 prepareGracefulShutdown();
             }
         });
+        logger.info("Registered a graceful shutdown hook");
     }
 
     private void prepareGracefulShutdown() {
