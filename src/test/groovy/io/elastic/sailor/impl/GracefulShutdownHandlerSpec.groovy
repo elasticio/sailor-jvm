@@ -14,19 +14,26 @@ class GracefulShutdownHandlerSpec extends Specification {
         handler.prepareGracefulShutdown();
 
         then:
-        handler.messagesProcessingCount == null
+        0 * amqp.cancelConsumer()
+        handler.messagesProcessingCount.get() == 0
 
         when:
         handler.increment()
 
         then:
-        handler.messagesProcessingCount == null
+        handler.messagesProcessingCount.get() == 1
+
+        when:
+        handler.increment()
+
+        then:
+        handler.messagesProcessingCount.get() == 2
 
         when:
         handler.decrementAndExit()
 
         then:
-        handler.messagesProcessingCount == null
+        handler.messagesProcessingCount.get() == 1
     }
 
     def "should increment and decrement properly" () {
@@ -37,7 +44,8 @@ class GracefulShutdownHandlerSpec extends Specification {
         handler.prepareGracefulShutdown();
 
         then:
-        handler.messagesProcessingCount != null
+        1 * amqp.cancelConsumer()
+        handler.messagesProcessingCount.get() == 0
 
         when:
         handler.increment()

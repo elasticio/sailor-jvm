@@ -1,7 +1,6 @@
 package io.elastic.sailor.impl;
 
 import io.elastic.sailor.AmqpService;
-import io.elastic.sailor.Sailor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +12,7 @@ public class GracefulShutdownHandler {
 
     private AmqpService amqp;
     private boolean isShutdownRequired;
-    public static AtomicInteger messagesProcessingCount;
+    public AtomicInteger messagesProcessingCount = new AtomicInteger();
 
     public GracefulShutdownHandler(final AmqpService amqp, final boolean isShutdownRequired) {
         this.amqp = amqp;
@@ -24,9 +23,9 @@ public class GracefulShutdownHandler {
 
 
     public void increment() {
-        if (GracefulShutdownHandler.messagesProcessingCount != null) {
+        if (this.messagesProcessingCount != null) {
             logger.info("Incrementing the number of messages processed");
-            GracefulShutdownHandler.messagesProcessingCount.incrementAndGet();
+            this.messagesProcessingCount.incrementAndGet();
         }
     }
 
@@ -52,17 +51,12 @@ public class GracefulShutdownHandler {
         }
 
         GracefulShutdownHandler.this.amqp.cancelConsumer();
-        GracefulShutdownHandler.messagesProcessingCount = new AtomicInteger();
     }
 
     public void decrementAndExit() {
-        if (GracefulShutdownHandler.messagesProcessingCount == null) {
-            return;
-        }
-
 
         logger.info("Decrementing the number of messages processed");
-        final int count = GracefulShutdownHandler.messagesProcessingCount.decrementAndGet();
+        final int count = this.messagesProcessingCount.decrementAndGet();
 
         if (count < 1) {
             logger.info("No messages are being processed anymore. Exiting with 0");
