@@ -23,10 +23,8 @@ public class GracefulShutdownHandler {
 
 
     public void increment() {
-        if (this.messagesProcessingCount != null) {
-            logger.info("Incrementing the number of messages processed");
-            this.messagesProcessingCount.incrementAndGet();
-        }
+        logger.info("Incrementing the number of messages processed");
+        this.messagesProcessingCount.incrementAndGet();
     }
 
 
