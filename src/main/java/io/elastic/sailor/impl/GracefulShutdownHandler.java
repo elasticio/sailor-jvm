@@ -28,8 +28,9 @@ public class GracefulShutdownHandler {
         if (this.isShutdownRequired) {
             return;
         }
-        logger.info("Incrementing the number of messages processed");
-        this.messagesProcessingCount.incrementAndGet();
+        final int count = this.messagesProcessingCount.incrementAndGet();
+
+        logger.info("Incremented the number of messages concurrently processed to {}", count);
     }
 
 
@@ -55,9 +56,10 @@ public class GracefulShutdownHandler {
 
         this.amqp.cancelConsumer();
 
-        logger.info("Canceled all message consumers. Now waiting for all messages to be processed before exiting");
-
         this.exitSignal = new CountDownLatch(this.messagesProcessingCount.get());
+
+        logger.info("Canceled all message consumers. Now waiting for {} messages to be processed before exiting",
+                this.exitSignal.getCount());
 
         try {
             this.exitSignal.await();
@@ -65,7 +67,7 @@ public class GracefulShutdownHandler {
             logger.error(e.getMessage());
         }
 
-        logger.info("No messages are being processed anymore. Exiting with 0");
+        logger.info("No messages are being processed anymore");
         exit();
     }
 
@@ -74,17 +76,17 @@ public class GracefulShutdownHandler {
         if (this.isShutdownRequired) {
             return;
         }
-        logger.info("Decrementing the number of messages processed");
         final int count = this.messagesProcessingCount.decrementAndGet();
-
-        logger.info("{} messages are currently being processed", count);
+        logger.info("Decremented the number of messages concurrently processed to {}", count);
 
         if(this.exitSignal != null){
             this.exitSignal.countDown();
+            logger.info("Waiting for {} messages before exiting", exitSignal.getCount());
         }
     }
 
     protected void exit() {
+        logger.info("Exiting with 0");
         System.exit(0);
     }
 
