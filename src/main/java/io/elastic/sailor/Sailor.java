@@ -30,11 +30,10 @@ public class Sailor {
 
     public static void main(String[] args) throws IOException {
         logger.info("About to init Sailor");
-        final Sailor sailor = createAndStartSailor();
-        Sailor.gracefulShutdownHandler = new GracefulShutdownHandler(sailor.amqp, sailor.isShutdownRequired);
+        createAndStartSailor(true);
     }
 
-    static Sailor createAndStartSailor() throws IOException {
+    static Sailor createAndStartSailor(final boolean initGracefulShutdownHandler) throws IOException {
 
         com.google.inject.Module[] modules = new com.google.inject.Module[] {
                 new SailorModule(), new SailorEnvironmentModule()
@@ -44,7 +43,7 @@ public class Sailor {
 
         final Sailor sailor = injector.getInstance(Sailor.class);
 
-        sailor.startOrShutdown(injector);
+        sailor.startOrShutdown(injector, initGracefulShutdownHandler);
 
         return sailor;
     }
@@ -75,22 +74,28 @@ public class Sailor {
         this.isShutdownRequired = shutdownRequired;
     }
 
-    public void startOrShutdown(final Injector injector) {
+    public void startOrShutdown(final Injector injector, final boolean initGracefulShutdownHandler) {
         if (this.isShutdownRequired) {
             shutdown();
             return;
         }
 
-        start(injector.createChildInjector(new AmqpAwareModule(), new AmqpEnvironmentModule()));
+        final Injector childInjector = injector.createChildInjector(new AmqpAwareModule(), new AmqpEnvironmentModule());
+
+        start(childInjector, initGracefulShutdownHandler);
     }
 
-    public void start(final Injector injector) {
+    public void start(final Injector injector, final boolean initGracefulShutdownHandler) {
 
         amqp = injector.getInstance(AmqpService.class);
         logger.info("Connecting to AMQP");
         amqp.connectAndSubscribe();
 
         errorPublisher = injector.getInstance(ErrorPublisher.class);
+
+        if (initGracefulShutdownHandler) {
+            Sailor.gracefulShutdownHandler = new GracefulShutdownHandler(amqp);
+        }
 
         try {
             logger.info("Processing flow step: {}", this.step.getId());

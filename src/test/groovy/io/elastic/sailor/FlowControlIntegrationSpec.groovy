@@ -273,7 +273,7 @@ class FlowControlIntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
 
         then: "AMQP properties headers are all set"

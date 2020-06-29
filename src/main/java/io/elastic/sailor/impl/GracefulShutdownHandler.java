@@ -12,22 +12,17 @@ public class GracefulShutdownHandler {
     private static final Logger logger = LoggerFactory.getLogger(GracefulShutdownHandler.class);
 
     private AmqpService amqp;
-    private boolean isShutdownRequired;
     public AtomicInteger messagesProcessingCount = new AtomicInteger();
     private CountDownLatch exitSignal;
 
-    public GracefulShutdownHandler(final AmqpService amqp, final boolean isShutdownRequired) {
+    public GracefulShutdownHandler(final AmqpService amqp) {
         this.amqp = amqp;
-        this.isShutdownRequired = isShutdownRequired;
 
         registerShutdownHook();
     }
 
 
     public void increment() {
-        if (this.isShutdownRequired) {
-            return;
-        }
         final int count = this.messagesProcessingCount.incrementAndGet();
 
         logger.info("Incremented the number of messages concurrently processed to {}", count);
@@ -46,10 +41,6 @@ public class GracefulShutdownHandler {
     }
 
     protected void prepareGracefulShutdown() {
-        if (this.isShutdownRequired) {
-            return;
-        }
-
         if (this.amqp == null) {
             return;
         }
@@ -72,10 +63,6 @@ public class GracefulShutdownHandler {
     }
 
     public void decrement() {
-
-        if (this.isShutdownRequired) {
-            return;
-        }
         final int count = this.messagesProcessingCount.decrementAndGet();
         logger.info("Decremented the number of messages concurrently processed to {}", count);
 

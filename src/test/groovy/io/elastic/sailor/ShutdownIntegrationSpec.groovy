@@ -214,7 +214,7 @@ class ShutdownIntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
         then: "Blocking var exists"
         def result = blockingVar.get()

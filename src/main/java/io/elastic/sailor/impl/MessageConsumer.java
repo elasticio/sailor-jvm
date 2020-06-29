@@ -58,6 +58,9 @@ public class MessageConsumer extends DefaultConsumer {
         } catch (Exception e) {
             logger.info("Failed to parse message to process {}", deliveryTag, e);
             this.getChannel().basicReject(deliveryTag, false);
+
+            decrement();
+
             return;
         }
 
@@ -73,9 +76,17 @@ public class MessageConsumer extends DefaultConsumer {
             removeFromMDC(Constants.MDC_PARENT_MESSAGE_ID);
             ackOrReject(stats, deliveryTag);
 
+            decrement();
+        }
+    }
+
+    private void decrement() {
+        try {
             if (Sailor.gracefulShutdownHandler != null) {
                 Sailor.gracefulShutdownHandler.decrement();
             }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
         }
     }
 
@@ -94,7 +105,7 @@ public class MessageConsumer extends DefaultConsumer {
     private static void removeFromMDC(final String key) {
         try {
             MDC.remove(key);
-        }catch(Exception e) {
+        } catch (Exception e) {
             logger.warn("Failed to remove {} from MDC", key, e);
         }
     }
