@@ -7,4 +7,6 @@ public interface ObjectStorage {
     JsonObject getJsonObject(String id);
 
     JsonObject postJsonObject(JsonObject object);
+
+    JsonObject post(String object);
 }

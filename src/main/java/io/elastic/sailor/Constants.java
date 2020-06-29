@@ -69,6 +69,7 @@ public final class Constants {
 
     public static final String ENV_VAR_OBJECT_STORAGE_URI = "ELASTICIO_OBJECT_STORAGE_URI";
     public static final String ENV_VAR_OBJECT_STORAGE_TOKEN = "ELASTICIO_OBJECT_STORAGE_TOKEN";
+    public static final String ENV_VAR_OBJECT_STORAGE_SIZE_THRESHOLD = "ELASTICIO_OBJECT_STORAGE_SIZE_THRESHOLD";
     public static final String ENV_VAR_EMIT_LIGHTWEIGHT_MESSAGE = "ELASTICIO_EMIT_LIGHTWEIGHT_MESSAGE";
 
     public static final String MESSAGE_HEADER_OBJECT_STORAGE_ID = "x-ipaas-object-storage-id";

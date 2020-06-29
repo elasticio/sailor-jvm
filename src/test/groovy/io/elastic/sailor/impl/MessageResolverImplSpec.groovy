@@ -23,6 +23,7 @@ class MessageResolverImplSpec extends Specification {
         resolver.setObjectStorage(storage)
         resolver.setComponentDescriptorResolver(new ComponentDescriptorResolver())
         resolver.setStep(TestUtils.createStep("helloworldaction"))
+        resolver.setObjectStorageSizeThreshold(1)
     }
 
     def "should not resolve if object id not present"() {
@@ -141,6 +142,34 @@ class MessageResolverImplSpec extends Specification {
 
     }
 
+    def "should not externalize because the message is under the threshold size"() {
+        setup:
+        resolver.setObjectStorageSizeThreshold(200)
+
+        def headers = Json.createObjectBuilder().build()
+
+        def body = Json.createObjectBuilder()
+                .add("hello", "world")
+                .build()
+
+        def msg = new Message.Builder()
+                .id(UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee"))
+                .body(body)
+                .headers(headers)
+                .build()
+
+        def msgJson = msg.toJsonObject()
+
+        when:
+        def result = resolver.externalize(msgJson)
+
+        then:
+        0 * storage.post(_)
+        result == msgJson
+        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"hello":"world"},"attachments":{},"passthrough":{}}'
+
+    }
+
 
     def "should externalize successfully"() {
         setup:
@@ -163,7 +192,7 @@ class MessageResolverImplSpec extends Specification {
         def result = resolver.externalize(msgJson)
 
         then:
-        1 * storage.postJsonObject(_) >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
+        1 * storage.post('{"hello":"world"}') >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
         JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"body":{},"attachments":{},"passthrough":{}}'
 
     }
@@ -208,8 +237,8 @@ class MessageResolverImplSpec extends Specification {
         def result = resolver.externalize(msgJson)
 
         then:
-        1 * storage.postJsonObject(_) >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
-        1 * storage.postJsonObject(_) >> Json.createObjectBuilder().add("objectId", "588763137d802200192b485c").build()
+        1 * storage.post('{"hello":"world"}') >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
+        1 * storage.post('{"hello":"again"}') >> Json.createObjectBuilder().add("objectId", "588763137d802200192b485c").build()
         JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"body":{},"attachments":{},"passthrough":{"step_1":{"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3","headers":{"foo":"bar","x-ipaas-object-storage-id":"588763137d802200192b485c"},"body":{},"attachments":{},"passthrough":{}}}}'
 
     }

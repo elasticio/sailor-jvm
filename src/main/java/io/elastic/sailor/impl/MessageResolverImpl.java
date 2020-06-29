@@ -9,15 +9,19 @@ import org.slf4j.LoggerFactory;
 
 import javax.json.*;
 import java.nio.charset.Charset;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MessageResolverImpl implements MessageResolver {
 
+    public static final int OBJECT_STORAGE_SIZE_THRESHOLD_DEFAULT = 1024*1024;
     private static final Logger logger = LoggerFactory.getLogger(MessageResolverImpl.class);
 
     private ComponentDescriptorResolver componentDescriptorResolver;
     private Step step;
     private ObjectStorage objectStorage;
     private CryptoServiceImpl cryptoService;
+    private int objectStorageSizeThreshold = OBJECT_STORAGE_SIZE_THRESHOLD_DEFAULT;
 
     @Override
     public Message materialize(byte[] body) {
@@ -64,15 +68,38 @@ public class MessageResolverImpl implements MessageResolver {
     @Override
     public JsonObject externalize(final JsonObject message) {
         logger.info("Externalizing message body");
-        final JsonObjectBuilder result = externalizeObject(message);
+        final MessageHolder messageHolder = new MessageHolder(message);
 
+        final List<MessageHolder> passthroughHolders = new ArrayList<>();
         final JsonObject passthrough = message.getJsonObject(Message.PROPERTY_PASSTHROUGH);
-        final JsonObjectBuilder passthroughBuilder = Json.createObjectBuilder();
 
         for (String stepId : passthrough.keySet()) {
             logger.info("Externalizing passthrough step={}", stepId);
-            final JsonObjectBuilder externalizedStep = externalizeObject(passthrough.getJsonObject(stepId));
-            passthroughBuilder.add(stepId, externalizedStep);
+            final JsonObject msg = passthrough.getJsonObject(stepId);
+            passthroughHolders.add(new MessageHolder(stepId, msg));
+        }
+
+        final Integer passthroughSize = passthroughHolders.stream()
+                .map(e -> e.bodyStr.length())
+                .reduce(0, (subtotal, element) -> subtotal + element);
+
+        int totalSize = messageHolder.bodyStr.getBytes().length + passthroughSize;
+
+        logger.info("Message total size (body+passthrough): {} bytes", totalSize);
+
+        if (totalSize <= this.objectStorageSizeThreshold) {
+            logger.info("Message size is below the threshold of {} bytes. No externalization required."
+                    , this.objectStorageSizeThreshold);
+            return message;
+        }
+
+        final JsonObjectBuilder result = externalizeObject(messageHolder);
+        final JsonObjectBuilder passthroughBuilder = Json.createObjectBuilder();
+
+        for (MessageHolder next : passthroughHolders) {
+            logger.info("Externalizing passthrough step={}", next.stepId);
+            final JsonObjectBuilder externalizedStep = externalizeObject(next);
+            passthroughBuilder.add(next.stepId, externalizedStep);
         }
 
         result.add(Message.PROPERTY_PASSTHROUGH, passthroughBuilder);
@@ -80,19 +107,17 @@ public class MessageResolverImpl implements MessageResolver {
         return result.build();
     }
 
-    private JsonObjectBuilder externalizeObject(final JsonObject message) {
+    private JsonObjectBuilder externalizeObject(final MessageHolder holder) {
 
-        final JsonObjectBuilder result = Utils.copy(message);
+        final JsonObjectBuilder result = Utils.copy(holder.message);
 
-        final JsonObject body = message.getJsonObject(Message.PROPERTY_BODY);
-
-        final JsonObject storedObject = objectStorage.postJsonObject(body);
+        final JsonObject storedObject = objectStorage.post(holder.bodyStr);
 
         final JsonValue objectId = storedObject.get("objectId");
 
         logger.info("Stored object with id={}", objectId);
 
-        final JsonObjectBuilder headers = Utils.copy(message.getJsonObject(Message.PROPERTY_HEADERS));
+        final JsonObjectBuilder headers = Utils.copy(holder.message.getJsonObject(Message.PROPERTY_HEADERS));
         headers.add(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID, objectId);
 
         result.add(Message.PROPERTY_HEADERS, headers.build());
@@ -147,8 +172,15 @@ public class MessageResolverImpl implements MessageResolver {
     }
 
     @Inject
-    public void setObjectStorage(ObjectStorage objectStorage) {
+    public void setObjectStorage(final ObjectStorage objectStorage) {
         this.objectStorage = objectStorage;
+    }
+
+
+    @Inject(optional = true)
+    public void setObjectStorageSizeThreshold(final @Named(Constants.ENV_VAR_OBJECT_STORAGE_SIZE_THRESHOLD)
+                                                          int objectStorageSizeThreshold) {
+        this.objectStorageSizeThreshold = objectStorageSizeThreshold;
     }
 
 
@@ -160,5 +192,22 @@ public class MessageResolverImpl implements MessageResolver {
         }
 
         return value;
+    }
+
+    private class MessageHolder {
+        private String stepId;
+        private JsonObject message;
+        private String bodyStr;
+
+        public MessageHolder(final JsonObject message) {
+            this("", message);
+        }
+
+        public MessageHolder(final String stepId, final JsonObject message) {
+            this.stepId = stepId;
+            this.message = message;
+            this.bodyStr = message.getJsonObject(Message.PROPERTY_BODY).toString();
+        }
+
     }
 }

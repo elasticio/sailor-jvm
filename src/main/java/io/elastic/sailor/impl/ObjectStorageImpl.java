@@ -45,7 +45,11 @@ public class ObjectStorageImpl implements ObjectStorage {
 
     @Override
     public JsonObject postJsonObject(final JsonObject object) {
+        return post(object.toString());
+    }
 
+    @Override
+    public JsonObject post(String object) {
         if (this.objectStorageUri == null) {
             logger.info("Object storage service URI is not set");
             return null;
@@ -60,7 +64,7 @@ public class ObjectStorageImpl implements ObjectStorage {
 
         final String endpoint = String.format("%s/objects/", this.objectStorageUri);
 
-        final String content = cryptoService.encryptJsonObject(object);
+        final String content = cryptoService.encrypt(object);
 
         final String result = HttpUtils.post(endpoint,
                 HttpUtils.createStringEntity(content),

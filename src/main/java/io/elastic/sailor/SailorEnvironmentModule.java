@@ -2,6 +2,7 @@ package io.elastic.sailor;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import io.elastic.sailor.impl.MessageResolverImpl;
 
 public class SailorEnvironmentModule extends AbstractModule {
 
@@ -61,6 +62,10 @@ public class SailorEnvironmentModule extends AbstractModule {
 
         // 5 mins
         bindOptionalLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY, 5 * 60 * 1000L);
+
+        // 1MB
+        getOptionalIntegerValue(Constants.ENV_VAR_OBJECT_STORAGE_SIZE_THRESHOLD,
+                MessageResolverImpl.OBJECT_STORAGE_SIZE_THRESHOLD_DEFAULT);
 
 
     }
