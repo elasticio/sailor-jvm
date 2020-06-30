@@ -14,6 +14,7 @@ public class GracefulShutdownHandler {
     private AmqpService amqp;
     public AtomicInteger messagesProcessingCount = new AtomicInteger();
     private CountDownLatch exitSignal;
+    private Thread hook;
 
     public GracefulShutdownHandler(final AmqpService amqp) {
         this.amqp = amqp;
@@ -30,13 +31,15 @@ public class GracefulShutdownHandler {
 
 
     private void registerShutdownHook() {
-        Runtime.getRuntime().addShutdownHook(new Thread() {
+        hook = new Thread() {
             @Override
             public void run() {
                 logger.info("Shutdown hook called. Will exit gracefully now");
                 prepareGracefulShutdown();
             }
-        });
+        };
+
+        Runtime.getRuntime().addShutdownHook(hook);
         logger.info("Registered a graceful shutdown hook");
     }
 
@@ -63,7 +66,9 @@ public class GracefulShutdownHandler {
             logger.error(e.getMessage());
         }
 
+        Runtime.getRuntime().removeShutdownHook(hook);
         logger.info("No messages are being processed anymore");
+        amqp.disconnect();
         exit();
     }
 
