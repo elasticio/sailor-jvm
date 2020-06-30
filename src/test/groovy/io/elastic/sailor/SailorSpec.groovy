@@ -33,7 +33,7 @@ class SailorSpec extends ApiAwareSpecification {
         def component = new HelloWorldAction()
 
         when:
-        sailor.start(injector, false)
+        sailor.start(injector)
 
         then:
         1 * componentBuilder.build() >> component
@@ -43,7 +43,7 @@ class SailorSpec extends ApiAwareSpecification {
 
     def "it should fail and report exception"() {
         when:
-        sailor.start(injector, false)
+        sailor.start(injector)
 
         then:
         1 * componentBuilder.build() >> { throw new RuntimeException("OMG. I can't build the component") }

@@ -8,12 +8,7 @@ class GracefulShutdownHandlerSpec extends Specification {
 
     def "should increment and decrement properly" () {
         setup:
-        def handler = new GracefulShutdownHandler(amqp) {
-            @Override
-            protected void exit() {
-                println("Bye!")
-            }
-        }
+        def handler = new GracefulShutdownHandler(amqp)
 
         when:
         handler.prepareGracefulShutdown();

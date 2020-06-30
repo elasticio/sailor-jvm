@@ -82,10 +82,10 @@ public class Sailor {
 
         final Injector childInjector = injector.createChildInjector(new AmqpAwareModule(), new AmqpEnvironmentModule());
 
-        start(childInjector, initGracefulShutdownHandler);
+        start(childInjector);
     }
 
-    public void start(final Injector injector, final boolean initGracefulShutdownHandler) {
+    public void start(final Injector injector) {
 
         amqp = injector.getInstance(AmqpService.class);
         logger.info("Connecting to AMQP");
@@ -93,9 +93,7 @@ public class Sailor {
 
         errorPublisher = injector.getInstance(ErrorPublisher.class);
 
-        if (initGracefulShutdownHandler) {
-            Sailor.gracefulShutdownHandler = new GracefulShutdownHandler(amqp);
-        }
+        Sailor.gracefulShutdownHandler = new GracefulShutdownHandler(amqp);
 
         try {
             logger.info("Processing flow step: {}", this.step.getId());

@@ -131,7 +131,7 @@ public class MessageConsumer extends DefaultConsumer {
             return;
         }
 
-        logger.info("Acknowledging received messages {}", deliveryTag);
+        logger.info("Acknowledging received message with deliveryTag={}", deliveryTag);
         this.getChannel().basicAck(deliveryTag, true);
     }
 
