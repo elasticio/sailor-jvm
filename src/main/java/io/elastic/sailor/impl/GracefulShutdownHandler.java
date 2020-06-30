@@ -84,7 +84,7 @@ public class GracefulShutdownHandler {
 
     protected void exit() {
         logger.info("Exiting ...");
-        System.exit(143);
+        System.exit(0);
     }
 
 }
