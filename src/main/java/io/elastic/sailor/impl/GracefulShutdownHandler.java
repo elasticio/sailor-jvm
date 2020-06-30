@@ -47,10 +47,15 @@ public class GracefulShutdownHandler {
 
         this.amqp.cancelConsumer();
 
+        logger.info("Canceled all message consumers.");
+
         this.exitSignal = new CountDownLatch(this.messagesProcessingCount.get());
 
-        logger.info("Canceled all message consumers. Now waiting for {} messages to be processed before exiting",
-                this.exitSignal.getCount());
+        final long messagesCount = this.exitSignal.getCount();
+
+        if (messagesCount > 0) {
+            logger.info("Now waiting for {} messages to be processed before exiting", messagesCount);
+        }
 
         try {
             this.exitSignal.await();
@@ -73,8 +78,8 @@ public class GracefulShutdownHandler {
     }
 
     protected void exit() {
-        logger.info("Exiting with 0");
-        System.exit(0);
+        logger.info("Exiting ...");
+        System.exit(143);
     }
 
 }
