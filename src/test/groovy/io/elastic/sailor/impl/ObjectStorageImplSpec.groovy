@@ -3,15 +3,12 @@ package io.elastic.sailor.impl
 import com.github.restdriver.clientdriver.ClientDriverRequest
 import com.github.restdriver.clientdriver.ClientDriverRule
 import io.elastic.api.JSON
-import io.elastic.api.Message
-import io.elastic.sailor.Constants
 import org.junit.Rule
 import spock.lang.Specification
 
 import javax.json.Json
 
-import static com.github.restdriver.clientdriver.RestClientDriver.giveResponse
-import static com.github.restdriver.clientdriver.RestClientDriver.onRequestTo
+import static com.github.restdriver.clientdriver.RestClientDriver.*
 
 class ObjectStorageImplSpec extends Specification {
 
@@ -56,13 +53,13 @@ class ObjectStorageImplSpec extends Specification {
     def "should resolve the object by id successfully"() {
         setup:
         def object = '{"from":"storage"}'
-        def storageObjectEncrypted = crypto.encrypt(object)
+        def storageObjectEncrypted = crypto.encrypt(object, MessageEncoding.UTF8)
 
         driver.addExpectation(
                 onRequestTo("/objects/55e5eeb460a8e2070000001e")
                         .withMethod(ClientDriverRequest.Method.GET)
                         .withHeader("Authorization", "Bearer secret_token"),
-                giveResponse(storageObjectEncrypted, 'application/json')
+                giveResponseAsBytes(new ByteArrayInputStream(storageObjectEncrypted), 'application/pdf')
                         .withStatus(200));
 
         when:

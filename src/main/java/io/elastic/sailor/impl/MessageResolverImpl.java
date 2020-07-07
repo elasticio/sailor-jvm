@@ -26,8 +26,7 @@ public class MessageResolverImpl implements MessageResolver {
     @Override
     public Message materialize(byte[] body) {
 
-        final String bodyString = new String(body, Charset.forName("UTF-8"));
-        final JsonObject payload = cryptoService.decryptMessageContent(bodyString);
+        final JsonObject payload = cryptoService.decryptMessageContent(body, MessageEncoding.BASE64);
 
         final String function = step.getFunction();
 

@@ -2,10 +2,9 @@ package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import io.elastic.api.JSON;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.ObjectStorage;
-import org.apache.http.entity.StringEntity;
+import org.apache.http.entity.ByteArrayEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,11 +35,10 @@ public class ObjectStorageImpl implements ObjectStorage {
 
         final String endpoint = String.format("%s/objects/%s", this.objectStorageUri, id);
 
-        final String content = HttpUtils.get(endpoint,
+        final byte[] bytes = HttpUtils.get(endpoint,
                 new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken),
                 5);
-
-        return cryptoService.decryptMessageContent(content);
+        return cryptoService.decryptMessageContent(bytes, MessageEncoding.UTF8);
     }
 
     @Override
@@ -64,14 +62,15 @@ public class ObjectStorageImpl implements ObjectStorage {
 
         final String endpoint = String.format("%s/objects/", this.objectStorageUri);
 
-        final String content = cryptoService.encrypt(object);
+        final byte[] content = cryptoService.encrypt(object, MessageEncoding.UTF8);
 
-        final String result = HttpUtils.post(endpoint,
-                HttpUtils.createStringEntity(content),
+
+        final JsonObject result = HttpUtils.post(endpoint,
+                new ByteArrayEntity(content),
                 new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken),
                 5);
 
-        return JSON.parseObject(result);
+        return result;
     }
 
     @Inject

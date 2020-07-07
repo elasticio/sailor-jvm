@@ -2,6 +2,7 @@ package io.elastic.sailor.impl;
 
 import io.elastic.api.JSON;
 import io.elastic.sailor.UnexpectedStatusCodeException;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.*;
 
 import org.apache.http.auth.AuthenticationException;
@@ -30,7 +31,7 @@ public class HttpUtils {
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class.getName());
 
     public static String postJson(String url, JsonObject body, AuthorizationHandler authorizationHandler) throws IOException {
-        return postJson(url, body, authorizationHandler,0);
+        return postJson(url, body, authorizationHandler, 0);
     }
 
     public static JsonObject getJson(String url, final AuthorizationHandler authorizationHandler) {
@@ -53,27 +54,29 @@ public class HttpUtils {
         httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpPost.setEntity(createStringEntity(body));
 
-        final String result = sendHttpRequest(httpPost, authorizationHandler, retryCount);
+        final byte[] bytes = sendHttpRequest(
+                httpPost, authorizationHandler, retryCount, new ByteArrayHttpEntityCallback());
 
-        if (result == null) {
+        if (bytes == null) {
             throw new RuntimeException("Null response received");
         }
 
         logger.info("Successfully posted json {} bytes length", body.toString().length());
 
-        return result;
+        return new String(bytes);
     }
 
-    public static String post(final String url,
-                                  final HttpEntity body,
-                                  final AuthorizationHandler authorizationHandler,
-                                  final int retryCount) {
+    public static JsonObject post(final String url,
+                              final HttpEntity body,
+                              final AuthorizationHandler authorizationHandler,
+                              final int retryCount) {
 
 
         final HttpPost httpPost = new HttpPost(url);
         httpPost.setEntity(body);
 
-        final String result = sendHttpRequest(httpPost, authorizationHandler, retryCount);
+        final JsonObject result = sendHttpRequest(
+                httpPost, authorizationHandler, retryCount, new JsonObjectParseCallback());
 
         if (result == null) {
             throw new RuntimeException("Null response received");
@@ -88,19 +91,28 @@ public class HttpUtils {
                                      final AuthorizationHandler authorizationHandler,
                                      int retryCount) {
 
-        final String content = get(url, authorizationHandler, retryCount);
+        final HttpGet httpGet = new HttpGet(url);
+        httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
 
-        return JSON.parseObject(content);
+        final JsonObject content = sendHttpRequest(
+                httpGet, authorizationHandler, retryCount, new JsonObjectParseCallback());
+
+        if (content == null) {
+            throw new RuntimeException("Null response received");
+        }
+
+        return content;
     }
 
-    public static String get(final String url,
-                             final AuthorizationHandler authorizationHandler,
-                             int retryCount) {
+    public static byte[] get(final String url,
+                                 final AuthorizationHandler authorizationHandler,
+                                 int retryCount) {
 
         final HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
 
-        final String content = sendHttpRequest(httpGet, authorizationHandler, retryCount);
+        final byte[] content = sendHttpRequest(
+                httpGet, authorizationHandler, retryCount, new ByteArrayHttpEntityCallback());
 
         if (content == null) {
             throw new RuntimeException("Null response received");
@@ -119,7 +131,8 @@ public class HttpUtils {
         httpPut.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpPut.setEntity(createStringEntity(body));
 
-        final String content = sendHttpRequest(httpPut, authorizationHandler, retryCount);
+        final JsonObject content = sendHttpRequest(
+                httpPut, authorizationHandler, retryCount, new JsonObjectParseCallback());
 
         if (content == null) {
             throw new RuntimeException("Null response received");
@@ -127,19 +140,18 @@ public class HttpUtils {
 
         logger.info("Successfully put json {} bytes length", body.toString().length());
 
-        return JSON.parseObject(content);
+        return content;
     }
 
 
-
     public static void delete(final String url,
-                                    final AuthorizationHandler authorizationHandler,
-                                    final int retryCount) {
+                              final AuthorizationHandler authorizationHandler,
+                              final int retryCount) {
 
         final HttpDelete httpDelete = new HttpDelete(url);
         httpDelete.addHeader(HTTP.CONTENT_TYPE, "application/json");
 
-        sendHttpRequest(httpDelete, authorizationHandler, retryCount);
+        sendHttpRequest(httpDelete, authorizationHandler, retryCount, null);
 
         logger.info("Successfully sent delete");
 
@@ -158,9 +170,10 @@ public class HttpUtils {
         }
     }
 
-    private static String sendHttpRequest(final HttpUriRequest request,
-                                          final AuthorizationHandler authorizationHandler,
-                                          final int retryCount) {
+    private static  <T> T sendHttpRequest(final HttpUriRequest request,
+                                        final AuthorizationHandler authorizationHandler,
+                                        final int retryCount,
+                                        final HttpEntityCallback<T> callback) {
 
         CloseableHttpClient httpClient = HttpClients.custom()
                 .setRetryHandler((exception, executionCount, context) -> {
@@ -192,13 +205,15 @@ public class HttpUtils {
             }
 
             final HttpEntity responseEntity = response.getEntity();
-            if (responseEntity == null) {
+
+            if (responseEntity == null || callback == null) {
                 return null;
             }
 
-            final String result = EntityUtils.toString(responseEntity);
+            final T result = callback.handle(responseEntity);
+
             EntityUtils.consume(responseEntity);
-            logger.info("Successfully consumed response entity");
+
             return result;
 
         } catch (Exception e) {
@@ -208,6 +223,33 @@ public class HttpUtils {
                 httpClient.close();
             } catch (IOException e) {
                 e.printStackTrace();
+            }
+        }
+    }
+
+    private interface HttpEntityCallback<T> {
+        T handle(HttpEntity entity);
+    }
+
+    private static class JsonObjectParseCallback implements HttpEntityCallback<JsonObject> {
+
+        @Override
+        public JsonObject handle(HttpEntity entity) {
+            if (entity == null) {
+                throw new RuntimeException("Null response received");
+            }
+
+            return JSON.parseObject(consumeToString(entity));
+        }
+    }
+
+    private static class ByteArrayHttpEntityCallback implements HttpEntityCallback<byte[]> {
+        @Override
+        public byte[] handle(HttpEntity entity) {
+            try {
+                return IOUtils.toByteArray(entity.getContent());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
         }
     }
@@ -236,6 +278,28 @@ public class HttpUtils {
         try {
             return URLDecoder.decode(input, "UTF-8");
         } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    private static String consumeToString(final HttpEntity entity) {
+        String result;
+        try {
+            result = EntityUtils.toString(entity);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        consume(entity);
+
+        return result;
+    }
+
+    public static void consume(final HttpEntity entity) {
+        try {
+            EntityUtils.consume(entity);
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }

@@ -51,7 +51,7 @@ public class HttpReplyCallback implements EventEmitter.Callback {
                 .add("headers", headers.build())
                 .build();
         // encrypt
-        byte[] encryptedPayload = cipher.encryptJsonObject(payload).getBytes();
+        byte[] encryptedPayload = cipher.encryptJsonObject(payload, MessageEncoding.BASE64);
 
         sendHttpReply(encryptedPayload, executionContext.buildAmqpProperties());
     }

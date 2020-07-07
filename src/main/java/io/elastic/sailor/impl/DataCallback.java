@@ -55,7 +55,7 @@ public class DataCallback extends CountingCallbackImpl {
         }
 
         // encrypt
-        byte[] encryptedPayload = cipher.encrypt(JSON.stringify(messageAsJson)).getBytes();
+        byte[] encryptedPayload = cipher.encrypt(JSON.stringify(messageAsJson), MessageEncoding.BASE64);
 
         messagePublisher.publish(routingKey, encryptedPayload, executionContext.buildAmqpProperties(message.getId()));
     }

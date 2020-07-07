@@ -34,10 +34,10 @@ class MessageResolverImplSpec extends Specification {
                 .build()
 
         def msg = new Message.Builder().headers(headers).body(body).build()
-        def encryptedMessage = crypto.encryptMessage(msg)
+        def encryptedMessage = crypto.encryptMessage(msg, MessageEncoding.BASE64)
 
         when:
-        def result = resolver.materialize(encryptedMessage.getBytes())
+        def result = resolver.materialize(encryptedMessage)
 
         then:
         JSON.stringify(result.toJsonObject()) == JSON.stringify(msg.toJsonObject())
@@ -58,10 +58,10 @@ class MessageResolverImplSpec extends Specification {
                 .headers(headers)
                 .body(body)
                 .build()
-        def encryptedMessage = crypto.encryptMessage(msg)
+        def encryptedMessage = crypto.encryptMessage(msg, MessageEncoding.BASE64)
 
         when:
-        def result = resolver.materialize(encryptedMessage.getBytes())
+        def result = resolver.materialize(encryptedMessage)
 
         then:
         JSON.stringify(result.toJsonObject()) == '{"id":"8c33707b-57cf-4001-86fe-4494cdf3d2a0","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{},"attachments":{},"passthrough":{}}'
@@ -80,11 +80,11 @@ class MessageResolverImplSpec extends Specification {
 
         def id = UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee")
         def msg = new Message.Builder().id(id).body(body).headers(headers).build()
-        def encryptedMessage = crypto.encryptMessage(msg)
+        def encryptedMessage = crypto.encryptMessage(msg, MessageEncoding.BASE64)
 
 
         when:
-        def result = resolver.materialize(encryptedMessage.getBytes())
+        def result = resolver.materialize(encryptedMessage)
 
         then:
         1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()
@@ -129,10 +129,10 @@ class MessageResolverImplSpec extends Specification {
                 .headers(headers)
                 .passthrough(passthrough)
                 .build()
-        def encryptedMessage = crypto.encryptMessage(msg)
+        def encryptedMessage = crypto.encryptMessage(msg, MessageEncoding.BASE64)
 
         when:
-        def result = resolver.materialize(encryptedMessage.getBytes())
+        def result = resolver.materialize(encryptedMessage)
 
         then:
         1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()

@@ -4,12 +4,11 @@ import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
 import com.rabbitmq.client.DefaultConsumer
 import com.rabbitmq.client.Envelope
-import io.elastic.api.HttpReply
 import io.elastic.api.JSON
 import io.elastic.api.Message
-import io.elastic.sailor.component.StartupShutdownAction
 import io.elastic.sailor.impl.AmqpServiceImpl
 import io.elastic.sailor.impl.CryptoServiceImpl
+import io.elastic.sailor.impl.MessageEncoding
 import io.elastic.sailor.impl.MessagePublisherImpl
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -235,7 +234,7 @@ class FlowControlIntegrationSpec extends Specification {
                 .body(Json.createObjectBuilder().add('message', "Let's see flow control in action!").build())
                 .build()
 
-        byte[] payload = cipher.encryptMessage(msg).getBytes();
+        byte[] payload = cipher.encryptMessage(msg, MessageEncoding.BASE64)
 
         publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
@@ -264,7 +263,8 @@ class FlowControlIntegrationSpec extends Specification {
 
                 FlowControlIntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def errorJson = JSON.parseObject(new String(body, "UTF-8"))
-                def error = FlowControlIntegrationSpec.this.cipher.decrypt(errorJson.getString('error'));
+                def error = FlowControlIntegrationSpec.this.cipher.decrypt(
+                        errorJson.getString('error').getBytes(), MessageEncoding.BASE64);
                 blockingVar.set([error:error, properties:properties]);
             }
         }

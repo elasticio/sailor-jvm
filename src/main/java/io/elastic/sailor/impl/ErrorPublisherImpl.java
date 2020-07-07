@@ -12,8 +12,7 @@ import io.elastic.sailor.Utils;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
-import java.io.PrintWriter;
-import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 
 public class ErrorPublisherImpl implements ErrorPublisher {
 
@@ -46,10 +45,10 @@ public class ErrorPublisherImpl implements ErrorPublisher {
         final JsonObject error = builder.build();
 
         final JsonObjectBuilder payloadBuilder = Json.createObjectBuilder()
-                .add("error", cipher.encryptJsonObject(error));
+                .add("error", toString(cipher.encryptJsonObject(error, MessageEncoding.BASE64)));
 
         if (originalMessage != null) {
-            payloadBuilder.add("errorInput", cipher.encryptMessage(originalMessage));
+            payloadBuilder.add("errorInput", toString(cipher.encryptMessage(originalMessage, MessageEncoding.BASE64)));
         }
 
         final JsonObject payload = payloadBuilder.build();
@@ -57,5 +56,13 @@ public class ErrorPublisherImpl implements ErrorPublisher {
         byte[] errorPayload = payload.toString().getBytes();
 
         messagePublisher.publish(this.routingKey, errorPayload, options);
+    }
+
+    private String toString(byte[] bytes) {
+        try {
+            return new String(bytes, "UTF-8");
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

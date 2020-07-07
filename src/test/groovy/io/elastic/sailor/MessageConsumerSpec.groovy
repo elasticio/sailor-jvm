@@ -8,6 +8,7 @@ import io.elastic.api.Message
 import io.elastic.sailor.component.HelloWorldAction
 import io.elastic.sailor.impl.CryptoServiceImpl
 import io.elastic.sailor.impl.MessageConsumer
+import io.elastic.sailor.impl.MessageEncoding
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -57,7 +58,7 @@ class MessageConsumerSpec extends Specification {
                 .build()
 
         msg = new Message.Builder().body(body).build();
-        encryptedMessage = cipher.encryptMessage(msg)
+        encryptedMessage = cipher.encryptMessage(msg, MessageEncoding.BASE64)
     }
 
     def setup() {
@@ -69,10 +70,10 @@ class MessageConsumerSpec extends Specification {
     def "should decrypt and process message successfully"() {
 
         when:
-        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
+        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage);
 
         then:
-        1 * messageResolver.materialize(encryptedMessage.getBytes()) >> msg
+        1 * messageResolver.materialize(encryptedMessage) >> msg
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
@@ -87,10 +88,10 @@ class MessageConsumerSpec extends Specification {
     def "should reject message if error callback has count > 0"() {
 
         when:
-        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
+        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage);
 
         then:
-        1 * messageResolver.materialize(encryptedMessage.getBytes()) >> msg
+        1 * messageResolver.materialize(encryptedMessage) >> msg
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
@@ -104,10 +105,10 @@ class MessageConsumerSpec extends Specification {
     def "should reject message if processing fails"() {
 
         when:
-        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage.getBytes());
+        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage);
 
         then:
-        1 * messageResolver.materialize(encryptedMessage.getBytes()) >> msg
+        1 * messageResolver.materialize(encryptedMessage) >> msg
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null

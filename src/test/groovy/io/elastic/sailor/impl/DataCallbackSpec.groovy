@@ -42,7 +42,7 @@ class DataCallbackSpec extends Specification {
         1 * messagePublisher.publish(
                 "aRoutingKey",
                 {
-                    def payload = crypto.decrypt(new String(it))
+                    def payload = crypto.decrypt(it, MessageEncoding.BASE64)
                     assert payload == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"hello":"world"},"attachments":{}}'
                     it
                 },
@@ -67,7 +67,7 @@ class DataCallbackSpec extends Specification {
         1 * messagePublisher.publish(
                 "aRoutingKey",
                 {
-                    def payload = crypto.decrypt(new String(it))
+                    def payload = crypto.decrypt(it, MessageEncoding.BASE64)
                     assert payload == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"external-id":"123"},"body":{},"attachments":{},"passthrough":{}}'
                     it
                 },
