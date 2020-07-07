@@ -7,6 +7,7 @@ import io.elastic.api.Message;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.ErrorPublisher;
 import io.elastic.sailor.MessagePublisher;
+import io.elastic.sailor.Utils;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -32,12 +33,11 @@ public class ErrorPublisherImpl implements ErrorPublisher {
     @Override
     public void publish(Throwable e, AMQP.BasicProperties options, Message originalMessage) {
 
-        final StringWriter writer = new StringWriter();
-        e.printStackTrace(new PrintWriter(writer));
+        final String stackTrace = Utils.getStackTrace(e);
 
         final JsonObjectBuilder builder = Json.createObjectBuilder()
                 .add("name", e.getClass().getName())
-                .add("stack", writer.toString());
+                .add("stack", stackTrace);
 
         if (e.getMessage() != null) {
             builder.add("message", e.getMessage());
