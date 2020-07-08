@@ -63,10 +63,6 @@ public class SailorEnvironmentModule extends AbstractModule {
         // 5 mins
         bindOptionalLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY, 5 * 60 * 1000L);
 
-        // 1MB
-        getOptionalIntegerValue(Constants.ENV_VAR_OBJECT_STORAGE_SIZE_THRESHOLD,
-                MessageResolverImpl.OBJECT_STORAGE_SIZE_THRESHOLD_DEFAULT);
-
 
     }
 
@@ -107,7 +103,7 @@ public class SailorEnvironmentModule extends AbstractModule {
                 .toInstance(getOptionalYesNoValue(name));
     }
 
-    private static int getOptionalIntegerValue(final String key, int defaultValue) {
+    public static int getOptionalIntegerValue(final String key, int defaultValue) {
         final String value = Utils.getOptionalEnvVar(key);
 
         if (value != null) {
@@ -117,7 +113,7 @@ public class SailorEnvironmentModule extends AbstractModule {
         return defaultValue;
     }
 
-    private static long getOptionalLongValue(final String key, long defaultValue) {
+    public static long getOptionalLongValue(final String key, long defaultValue) {
         final String value = Utils.getOptionalEnvVar(key);
 
         if (value != null) {
@@ -127,7 +123,7 @@ public class SailorEnvironmentModule extends AbstractModule {
         return defaultValue;
     }
 
-    private static boolean getOptionalYesNoValue(final String key) {
+    public static boolean getOptionalYesNoValue(final String key) {
         final String value = Utils.getOptionalEnvVar(key);
 
         if (value != null) {

@@ -176,7 +176,7 @@ public class MessageResolverImpl implements MessageResolver {
     }
 
 
-    @Inject(optional = true)
+    @Inject
     public void setObjectStorageSizeThreshold(final @Named(Constants.ENV_VAR_OBJECT_STORAGE_SIZE_THRESHOLD)
                                                           int objectStorageSizeThreshold) {
         this.objectStorageSizeThreshold = objectStorageSizeThreshold;
