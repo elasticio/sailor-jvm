@@ -26,7 +26,7 @@ class MessageResolverImplSpec extends Specification {
         resolver.setObjectStorageSizeThreshold(1)
     }
 
-    def "should not resolve if object id not present"() {
+    def "should not materialize if object id not present"() {
         setup:
         def headers = Json.createObjectBuilder().build()
         def body = Json.createObjectBuilder()
@@ -44,7 +44,7 @@ class MessageResolverImplSpec extends Specification {
 
     }
 
-    def "should not resolve if autoResolveObjectReferences=false"() {
+    def "should not materialize if autoResolveObjectReferences=false"() {
         setup:
         resolver.setStep(TestUtils.createStep("doNotAutoResolveObjectReferences"))
 
@@ -69,7 +69,7 @@ class MessageResolverImplSpec extends Specification {
 
     }
 
-    def "should resolve the object by id successfully"() {
+    def "should materialize the object by id successfully"() {
         setup:
 
         def headers = Json.createObjectBuilder()
@@ -79,8 +79,13 @@ class MessageResolverImplSpec extends Specification {
         def body = Json.createObjectBuilder().build()
 
         def id = UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee")
-        def msg = new Message.Builder().id(id).body(body).headers(headers).build()
-        def encryptedMessage = crypto.encryptMessage(msg, MessageEncoding.BASE64)
+
+        def msg = Json.createObjectBuilder()
+                .add("id",  "9d843898-2799-47bd-bede-123dd5d755ee")
+                .add("headers",  headers)
+                .add("body",  body)
+                .build()
+        def encryptedMessage = crypto.encryptJsonObject(msg, MessageEncoding.BASE64)
 
 
         when:
@@ -88,7 +93,7 @@ class MessageResolverImplSpec extends Specification {
 
         then:
         1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()
-        JSON.stringify(msg.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{},"attachments":{},"passthrough":{}}'
+        JSON.stringify(msg) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{}}'
         JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"from":"storage"},"attachments":{},"passthrough":{}}'
 
     }
@@ -174,26 +179,47 @@ class MessageResolverImplSpec extends Specification {
     def "should externalize successfully"() {
         setup:
 
-        def headers = Json.createObjectBuilder().build()
+        def headers = Json.createObjectBuilder()
+                .add("x-meta-foo", "12345")
+                .build()
 
         def body = Json.createObjectBuilder()
                 .add("hello", "world")
                 .build()
 
-        def msg = new Message.Builder()
-                .id(UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee"))
-                .body(body)
-                .headers(headers)
+        def msg = Json.createObjectBuilder()
+                .add("id", "9d843898-2799-47bd-bede-123dd5d755ee")
+                .add("headers", headers)
+                .add("body", body)
                 .build()
 
-        def msgJson = msg.toJsonObject()
-
         when:
-        def result = resolver.externalize(msgJson)
+        def result = resolver.externalize(msg)
 
         then:
         1 * storage.post('{"hello":"world"}') >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
-        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"body":{},"attachments":{},"passthrough":{}}'
+        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-meta-foo":"12345","x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"body":{},"passthrough":{}}'
+
+    }
+
+    def "should externalize successfully when no headers"() {
+        setup:
+
+        def body = Json.createObjectBuilder()
+                .add("hello", "world")
+                .build()
+
+        def msg = Json.createObjectBuilder()
+                .add("id", "9d843898-2799-47bd-bede-123dd5d755ee")
+                .add("body", body)
+                .build()
+
+        when:
+        def result = resolver.externalize(msg)
+
+        then:
+        1 * storage.post('{"hello":"world"}') >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
+        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","body":{},"headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"passthrough":{}}'
 
     }
 

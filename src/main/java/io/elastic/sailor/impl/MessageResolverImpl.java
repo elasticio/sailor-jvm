@@ -52,13 +52,15 @@ public class MessageResolverImpl implements MessageResolver {
 
         final JsonObjectBuilder passthroughBuilder = Json.createObjectBuilder();
 
-        this.logger.info("About to retrieve passthrough from storage");
+        if (passthrough != null) {
+            this.logger.info("About to retrieve passthrough from storage");
 
-        for (String stepId : passthrough.keySet()) {
-            final JsonObjectBuilder resolvedStep = resolveMessage(passthrough.getJsonObject(stepId));
+            for (String stepId : passthrough.keySet()) {
+                final JsonObjectBuilder resolvedStep = resolveMessage(passthrough.getJsonObject(stepId));
 
-            if (resolvedStep != null) {
-                passthroughBuilder.add(stepId, resolvedStep);
+                if (resolvedStep != null) {
+                    passthroughBuilder.add(stepId, resolvedStep);
+                }
             }
         }
 
@@ -75,10 +77,12 @@ public class MessageResolverImpl implements MessageResolver {
         final List<MessageHolder> passthroughHolders = new ArrayList<>();
         final JsonObject passthrough = message.getJsonObject(Message.PROPERTY_PASSTHROUGH);
 
-        for (String stepId : passthrough.keySet()) {
-            logger.info("Externalizing passthrough step={}", stepId);
-            final JsonObject msg = passthrough.getJsonObject(stepId);
-            passthroughHolders.add(new MessageHolder(stepId, msg));
+        if (passthrough != null){
+            for (String stepId : passthrough.keySet()) {
+                logger.info("Externalizing passthrough step={}", stepId);
+                final JsonObject msg = passthrough.getJsonObject(stepId);
+                passthroughHolders.add(new MessageHolder(stepId, msg));
+            }
         }
 
         final Integer passthroughSize = passthroughHolders.stream()
