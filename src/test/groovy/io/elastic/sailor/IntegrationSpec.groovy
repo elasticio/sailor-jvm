@@ -272,7 +272,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
 
         then: "AMQP properties headers are all set"
@@ -358,7 +358,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
 
         then: "AMQP properties headers are all set"
@@ -454,7 +454,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
 
         then: "AMQP properties headers are all set"
@@ -541,7 +541,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
@@ -621,7 +621,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
@@ -671,7 +671,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
         then: "Blocking var exists"
         def result = blockingVar.get()
@@ -753,7 +753,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
@@ -828,7 +828,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
 
         then: "AMQP properties headers are all set"

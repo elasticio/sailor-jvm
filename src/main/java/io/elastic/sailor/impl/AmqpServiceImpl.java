@@ -20,7 +20,6 @@ public class AmqpServiceImpl implements AmqpService {
 
     private Connection amqp;
     private Channel subscribeChannel;
-    private Channel publishChannel;
 
     private String amqpUri;
     private String subscribeExchangeName;
@@ -88,11 +87,6 @@ public class AmqpServiceImpl implements AmqpService {
             subscribeChannel.close();
         } catch (IOException | TimeoutException e) {
             logger.info("Subscription channel is already closed: " + e);
-        }
-        try {
-            publishChannel.close();
-        } catch (IOException | TimeoutException e) {
-            logger.info("Publish channel is already closed: " + e);
         }
         try {
             amqp.close();
@@ -175,10 +169,6 @@ public class AmqpServiceImpl implements AmqpService {
 
     public void setSubscribeChannel(Channel subscribeChannel) {
         this.subscribeChannel = subscribeChannel;
-    }
-
-    public void setPublishChannel(Channel publishChannel) {
-        this.publishChannel = publishChannel;
     }
 
     public Connection getConnection() {

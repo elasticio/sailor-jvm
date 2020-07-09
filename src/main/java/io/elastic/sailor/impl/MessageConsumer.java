@@ -42,6 +42,10 @@ public class MessageConsumer extends DefaultConsumer {
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
 
+        if (Sailor.gracefulShutdownHandler != null) {
+            Sailor.gracefulShutdownHandler.increment();
+        }
+
         ExecutionContext executionContext = null;
         long deliveryTag = envelope.getDeliveryTag();
 
@@ -55,6 +59,9 @@ public class MessageConsumer extends DefaultConsumer {
         } catch (Exception e) {
             this.getChannel().basicReject(deliveryTag, false);
             logger.error("Failed to parse or resolve message to process {}", Utils.getStackTrace(e));
+
+            decrement();
+
             return;
         }
 
@@ -69,6 +76,18 @@ public class MessageConsumer extends DefaultConsumer {
             removeFromMDC(Constants.MDC_MESSAGE_ID);
             removeFromMDC(Constants.MDC_PARENT_MESSAGE_ID);
             ackOrReject(stats, deliveryTag);
+
+            decrement();
+        }
+    }
+
+    private void decrement() {
+        try {
+            if (Sailor.gracefulShutdownHandler != null) {
+                Sailor.gracefulShutdownHandler.decrement();
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
         }
     }
 
@@ -110,7 +129,7 @@ public class MessageConsumer extends DefaultConsumer {
             return;
         }
 
-        logger.info("Acknowledging received messages {}", deliveryTag);
+        logger.info("Acknowledging received message with deliveryTag={}", deliveryTag);
         this.getChannel().basicAck(deliveryTag, true);
     }
 

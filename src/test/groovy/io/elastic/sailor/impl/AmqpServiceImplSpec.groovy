@@ -13,7 +13,6 @@ import spock.lang.Shared
 class AmqpServiceImplSpec extends ApiAwareSpecification {
 
     def subscribeChannel = Mock(Channel)
-    def publishChannel = Mock(Channel)
 
     @Shared
     def amqp;
@@ -26,7 +25,6 @@ class AmqpServiceImplSpec extends ApiAwareSpecification {
 
     def setup() {
         amqp.setSubscribeChannel(subscribeChannel)
-        amqp.setPublishChannel(publishChannel)
     }
 
     def getOptions() {
