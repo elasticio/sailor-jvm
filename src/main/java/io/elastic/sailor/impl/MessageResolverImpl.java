@@ -56,7 +56,10 @@ public class MessageResolverImpl implements MessageResolver {
 
         for (String stepId : passthrough.keySet()) {
             final JsonObjectBuilder resolvedStep = resolveMessage(passthrough.getJsonObject(stepId));
-            passthroughBuilder.add(stepId, resolvedStep);
+
+            if (resolvedStep != null) {
+                passthroughBuilder.add(stepId, resolvedStep);
+            }
         }
 
         resolved.add(Message.PROPERTY_PASSTHROUGH, passthroughBuilder);
