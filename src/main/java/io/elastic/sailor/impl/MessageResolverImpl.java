@@ -116,10 +116,19 @@ public class MessageResolverImpl implements MessageResolver {
 
         logger.info("Stored object with id={}", objectId);
 
-        final JsonObjectBuilder headers = Utils.copy(holder.message.getJsonObject(Message.PROPERTY_HEADERS));
-        headers.add(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID, objectId);
+        final JsonObject headers = holder.message.getJsonObject(Message.PROPERTY_HEADERS);
 
-        result.add(Message.PROPERTY_HEADERS, headers.build());
+        JsonObjectBuilder headersBuilder;
+
+        if (headers == null) {
+            headersBuilder = Json.createObjectBuilder();
+        } else {
+            headersBuilder = Utils.copy(headers);
+        }
+
+        headersBuilder.add(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID, objectId);
+
+        result.add(Message.PROPERTY_HEADERS, headersBuilder.build());
         result.add(Message.PROPERTY_BODY, Json.createObjectBuilder().build());
 
         return result;
