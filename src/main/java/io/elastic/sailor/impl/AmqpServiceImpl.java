@@ -20,7 +20,6 @@ public class AmqpServiceImpl implements AmqpService {
 
     private Connection amqp;
     private Channel subscribeChannel;
-    private Channel publishChannel;
 
     private String amqpUri;
     private String subscribeExchangeName;
@@ -30,6 +29,7 @@ public class AmqpServiceImpl implements AmqpService {
     private Step step;
     private String consumerTag;
     private ContainerContext containerContext;
+    private MessageResolver messageResolver;
 
     @Inject
     public AmqpServiceImpl(CryptoServiceImpl cipher) {
@@ -70,6 +70,11 @@ public class AmqpServiceImpl implements AmqpService {
         this.containerContext = containerContext;
     }
 
+    @Inject
+    public void setMessageResolver(final MessageResolver messageResolver) {
+        this.messageResolver = messageResolver;
+    }
+
     public void connectAndSubscribe() {
         openConnection();
         openSubscribeChannel();
@@ -84,11 +89,6 @@ public class AmqpServiceImpl implements AmqpService {
             logger.info("Subscription channel is already closed: " + e);
         }
         try {
-            publishChannel.close();
-        } catch (IOException | TimeoutException e) {
-            logger.info("Publish channel is already closed: " + e);
-        }
-        try {
             amqp.close();
         } catch (IOException e) {
             logger.info("AMQP connection is already closed: " + e);
@@ -98,7 +98,7 @@ public class AmqpServiceImpl implements AmqpService {
 
     public void subscribeConsumer(final Function function) {
         final MessageConsumer consumer = new MessageConsumer(
-                subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext);
+                subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext, this.messageResolver);
 
         try {
             consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
@@ -169,10 +169,6 @@ public class AmqpServiceImpl implements AmqpService {
 
     public void setSubscribeChannel(Channel subscribeChannel) {
         this.subscribeChannel = subscribeChannel;
-    }
-
-    public void setPublishChannel(Channel publishChannel) {
-        this.publishChannel = publishChannel;
     }
 
     public Connection getConnection() {

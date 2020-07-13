@@ -1,10 +1,9 @@
 package io.elastic.sailor;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.assistedinject.FactoryModuleBuilder;
 import com.google.inject.name.Names;
-import io.elastic.api.EventEmitter;
-import io.elastic.sailor.impl.*;
+import io.elastic.sailor.impl.MessageResolverImpl;
+import static io.elastic.sailor.SailorEnvironmentModule.getOptionalIntegerValue;
 
 public class AmqpEnvironmentModule extends AbstractModule {
     @Override
@@ -19,11 +18,22 @@ public class AmqpEnvironmentModule extends AbstractModule {
         bindRequiredStringEnvVar(Constants.ENV_VAR_SNAPSHOT_ROUTING_KEY);
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD);
         bindRequiredStringEnvVar(Constants.ENV_VAR_MESSAGE_CRYPTO_IV);
+
+        // 1MB
+        bindOptionalIntegerEnvVar(Constants.ENV_VAR_OBJECT_STORAGE_SIZE_THRESHOLD,
+                MessageResolverImpl.OBJECT_STORAGE_SIZE_THRESHOLD_DEFAULT);
     }
+
 
     void bindRequiredStringEnvVar(final String name) {
         bind(String.class)
                 .annotatedWith(Names.named(name))
                 .toInstance(Utils.getEnvVar(name));
+    }
+
+    void bindOptionalIntegerEnvVar(final String name, int defaultValue) {
+        bind(Integer.class)
+                .annotatedWith(Names.named(name))
+                .toInstance(getOptionalIntegerValue(name, defaultValue));
     }
 }

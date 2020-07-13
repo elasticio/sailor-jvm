@@ -60,9 +60,12 @@ public class SailorTestModule extends AbstractModule {
 
         bindRequiredIntegerEnvVar(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS, 5);
 
+        bindRequiredIntegerEnvVar(Constants.ENV_VAR_OBJECT_STORAGE_SIZE_THRESHOLD, Integer.MAX_VALUE);
         bindRequiredIntegerEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_ATTEMPTS, Integer.MAX_VALUE);
         bindRequiredLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_DELAY, 100L);
         bindRequiredLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY, 5 * 60 * 1000L);
+
+        bindRequiredBooleanEnvVar(Constants.ENV_VAR_EMIT_LIGHTWEIGHT_MESSAGE, false);
 
     }
 
@@ -80,6 +83,12 @@ public class SailorTestModule extends AbstractModule {
 
     void bindRequiredLongEnvVar(final String name, final Long value) {
         bind(Long.class)
+                .annotatedWith(Names.named(name))
+                .toInstance(value);
+    }
+
+    void bindRequiredBooleanEnvVar(final String name, final Boolean value) {
+        bind(Boolean.class)
                 .annotatedWith(Names.named(name))
                 .toInstance(value);
     }

@@ -34,13 +34,15 @@ class ErrorPublisherImplSpec extends Specification {
                 routingKey,
                 {
                     def payload = JSON.parseObject(new String(it))
-                    def errorString = crypto.decrypt(payload.getString("error"))
+                    def errorString = crypto.decrypt(
+                            payload.getString("error").getBytes(), MessageEncoding.BASE64)
                     def error = JSON.parseObject(errorString)
                     assert error.getString('name') == 'java.lang.IllegalStateException'
                     assert error.getString('message') == 'Ouch!'
                     assert error.getString('stack').startsWith('java.lang.IllegalStateException: Ouch!')
 
-                    def errorInputString = crypto.decrypt(payload.getString("errorInput"))
+                    def errorInputString = crypto.decrypt(
+                            payload.getString("errorInput").getBytes(), MessageEncoding.BASE64)
                     def errorInput = JSON.parseObject(errorInputString)
                     assert JSON.stringify(errorInput.get('body')) == '{"hello":"world"}'
 

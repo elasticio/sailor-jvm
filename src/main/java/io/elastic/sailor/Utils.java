@@ -8,6 +8,8 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -128,5 +130,37 @@ public class Utils {
         }
 
         return "unknown";
+    }
+
+    public static JsonObjectBuilder copy(final JsonObject object) {
+
+        final JsonObjectBuilder result = Json.createObjectBuilder();
+
+        object.entrySet()
+                .stream()
+                .forEach(s -> result.add(s.getKey(), s.getValue()));
+
+        return result;
+    }
+
+    public static JsonObject omit(final JsonObject obj, String... properties) {
+        if (properties == null) {
+            throw new IllegalArgumentException("Properties must not be null");
+        }
+        final List<String> propertiesList = Arrays.asList(properties);
+
+        final JsonObjectBuilder result = Json.createObjectBuilder();
+        obj.entrySet()
+                .stream()
+                .filter(s -> !propertiesList.contains(s.getKey()))
+                .forEach(s -> result.add(s.getKey(), s.getValue()));
+        return result.build();
+    }
+
+    public static String getStackTrace(Throwable e) {
+        final StringWriter writer = new StringWriter();
+        e.printStackTrace(new PrintWriter(writer));
+
+        return writer.toString();
     }
 }

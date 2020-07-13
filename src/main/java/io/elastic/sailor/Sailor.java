@@ -4,8 +4,12 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import io.elastic.api.*;
+import io.elastic.api.Function;
+import io.elastic.api.InitParameters;
+import io.elastic.api.ShutdownParameters;
+import io.elastic.api.StartupParameters;
 import io.elastic.sailor.impl.BunyanJsonLayout;
+import io.elastic.sailor.impl.GracefulShutdownHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,13 +29,14 @@ public class Sailor {
     private boolean isShutdownRequired;
     private AmqpService amqp;
     private ErrorPublisher errorPublisher;
+    public static GracefulShutdownHandler gracefulShutdownHandler;
 
     public static void main(String[] args) throws IOException {
         logger.info("About to init Sailor");
-        createAndStartSailor();
+        createAndStartSailor(true);
     }
 
-    static Sailor createAndStartSailor() throws IOException {
+    static Sailor createAndStartSailor(final boolean initGracefulShutdownHandler) throws IOException {
 
         com.google.inject.Module[] modules = new com.google.inject.Module[] {
                 new SailorModule(), new SailorEnvironmentModule()
@@ -41,7 +46,7 @@ public class Sailor {
 
         final Sailor sailor = injector.getInstance(Sailor.class);
 
-        sailor.startOrShutdown(injector);
+        sailor.startOrShutdown(injector, initGracefulShutdownHandler);
 
         return sailor;
     }
@@ -72,13 +77,15 @@ public class Sailor {
         this.isShutdownRequired = shutdownRequired;
     }
 
-    public void startOrShutdown(final Injector injector) {
+    public void startOrShutdown(final Injector injector, final boolean initGracefulShutdownHandler) {
         if (this.isShutdownRequired) {
             shutdown();
             return;
         }
 
-        start(injector.createChildInjector(new AmqpAwareModule(), new AmqpEnvironmentModule()));
+        final Injector childInjector = injector.createChildInjector(new AmqpAwareModule(), new AmqpEnvironmentModule());
+
+        start(childInjector);
     }
 
     public void start(final Injector injector) {
@@ -88,6 +95,8 @@ public class Sailor {
         amqp.connectAndSubscribe();
 
         errorPublisher = injector.getInstance(ErrorPublisher.class);
+
+        Sailor.gracefulShutdownHandler = new GracefulShutdownHandler(amqp);
 
         try {
             logger.info("Processing flow step: {}", this.step.getId());

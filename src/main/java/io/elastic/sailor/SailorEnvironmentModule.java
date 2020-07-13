@@ -2,6 +2,7 @@ package io.elastic.sailor;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import io.elastic.sailor.impl.MessageResolverImpl;
 
 public class SailorEnvironmentModule extends AbstractModule {
 
@@ -31,6 +32,8 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindOptionalStringEnvVar(Constants.ENV_VAR_FLOW_VERSION);
         bindOptionalStringEnvVar(Constants.ENV_VAR_TASK_USER_EMAIL);
         bindOptionalStringEnvVar(Constants.ENV_VAR_TENANT_ID);
+        bindOptionalStringEnvVar(Constants.ENV_VAR_OBJECT_STORAGE_URI);
+        bindOptionalStringEnvVar(Constants.ENV_VAR_OBJECT_STORAGE_TOKEN);
 
 
         // optional env vars
@@ -50,6 +53,7 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindOptionalYesNoEnvVar(Constants.ENV_VAR_STARTUP_REQUIRED);
         bindOptionalYesNoEnvVar(Constants.ENV_VAR_NO_SELF_PASSTRHOUGH);
         bindOptionalYesNoEnvVar(Constants.ENV_VAR_HOOK_SHUTDOWN);
+        bindOptionalYesNoEnvVar(Constants.ENV_VAR_EMIT_LIGHTWEIGHT_MESSAGE);
 
         bindOptionalIntegerEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_ATTEMPTS, Integer.MAX_VALUE);
 
@@ -99,7 +103,7 @@ public class SailorEnvironmentModule extends AbstractModule {
                 .toInstance(getOptionalYesNoValue(name));
     }
 
-    private static int getOptionalIntegerValue(final String key, int defaultValue) {
+    public static int getOptionalIntegerValue(final String key, int defaultValue) {
         final String value = Utils.getOptionalEnvVar(key);
 
         if (value != null) {
@@ -109,7 +113,7 @@ public class SailorEnvironmentModule extends AbstractModule {
         return defaultValue;
     }
 
-    private static long getOptionalLongValue(final String key, long defaultValue) {
+    public static long getOptionalLongValue(final String key, long defaultValue) {
         final String value = Utils.getOptionalEnvVar(key);
 
         if (value != null) {
@@ -119,7 +123,7 @@ public class SailorEnvironmentModule extends AbstractModule {
         return defaultValue;
     }
 
-    private static boolean getOptionalYesNoValue(final String key) {
+    public static boolean getOptionalYesNoValue(final String key) {
         final String value = Utils.getOptionalEnvVar(key);
 
         if (value != null) {

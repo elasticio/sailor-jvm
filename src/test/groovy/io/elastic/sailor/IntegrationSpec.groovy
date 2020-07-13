@@ -10,6 +10,7 @@ import io.elastic.api.Message
 import io.elastic.sailor.component.StartupShutdownAction
 import io.elastic.sailor.impl.AmqpServiceImpl
 import io.elastic.sailor.impl.CryptoServiceImpl
+import io.elastic.sailor.impl.MessageEncoding
 import io.elastic.sailor.impl.MessagePublisherImpl
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -244,7 +245,7 @@ class IntegrationSpec extends Specification {
                 .body(Json.createObjectBuilder().add('message', 'Just do it!').build())
                 .build()
 
-        byte[] payload = cipher.encryptMessage(msg).getBytes();
+        byte[] payload = cipher.encryptMessage(msg, MessageEncoding.BASE64)
 
         publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
@@ -261,8 +262,8 @@ class IntegrationSpec extends Specification {
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def bodyString = new String(body, "UTF-8");
-                def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
+                def message = Utils.createMessage(
+                        IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64))
                 blockingVar.set([message:message, properties:properties]);
             }
         }
@@ -271,7 +272,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
 
         then: "AMQP properties headers are all set"
@@ -330,7 +331,7 @@ class IntegrationSpec extends Specification {
                 .body(Json.createObjectBuilder().add('message', 'Just do it!').build())
                 .build()
 
-        byte[] payload = cipher.encryptMessage(msg).getBytes();
+        byte[] payload = cipher.encryptMessage(msg, MessageEncoding.BASE64)
 
         publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
@@ -347,8 +348,8 @@ class IntegrationSpec extends Specification {
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def bodyString = new String(body, "UTF-8");
-                def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
+                def message = Utils.createMessage(
+                        IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64))
                 blockingVar.set([message:message, properties:properties]);
             }
         }
@@ -357,7 +358,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
 
         then: "AMQP properties headers are all set"
@@ -425,7 +426,7 @@ class IntegrationSpec extends Specification {
                 .add(Message.PROPERTY_PASSTHROUGH, passthrough)
                 .build()
 
-        byte[] payload = cipher.encryptJsonObject(msg).getBytes();
+        byte[] payload = cipher.encryptJsonObject(msg, MessageEncoding.BASE64)
 
         publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
@@ -442,8 +443,7 @@ class IntegrationSpec extends Specification {
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def bodyString = new String(body, "UTF-8");
-                def decryptedJson = IntegrationSpec.this.cipher.decryptMessageContent(bodyString)
+                def decryptedJson = IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64)
                 def message = Utils.createMessage(decryptedJson)
                 def receivedPassthrough = decryptedJson.getJsonObject(Message.PROPERTY_PASSTHROUGH)
                 blockingVar.set([message:message, properties:properties, receivedPassthrough:receivedPassthrough]);
@@ -454,7 +454,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
 
         then: "AMQP properties headers are all set"
@@ -514,7 +514,7 @@ class IntegrationSpec extends Specification {
                 .body(Json.createObjectBuilder().add('message', 'Show me startup/init').build())
                 .build()
 
-        byte[] payload = cipher.encryptMessage(msg).getBytes();
+        byte[] payload = cipher.encryptMessage(msg, MessageEncoding.BASE64)
 
         publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
@@ -531,8 +531,8 @@ class IntegrationSpec extends Specification {
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def bodyString = new String(body, "UTF-8");
-                def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
+                def message = Utils.createMessage(
+                        IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64))
                 blockingVar.set([message:message, properties:properties]);
             }
         }
@@ -541,7 +541,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
@@ -594,7 +594,7 @@ class IntegrationSpec extends Specification {
                 .body(Json.createObjectBuilder().add('message', 'Show me startup/shutdown').build())
                 .build()
 
-        byte[] payload = cipher.encryptMessage(msg).getBytes();
+        byte[] payload = cipher.encryptMessage(msg, MessageEncoding.BASE64)
 
         publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
@@ -611,8 +611,8 @@ class IntegrationSpec extends Specification {
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def bodyString = new String(body, "UTF-8");
-                def message = Utils.createMessage(IntegrationSpec.this.cipher.decryptMessageContent(bodyString))
+                def message = Utils.createMessage(
+                        IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64))
                 blockingVar.set([message:message, properties:properties]);
             }
         }
@@ -621,7 +621,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
@@ -671,7 +671,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
         then: "Blocking var exists"
         def result = blockingVar.get()
@@ -727,7 +727,7 @@ class IntegrationSpec extends Specification {
                 .body(Json.createObjectBuilder().add('message', 'Send me a reply').build())
                 .build()
 
-        byte[] payload = cipher.encryptMessage(msg).getBytes();
+        byte[] payload = cipher.encryptMessage(msg, MessageEncoding.BASE64)
 
         publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
@@ -744,8 +744,7 @@ class IntegrationSpec extends Specification {
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def bodyString = new String(body, "UTF-8");
-                def message = IntegrationSpec.this.cipher.decrypt(bodyString);
+                def message = IntegrationSpec.this.cipher.decrypt(body, MessageEncoding.BASE64);
                 blockingVar.set([message:message, properties:properties]);
             }
         }
@@ -754,7 +753,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
@@ -801,7 +800,7 @@ class IntegrationSpec extends Specification {
                 .body(Json.createObjectBuilder().add('message', 'Just do it 2!').build())
                 .build()
 
-        byte[] payload = cipher.encryptMessage(msg).getBytes();
+        byte[] payload = cipher.encryptMessage(msg, MessageEncoding.BASE64)
 
         publishChannel.basicPublish(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
@@ -819,7 +818,8 @@ class IntegrationSpec extends Specification {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def errorJson = JSON.parseObject(new String(body, "UTF-8"))
-                def error = IntegrationSpec.this.cipher.decrypt(errorJson.getString('error'));
+                def error = IntegrationSpec.this.cipher.decrypt(
+                        errorJson.getString('error').getBytes(), MessageEncoding.BASE64);
                 blockingVar.set([error:error, properties:properties]);
             }
         }
@@ -828,7 +828,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor()
+        sailor = Sailor.createAndStartSailor(false)
 
 
         then: "AMQP properties headers are all set"

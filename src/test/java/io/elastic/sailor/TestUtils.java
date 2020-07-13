@@ -5,17 +5,21 @@ import javax.json.JsonObject;
 
 public class TestUtils {
 
-    public static Step createStep(final boolean putIncomingMessageIntoPassThrough) {
+    public static Step createStep(final String functionName, final boolean putIncomingMessageIntoPassThrough) {
         final JsonObject step = Json.createObjectBuilder()
                 .add("id", "step_1")
                 .add("comp_id", "testcomponent")
-                .add("function", "test")
+                .add("function", functionName)
                 .add("snapshot", Json.createObjectBuilder().add("timestamp", "19700101").build())
                 .build();
         return new Step(step, putIncomingMessageIntoPassThrough);
     }
 
     public static Step createStep() {
-        return TestUtils.createStep(false);
+        return TestUtils.createStep("test", false);
+    }
+
+    public static Step createStep(final String functionName) {
+        return TestUtils.createStep(functionName, false);
     }
 }

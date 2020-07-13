@@ -10,9 +10,7 @@ import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import javax.json.JsonObject;
 import java.io.IOException;
-import java.nio.charset.Charset;
 
 public class MessageConsumer extends DefaultConsumer {
 
@@ -22,24 +20,31 @@ public class MessageConsumer extends DefaultConsumer {
     private final Function function;
     private final Step step;
     private final ContainerContext containerContext;
+    private final MessageResolver messageResolver;
 
     public MessageConsumer(Channel channel,
                            CryptoServiceImpl cipher,
                            MessageProcessor processor,
                            Function function,
                            Step step,
-                           final ContainerContext containerContext) {
+                           final ContainerContext containerContext,
+                           final MessageResolver messageResolver) {
         super(channel);
         this.cipher = cipher;
         this.processor = processor;
         this.function = function;
         this.step = step;
         this.containerContext = containerContext;
+        this.messageResolver = messageResolver;
     }
 
     @Override
     public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
             throws IOException {
+
+        if (Sailor.gracefulShutdownHandler != null) {
+            Sailor.gracefulShutdownHandler.increment();
+        }
 
         ExecutionContext executionContext = null;
         long deliveryTag = envelope.getDeliveryTag();
@@ -52,8 +57,11 @@ public class MessageConsumer extends DefaultConsumer {
         try {
             executionContext = createExecutionContext(body, properties);
         } catch (Exception e) {
-            logger.info("Failed to parse message to process {}", deliveryTag, e);
             this.getChannel().basicReject(deliveryTag, false);
+            logger.error("Failed to parse or resolve message to process {}", Utils.getStackTrace(e));
+
+            decrement();
+
             return;
         }
 
@@ -62,12 +70,24 @@ public class MessageConsumer extends DefaultConsumer {
         try {
             stats = processor.processMessage(executionContext, this.function);
         } catch (Exception e) {
-            logger.error("Failed to process message for delivery tag:" + deliveryTag, e);
+            logger.error("Failed to process message: {}", Utils.getStackTrace(e));
         } finally {
             removeFromMDC(Constants.MDC_THREAD_ID);
             removeFromMDC(Constants.MDC_MESSAGE_ID);
             removeFromMDC(Constants.MDC_PARENT_MESSAGE_ID);
             ackOrReject(stats, deliveryTag);
+
+            decrement();
+        }
+    }
+
+    private void decrement() {
+        try {
+            if (Sailor.gracefulShutdownHandler != null) {
+                Sailor.gracefulShutdownHandler.decrement();
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage());
         }
     }
 
@@ -87,16 +107,13 @@ public class MessageConsumer extends DefaultConsumer {
         try {
             MDC.remove(key);
         }catch(Exception e) {
-            logger.warn("Failed to remove {} from MDC", key, e);
+            logger.warn("Failed to remove {} from MDC: {}", key, Utils.getStackTrace(e));
         }
     }
 
     private ExecutionContext createExecutionContext(final byte[] body, final AMQP.BasicProperties properties) {
 
-        final String bodyString = new String(body, Charset.forName("UTF-8"));
-        final JsonObject payload = cipher.decryptMessageContent(bodyString);
-
-        final Message message = Utils.createMessage(payload);
+        final Message message = messageResolver.materialize(body);
 
         return new ExecutionContext(this.step, message, properties, this.containerContext);
     }
@@ -112,7 +129,7 @@ public class MessageConsumer extends DefaultConsumer {
             return;
         }
 
-        logger.info("Acknowledging received messages {}", deliveryTag);
+        logger.info("Acknowledging received message with deliveryTag={}", deliveryTag);
         this.getChannel().basicAck(deliveryTag, true);
     }
 

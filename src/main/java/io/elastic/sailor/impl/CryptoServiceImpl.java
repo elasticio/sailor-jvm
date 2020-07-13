@@ -15,10 +15,8 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import javax.json.Json;
 import javax.json.JsonObject;
-import javax.json.JsonString;
 import java.security.Key;
 import java.security.MessageDigest;
-import java.util.UUID;
 
 public final class CryptoServiceImpl {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CryptoServiceImpl.class);
@@ -42,24 +40,24 @@ public final class CryptoServiceImpl {
         this.encryptionIV = new IvParameterSpec(initializationVector.getBytes());
     }
 
-    public String encryptMessage(final Message message) {
-        return encrypt(message.toString());
+    public byte[] encryptMessage(final Message message, final MessageEncoding encoding) {
+        return encrypt(message.toString(), encoding);
     }
 
     // converts JSON to string and encrypts
-    public String encryptJsonObject(JsonObject message) {
-        return encrypt(message.toString());
+    public byte[] encryptJsonObject(JsonObject message, final MessageEncoding encoding) {
+        return encrypt(message.toString(), encoding);
     }
 
     // decrypts string and returns JSON object
-    public JsonObject decryptMessageContent(final String message) {
+    public JsonObject decryptMessageContent(final byte[] bytes, final MessageEncoding encoding) {
 
-        if (message == null || message.isEmpty()) {
+        if (bytes == null || bytes.length == 0) {
             logger.info("Message is null or empty. Returning empty JSON object");
             return Json.createObjectBuilder().build();
         }
 
-        final String decryptedMessage = decrypt(message);
+        final String decryptedMessage = decrypt(bytes, encoding);
 
         if (Utils.isJsonObject(decryptedMessage)) {
             logger.info("Parsing message JSON");
@@ -69,28 +67,38 @@ public final class CryptoServiceImpl {
         throw new RuntimeException("Message is not a JSON object: " + decryptedMessage);
     }
 
-    public String encrypt(String message) {
+    public byte[] encrypt(final String message, final MessageEncoding encoding) {
         try {
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, encryptionKey, encryptionIV);
 
-            byte[] a = cipher.doFinal(message.getBytes());
+            final byte[] bytes = message.getBytes("UTF-8");
 
-            return new String(Base64.encodeBase64(a));
+            byte[] a = cipher.doFinal(bytes);
+
+            if (encoding == MessageEncoding.BASE64) {
+                return Base64.encodeBase64(a);
+            }
+
+            return a;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private String decrypt(final String message) {
+    private String decrypt(byte[] bytes, final MessageEncoding encoding) {
         try {
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, encryptionKey, encryptionIV);
 
-            byte[] messageBytes = cipher.doFinal(Base64.decodeBase64(message.getBytes()));
+            if (encoding == MessageEncoding.BASE64) {
+                bytes = Base64.decodeBase64(bytes);
+            }
 
-            return new String(messageBytes, "UTF-8");
+            byte[] messageBytes = cipher.doFinal(bytes);
+
+            return new String(messageBytes);
 
         } catch (Exception e) {
             throw new RuntimeException(e);

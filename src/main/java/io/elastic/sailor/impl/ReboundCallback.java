@@ -46,7 +46,7 @@ public class ReboundCallback extends CountingCallbackImpl {
         }
 
         final Message message = executionContext.getMessage();
-        byte[] payload = cipher.encryptMessage(message).getBytes();
+        byte[] payload = cipher.encryptMessage(message, MessageEncoding.BASE64);
         Map<String, Object> headers = executionContext.buildDefaultHeaders();
         headers.put(HEADER_REBOUND_REASON, data.toString());
         headers.put(HEADER_REBOUND_ITERATION, reboundIteration);
