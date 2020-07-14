@@ -2,6 +2,7 @@ package io.elastic.sailor;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import io.elastic.sailor.impl.MessageEncoding;
 
 public class SailorTestModule extends AbstractModule {
 
@@ -66,6 +67,10 @@ public class SailorTestModule extends AbstractModule {
         bindRequiredLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY, 5 * 60 * 1000L);
 
         bindRequiredBooleanEnvVar(Constants.ENV_VAR_EMIT_LIGHTWEIGHT_MESSAGE, false);
+
+        bind(MessageEncoding.class)
+                .annotatedWith(Names.named(Constants.ENV_VAR_PROTOCOL_VERSION))
+                .toInstance(MessageEncoding.BASE64);
 
     }
 

@@ -2,13 +2,13 @@ package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
 import io.elastic.sailor.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.json.*;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,9 +24,11 @@ public class MessageResolverImpl implements MessageResolver {
     private int objectStorageSizeThreshold = OBJECT_STORAGE_SIZE_THRESHOLD_DEFAULT;
 
     @Override
-    public Message materialize(byte[] body) {
+    public Message materialize(final byte[] body, final AMQP.BasicProperties properties) {
 
-        final JsonObject payload = cryptoService.decryptMessageContent(body, MessageEncoding.BASE64);
+        final MessageEncoding encoding = Utils.getMessageEncoding(properties);
+
+        final JsonObject payload = cryptoService.decryptMessageContent(body, encoding);
 
         final String function = step.getFunction();
 

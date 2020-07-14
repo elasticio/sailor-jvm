@@ -3,6 +3,7 @@ package io.elastic.sailor;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.JSON;
 import io.elastic.api.Message;
+import io.elastic.sailor.impl.MessageEncoding;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -162,5 +163,13 @@ public class Utils {
         e.printStackTrace(new PrintWriter(writer));
 
         return writer.toString();
+    }
+
+    public static MessageEncoding getMessageEncoding(final AMQP.BasicProperties properties) {
+
+        final int protocolVersion = (int) properties.getHeaders().getOrDefault(
+                Constants.AMQP_HEADER_PROTOCOL_VERSION, MessageEncoding.BASE64.protocolVersion);
+
+        return MessageEncoding.fromProtocolVersion(protocolVersion);
     }
 }

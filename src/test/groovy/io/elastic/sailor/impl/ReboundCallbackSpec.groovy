@@ -1,19 +1,14 @@
 package io.elastic.sailor.impl
 
 import io.elastic.api.Message
-import io.elastic.sailor.AmqpService
-import io.elastic.sailor.ContainerContext
-import io.elastic.sailor.ExecutionContext
-import io.elastic.sailor.MessagePublisher
-import io.elastic.sailor.TestUtils
-import io.elastic.sailor.Utils
+import io.elastic.sailor.*
 import spock.lang.Specification
 import spock.lang.Unroll
 
 class ReboundCallbackSpec extends Specification{
 
     ExecutionContext ctx = new ExecutionContext(
-            TestUtils.createStep(), new Message.Builder().build(), Utils.buildAmqpProperties([:]), new ContainerContext())
+            TestUtils.createStep(), new byte[0], new Message.Builder().build(), Utils.buildAmqpProperties([:]), new ContainerContext())
 
     CryptoServiceImpl cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 

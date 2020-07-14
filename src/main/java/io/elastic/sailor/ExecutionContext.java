@@ -17,16 +17,19 @@ public class ExecutionContext {
     private static final Logger logger = LoggerFactory.getLogger(ExecutionContext.class);
 
     private final Step step;
+    private byte[] rawMessage;
     private final Message message;
     private final AMQP.BasicProperties amqpProperties;
     private final ContainerContext containerContext;
 
     public ExecutionContext(
             final Step step,
+            byte[] rawMessage,
             final Message message,
             final AMQP.BasicProperties amqpProperties,
             final ContainerContext containerContext) {
         this.step = step;
+        this.rawMessage = rawMessage;
         this.message = message;
         this.amqpProperties = amqpProperties;
         this.containerContext = containerContext;
@@ -87,6 +90,10 @@ public class ExecutionContext {
         return Utils.buildAmqpProperties(headers);
     }
 
+
+    public byte[] getRawMessage() {
+        return rawMessage;
+    }
     public Message getMessage() {
         return message;
     }

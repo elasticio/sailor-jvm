@@ -279,7 +279,7 @@ class IntegrationSpec extends Specification {
         def result = blockingVar.get()
 
         println result.properties
-        result.properties.headers.size() == 13
+        result.properties.headers.size() == 14
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == System.getProperty(Constants.ENV_VAR_FUNCTION)
@@ -293,6 +293,7 @@ class IntegrationSpec extends Specification {
         result.properties.headers.threadId.toString() == traceId
         result.properties.headers.messageId.toString() == result.message.id.toString()
         result.properties.headers.parentMessageId.toString() == messageId
+        result.properties.headers.protocolVersion == 1
 
         then: "Emitted message is received"
         result.message.headers.isEmpty()
@@ -364,7 +365,7 @@ class IntegrationSpec extends Specification {
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
 
-        result.properties.headers.size() == 13
+        result.properties.headers.size() == 14
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == headers.function
@@ -378,6 +379,7 @@ class IntegrationSpec extends Specification {
         result.properties.headers.threadId.toString() == threadId
         result.properties.headers.messageId.toString() == result.message.id.toString()
         result.properties.headers.parentMessageId.toString() == messageId
+        result.properties.headers.protocolVersion == 1
 
         then: "Emitted message is received"
         result.message.headers.isEmpty()
@@ -460,7 +462,7 @@ class IntegrationSpec extends Specification {
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
 
-        result.properties.headers.size() == 13
+        result.properties.headers.size() == 14
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
         result.properties.headers.function.toString() == headers.function
@@ -474,6 +476,7 @@ class IntegrationSpec extends Specification {
         result.properties.headers.messageId.toString() == result.message.id.toString()
         result.properties.headers.parentMessageId.toString() == messageId
         result.properties.headers.threadId.toString() == traceId
+        result.properties.headers.protocolVersion == 1
 
         then: "Emitted message is received"
         result.message.headers.isEmpty()

@@ -2,10 +2,7 @@ package io.elastic.sailor.impl
 
 import io.elastic.api.JSON
 import io.elastic.api.Message
-import io.elastic.sailor.ComponentDescriptorResolver
-import io.elastic.sailor.Constants
-import io.elastic.sailor.ObjectStorage
-import io.elastic.sailor.TestUtils
+import io.elastic.sailor.*
 import spock.lang.Specification
 
 import javax.json.Json
@@ -14,6 +11,7 @@ class MessageResolverImplSpec extends Specification {
 
     def crypto = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
     def storage = Mock(ObjectStorage)
+    def amqpHeaders = Utils.buildAmqpProperties([:])
 
     def resolver
 
@@ -37,7 +35,7 @@ class MessageResolverImplSpec extends Specification {
         def encryptedMessage = crypto.encryptMessage(msg, MessageEncoding.BASE64)
 
         when:
-        def result = resolver.materialize(encryptedMessage)
+        def result = resolver.materialize(encryptedMessage, amqpHeaders)
 
         then:
         JSON.stringify(result.toJsonObject()) == JSON.stringify(msg.toJsonObject())
@@ -61,7 +59,7 @@ class MessageResolverImplSpec extends Specification {
         def encryptedMessage = crypto.encryptMessage(msg, MessageEncoding.BASE64)
 
         when:
-        def result = resolver.materialize(encryptedMessage)
+        def result = resolver.materialize(encryptedMessage, amqpHeaders)
 
         then:
         JSON.stringify(result.toJsonObject()) == '{"id":"8c33707b-57cf-4001-86fe-4494cdf3d2a0","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{},"attachments":{},"passthrough":{}}'
@@ -69,7 +67,7 @@ class MessageResolverImplSpec extends Specification {
 
     }
 
-    def "should materialize the object by id successfully"() {
+    def "should materialize the object by id successfully - base64"() {
         setup:
 
         def headers = Json.createObjectBuilder()
@@ -81,15 +79,15 @@ class MessageResolverImplSpec extends Specification {
         def id = UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee")
 
         def msg = Json.createObjectBuilder()
-                .add("id",  "9d843898-2799-47bd-bede-123dd5d755ee")
-                .add("headers",  headers)
-                .add("body",  body)
+                .add("id", "9d843898-2799-47bd-bede-123dd5d755ee")
+                .add("headers", headers)
+                .add("body", body)
                 .build()
         def encryptedMessage = crypto.encryptJsonObject(msg, MessageEncoding.BASE64)
 
 
         when:
-        def result = resolver.materialize(encryptedMessage)
+        def result = resolver.materialize(encryptedMessage, amqpHeaders)
 
         then:
         1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()
@@ -98,6 +96,37 @@ class MessageResolverImplSpec extends Specification {
 
     }
 
+    def "should materialize the object by id successfully - utf8"() {
+        setup:
+
+        def headers = Json.createObjectBuilder()
+                .add(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID, "55e5eeb460a8e2070000001e")
+                .build()
+
+        def body = Json.createObjectBuilder().build()
+
+        def id = UUID.fromString("9d843898-2799-47bd-bede-123dd5d755ee")
+
+        def msg = Json.createObjectBuilder()
+                .add("id", "9d843898-2799-47bd-bede-123dd5d755ee")
+                .add("headers", headers)
+                .add("body", body)
+                .build()
+        def encryptedMessage = crypto.encryptJsonObject(msg, MessageEncoding.UTF8)
+        def amqpHeaders = Utils.buildAmqpProperties([
+                (Constants.AMQP_HEADER_PROTOCOL_VERSION): MessageEncoding.UTF8.protocolVersion
+        ])
+
+
+        when:
+        def result = resolver.materialize(encryptedMessage, amqpHeaders)
+
+        then:
+        1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()
+        JSON.stringify(msg) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{}}'
+        JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"from":"storage"},"attachments":{},"passthrough":{}}'
+
+    }
 
     def "should resolve with passthrough successfully"() {
         setup:
@@ -137,7 +166,7 @@ class MessageResolverImplSpec extends Specification {
         def encryptedMessage = crypto.encryptMessage(msg, MessageEncoding.BASE64)
 
         when:
-        def result = resolver.materialize(encryptedMessage)
+        def result = resolver.materialize(encryptedMessage, amqpHeaders)
 
         then:
         1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()

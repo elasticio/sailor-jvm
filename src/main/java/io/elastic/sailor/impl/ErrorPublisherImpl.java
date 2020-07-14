@@ -3,7 +3,6 @@ package io.elastic.sailor.impl;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
-import io.elastic.api.Message;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.ErrorPublisher;
 import io.elastic.sailor.MessagePublisher;
@@ -30,7 +29,7 @@ public class ErrorPublisherImpl implements ErrorPublisher {
     }
 
     @Override
-    public void publish(Throwable e, AMQP.BasicProperties options, Message originalMessage) {
+    public void publish(Throwable e, AMQP.BasicProperties options, byte[] message) {
 
         final String stackTrace = Utils.getStackTrace(e);
 
@@ -47,8 +46,9 @@ public class ErrorPublisherImpl implements ErrorPublisher {
         final JsonObjectBuilder payloadBuilder = Json.createObjectBuilder()
                 .add("error", toString(cipher.encryptJsonObject(error, MessageEncoding.BASE64)));
 
-        if (originalMessage != null) {
-            payloadBuilder.add("errorInput", toString(cipher.encryptMessage(originalMessage, MessageEncoding.BASE64)));
+        if (message != null) {
+            final byte[] errorInput = createErrorInput(options, message);
+            payloadBuilder.add("errorInput", toString(errorInput));
         }
 
         final JsonObject payload = payloadBuilder.build();
@@ -56,6 +56,19 @@ public class ErrorPublisherImpl implements ErrorPublisher {
         byte[] errorPayload = payload.toString().getBytes();
 
         messagePublisher.publish(this.routingKey, errorPayload, options);
+    }
+
+    private byte[] createErrorInput(final AMQP.BasicProperties originalMessageProperties, final byte[] message) {
+
+        final MessageEncoding messageEncoding = Utils.getMessageEncoding(originalMessageProperties);
+
+        if (messageEncoding == MessageEncoding.UTF8) {
+            final String decrypted = cipher.decrypt(message, MessageEncoding.UTF8);
+
+            return cipher.encrypt(decrypted, MessageEncoding.BASE64);
+        }
+
+        return message;
     }
 
     private String toString(byte[] bytes) {
