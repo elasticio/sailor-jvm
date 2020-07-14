@@ -167,9 +167,9 @@ public class Utils {
 
     public static MessageEncoding getMessageEncoding(final AMQP.BasicProperties properties) {
 
-        final int protocolVersion = (int) properties.getHeaders().getOrDefault(
+        final Number protocolVersion = (Number) properties.getHeaders().getOrDefault(
                 Constants.AMQP_HEADER_PROTOCOL_VERSION, MessageEncoding.BASE64.protocolVersion);
 
-        return MessageEncoding.fromProtocolVersion(protocolVersion);
+        return MessageEncoding.fromProtocolVersion(protocolVersion.intValue());
     }
 }
