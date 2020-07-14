@@ -72,7 +72,7 @@ public final class Constants {
     public static final String ENV_VAR_OBJECT_STORAGE_SIZE_THRESHOLD = "ELASTICIO_OBJECT_STORAGE_SIZE_THRESHOLD";
     public static final String ENV_VAR_EMIT_LIGHTWEIGHT_MESSAGE = "ELASTICIO_EMIT_LIGHTWEIGHT_MESSAGE";
 
-    public static final String ENV_VAR_PROTOCOL_VERSION = "PROTOCOL_VERSION";
+    public static final String ENV_VAR_PROTOCOL_VERSION = "ELASTICIO_PROTOCOL_VERSION";
 
     public static final String MESSAGE_HEADER_OBJECT_STORAGE_ID = "x-ipaas-object-storage-id";
 
