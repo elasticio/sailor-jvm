@@ -3,6 +3,7 @@ package io.elastic.sailor;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import io.elastic.sailor.impl.MessageEncoding;
+import io.elastic.sailor.impl.MessageFormat;
 import io.elastic.sailor.impl.MessageResolverImpl;
 
 import static io.elastic.sailor.SailorEnvironmentModule.getOptionalIntegerValue;
@@ -26,6 +27,10 @@ public class AmqpEnvironmentModule extends AbstractModule {
                 MessageResolverImpl.OBJECT_STORAGE_SIZE_THRESHOLD_DEFAULT);
 
         bindProtocolVersion();
+
+        bindMessageFormat();
+
+        bindNoErrorReplies();
     }
 
 
@@ -50,5 +55,28 @@ public class AmqpEnvironmentModule extends AbstractModule {
         bind(MessageEncoding.class)
                 .annotatedWith(Names.named(Constants.ENV_VAR_PROTOCOL_VERSION))
                 .toInstance(MessageEncoding.fromProtocolVersion(protocolVersion));
+    }
+
+    private void bindMessageFormat() {
+        MessageFormat format = MessageFormat.DEFAULT;
+
+        final String value = Utils.getOptionalEnvVar(Constants.ENV_VAR_INPUT_FORMAT);
+
+        if (value != null) {
+            format = MessageFormat.valueOf(value.toLowerCase());
+        }
+
+        bind(MessageFormat.class)
+                .annotatedWith(Names.named(Constants.ENV_VAR_INPUT_FORMAT))
+                .toInstance(format);
+    }
+
+    void bindNoErrorReplies() {
+        final boolean value = SailorEnvironmentModule.getOptionalBooleanValue(
+                Constants.ENV_VAR_NO_ERROR_REPLIES, false);
+
+        bind(Boolean.class)
+                .annotatedWith(Names.named(Constants.ENV_VAR_NO_ERROR_REPLIES))
+                .toInstance(value);
     }
 }

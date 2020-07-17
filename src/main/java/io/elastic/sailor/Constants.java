@@ -75,6 +75,8 @@ public final class Constants {
     public static final String ENV_VAR_EMIT_LIGHTWEIGHT_MESSAGE = ENV_VAR_PREFIX + "EMIT_LIGHTWEIGHT_MESSAGE";
 
     public static final String ENV_VAR_PROTOCOL_VERSION = ENV_VAR_PREFIX + "PROTOCOL_VERSION";
+    public static final String ENV_VAR_INPUT_FORMAT = ENV_VAR_PREFIX + "INPUT_FORMAT";
+    public static final String ENV_VAR_NO_ERROR_REPLIES = ENV_VAR_PREFIX + "NO_ERROR_REPLIES";
 
     public static final String MESSAGE_HEADER_OBJECT_STORAGE_ID = "x-ipaas-object-storage-id";
 
@@ -96,6 +98,7 @@ public final class Constants {
     public static final String AMQP_HEADER_WORKSPACE_ID = "workspaceId";
     public static final String AMQP_HEADER_RETRY = "retry";
     public static final String AMQP_HEADER_PROTOCOL_VERSION = "protocolVersion";
+    public static final String AMQP_HEADER_ERROR_RESPONSE = "x-eio-error-response";
 
     public static final String MDC_THREAD_ID = AMQP_HEADER_THREAD_ID;
     public static final String MDC_MESSAGE_ID = AMQP_HEADER_MESSAGE_ID;

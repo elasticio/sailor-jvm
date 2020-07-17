@@ -2,7 +2,6 @@ package io.elastic.sailor;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
-import io.elastic.sailor.impl.MessageResolverImpl;
 
 public class SailorEnvironmentModule extends AbstractModule {
 
@@ -34,6 +33,7 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindOptionalStringEnvVar(Constants.ENV_VAR_TENANT_ID);
         bindOptionalStringEnvVar(Constants.ENV_VAR_OBJECT_STORAGE_URI);
         bindOptionalStringEnvVar(Constants.ENV_VAR_OBJECT_STORAGE_TOKEN);
+        bindOptionalStringEnvVar(Constants.ENV_VAR_INPUT_FORMAT);
 
 
         // optional env vars
@@ -62,8 +62,6 @@ public class SailorEnvironmentModule extends AbstractModule {
 
         // 5 mins
         bindOptionalLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY, 5 * 60 * 1000L);
-
-
     }
 
     void bindRequiredStringEnvVar(final String name) {
@@ -131,5 +129,15 @@ public class SailorEnvironmentModule extends AbstractModule {
         }
 
         return false;
+    }
+
+    public static boolean getOptionalBooleanValue(final String key, final boolean defaultValue) {
+        final String value = Utils.getOptionalEnvVar(key);
+
+        if (value != null) {
+            return Boolean.parseBoolean(value);
+        }
+
+        return defaultValue;
     }
 }

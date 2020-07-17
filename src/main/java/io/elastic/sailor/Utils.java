@@ -52,6 +52,24 @@ public class Utils {
         return value;
     }
 
+    public static AMQP.BasicProperties.Builder copy(final AMQP.BasicProperties properties) {
+        return new AMQP.BasicProperties.Builder()
+                .appId(properties.getAppId())
+                .contentType(properties.getContentType())
+                .contentEncoding(properties.getContentEncoding())
+                .clusterId(properties.getClusterId())
+                .correlationId(properties.getCorrelationId())
+                .headers(properties.getHeaders())
+                .deliveryMode(properties.getDeliveryMode())
+                .expiration(properties.getExpiration())
+                .messageId(properties.getMessageId())
+                .priority(properties.getPriority())
+                .replyTo(properties.getReplyTo())
+                .timestamp(properties.getTimestamp())
+                .type(properties.getType())
+                .userId(properties.getUserId());
+    }
+
     public static AMQP.BasicProperties buildAmqpProperties(final Map<String, Object> headers) {
         return createDefaultAmqpPropertiesBuilder(headers).build();
     }

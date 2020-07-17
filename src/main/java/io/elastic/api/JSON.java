@@ -4,7 +4,6 @@ package io.elastic.api;
 import javax.json.*;
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
-import java.util.concurrent.Callable;
 
 /**
  * JSON utilities.
@@ -27,6 +26,27 @@ public final class JSON {
         if (reader == null) {
             return null;
         }
+
+        try {
+            return reader.readObject();
+        } finally {
+            reader.close();
+        }
+    }
+
+    /**
+     * Parses a byte array into a {@link JsonObject}.
+     *
+     * @param input byte array to parse
+     * @return JsonObject
+     */
+    public static JsonObject parse(byte[] input) {
+        if (input == null) {
+            return null;
+        }
+
+        final JsonReader reader = Json.createReader(
+                new ByteArrayInputStream(input));
 
         try {
             return reader.readObject();

@@ -11,7 +11,7 @@ class MessageResolverImplSpec extends Specification {
 
     def crypto = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
     def storage = Mock(ObjectStorage)
-    def amqpHeaders = Utils.buildAmqpProperties([:])
+    def amqpHeaders = Utils.buildAmqpProperties([ 'foo': 'bar'])
 
     def resolver
 
@@ -22,6 +22,7 @@ class MessageResolverImplSpec extends Specification {
         resolver.setComponentDescriptorResolver(new ComponentDescriptorResolver())
         resolver.setStep(TestUtils.createStep("helloworldaction"))
         resolver.setObjectStorageSizeThreshold(1)
+        resolver.setMessageFormat(null)
     }
 
     def "should not materialize if object id not present"() {
@@ -125,6 +126,35 @@ class MessageResolverImplSpec extends Specification {
         1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()
         JSON.stringify(msg) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{}}'
         JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"from":"storage"},"attachments":{},"passthrough":{}}'
+
+    }
+
+    def "should not materialize if input is an error message"() {
+        setup:
+        resolver.setMessageFormat(MessageFormat.ERROR)
+
+        def error = Json.createObjectBuilder()
+                .add("name", "StupidException")
+                .add("message", "Are you so stupid?")
+                .add("stack", "Bla bla")
+                .build()
+        def errorInput = Json.createObjectBuilder()
+                .add("hello", "world")
+                .build()
+
+        def msg = Json.createObjectBuilder()
+                .add("error", new String(crypto.encryptJsonObject(error, MessageEncoding.BASE64)))
+                .add("errorInput", new String(crypto.encryptJsonObject(errorInput, MessageEncoding.BASE64)))
+                .build()
+
+
+        when:
+        def result = resolver.materialize(JSON.stringify(msg).getBytes(), amqpHeaders)
+
+        then:
+        JSON.stringify(result.getBody().get("error")) == JSON.stringify(error)
+        JSON.stringify(result.getBody().get("errorInput")) == JSON.stringify(errorInput)
+        JSON.stringify(result.getHeaders()) == '{"foo":"bar"}'
 
     }
 
