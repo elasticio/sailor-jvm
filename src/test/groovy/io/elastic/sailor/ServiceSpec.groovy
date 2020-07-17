@@ -20,12 +20,14 @@ class ServiceSpec extends Specification {
 
 
     def injector
-    def service;
+    def service
+    def params
 
     def setup() {
         injector = Guice.createInjector(new ServiceModule(), new TestServiceEnvironmentModule())
 
         service = injector.getInstance(Service.class)
+        params = service.createServiceExecutionParameters()
     }
 
     def cleanup() {
@@ -43,7 +45,7 @@ class ServiceSpec extends Specification {
                 giveResponse('{"message":"ok"}', 'application/json')
                         .withStatus(200));
         expect:
-        service.executeMethod(ServiceMethods.verifyCredentials)
+        service.executeMethod(ServiceMethods.verifyCredentials, params)
     }
 
     def "it should get meta model"() {
@@ -61,7 +63,7 @@ class ServiceSpec extends Specification {
 
 
         expect:
-        service.executeMethod(ServiceMethods.getMetaModel);
+        service.executeMethod(ServiceMethods.getMetaModel, params);
     }
 
     def "it should get select model"() {
@@ -77,7 +79,7 @@ class ServiceSpec extends Specification {
                 giveResponse('{"message":"ok"}', 'application/json')
                         .withStatus(200));
         expect:
-        service.executeMethod(ServiceMethods.selectModel)
+        service.executeMethod(ServiceMethods.selectModel, params)
     }
 
     def "it should post failure details and rethrow exception"() {
