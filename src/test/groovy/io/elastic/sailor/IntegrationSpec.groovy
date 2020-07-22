@@ -905,6 +905,135 @@ class IntegrationSpec extends Specification {
         publishChannel.basicCancel(errorConsumerTag)
     }
 
+    def "should send error http reply successfully - protocol version 2"() {
+        def httpReplyBlockingVar = new BlockingVariable(5)
+        def errorBlockingVar = new BlockingVariable(5)
+
+        setup:
+        System.setProperty(Constants.ENV_VAR_FUNCTION, 'erroneousAction')
+
+        def replyQueueName = prefix + '_request_reply_queue_error'
+        def replyQueueRoutingKey = prefix + '_request_reply_error_routing_key'
+
+        publishChannel.queueDeclare(replyQueueName, true, false, false, [:])
+        publishChannel.queueBind(
+                replyQueueName,
+                System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
+                replyQueueRoutingKey)
+
+
+        def headers = [
+                'execId'  : 'some-exec-id',
+                'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
+                'function': System.getProperty(Constants.ENV_VAR_FUNCTION),
+                'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
+                start     : System.currentTimeMillis(),
+                (Constants.AMQP_HEADER_REPLY_TO): replyQueueRoutingKey,
+                messageId: messageId,
+                (Constants.AMQP_META_HEADER_TRACE_ID): traceId,
+                (Constants.AMQP_HEADER_PROTOCOL_VERSION): MessageEncoding.UTF8.protocolVersion
+        ]
+
+        def options = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .priority(1)
+                .deliveryMode(2)
+                .build()
+
+        def msg = new Message.Builder()
+                .body(Json.createObjectBuilder().add('message', 'Send me a reply').build())
+                .build()
+
+        byte[] payload = cipher.encryptMessage(msg, MessageEncoding.UTF8)
+
+        publishChannel.basicPublish(
+                System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
+                System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
+                options,
+                payload);
+
+        def httpReplyConsumer = new DefaultConsumer(publishChannel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body)
+                    throws IOException {
+
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                def message = IntegrationSpec.this.cipher.decrypt(body, MessageEncoding.BASE64);
+                httpReplyBlockingVar.set([message:message, properties:properties]);
+            }
+        }
+
+        def httpReplyConsumerTag = publishChannel.basicConsume(replyQueueName, httpReplyConsumer)
+
+        def errorConsumer = new DefaultConsumer(publishChannel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body)
+                    throws IOException {
+
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                def errorJson = JSON.parseObject(new String(body, "UTF-8"))
+                def error = IntegrationSpec.this.cipher.decrypt(
+                        errorJson.getString('error').getBytes(), MessageEncoding.BASE64);
+                errorBlockingVar.set([error:error, properties:properties]);
+            }
+        }
+
+        def errorConsumerTag = publishChannel.basicConsume(errorsQueue, errorConsumer)
+
+        when:
+
+        sailor = Sailor.createAndStartSailor(false)
+
+
+        then: "AMQP properties headers are all set"
+        def result = httpReplyBlockingVar.get()
+        result.properties.headers[Constants.AMQP_HEADER_ERROR_RESPONSE] == true
+        result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        result.properties.headers.messageId.toString() != null
+        result.properties.headers.parentMessageId.toString() == messageId
+        result.properties.headers.containerId.toString() == 'container_12345'
+
+        then: "Emitted message is received"
+        def message = JSON.parseObject(result.message)
+        println message
+        message.getString('name') == 'java.lang.RuntimeException'
+        message.getString('stack').startsWith('java.lang.RuntimeException: Ouch. Something went wrong')
+        message.getString('message') == 'Ouch. Something went wrong'
+
+        then:
+        def errorResult = errorBlockingVar.get()
+        errorResult.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        errorResult.properties.headers.messageId.toString() != null
+        errorResult.properties.headers.parentMessageId.toString() == messageId
+        errorResult.properties.headers.containerId.toString() == System.getProperty(Constants.ENV_VAR_CONTAINER_ID)
+        errorResult.properties.headers.workspaceId.toString() == System.getProperty(Constants.ENV_VAR_WORKSPACE_ID)
+        errorResult.properties.headers.execId.toString() == System.getProperty(Constants.ENV_VAR_EXEC_ID)
+        errorResult.properties.headers.taskId.toString() == System.getProperty(Constants.ENV_VAR_FLOW_ID)
+        errorResult.properties.headers.userId.toString() == System.getProperty(Constants.ENV_VAR_USER_ID)
+        errorResult.properties.headers.stepId.toString() == System.getProperty(Constants.ENV_VAR_STEP_ID)
+        errorResult.properties.headers.compId.toString() == System.getProperty(Constants.ENV_VAR_COMP_ID)
+        errorResult.properties.headers.function.toString() == System.getProperty(Constants.ENV_VAR_FUNCTION)
+
+        then: "Emitted error received"
+        def errorJson = JSON.parseObject(errorResult.error);
+        errorJson.getString('name') == 'java.lang.RuntimeException'
+        errorJson.getString('message') == 'Ouch. Something went wrong'
+        errorJson.getString('stack').startsWith('java.lang.RuntimeException: Ouch. Something went wrong')
+
+        cleanup:
+        sailor.amqp.cancelConsumer()
+        publishChannel.basicCancel(httpReplyConsumerTag)
+        publishChannel.basicCancel(errorConsumerTag)
+    }
+
     def "publish init errors to RabbitMQ"() {
         def blockingVar = new BlockingVariable(5)
         setup:
