@@ -79,6 +79,7 @@ public class MessageResolverImpl implements MessageResolver {
 
     private Message createErrorMessage(final byte[] body, final AMQP.BasicProperties properties) {
         final JsonObject errorBody = JSON.parse(body);
+        logger.info("Error message:{}", new String(body));
 
         final JsonObjectBuilder headers = Json.createObjectBuilder();
         final JsonObjectBuilder builder = Json.createObjectBuilder();
