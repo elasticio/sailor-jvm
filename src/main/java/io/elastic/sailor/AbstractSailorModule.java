@@ -57,7 +57,7 @@ abstract class AbstractSailorModule extends AbstractModule {
         final String strValue = Utils.getOptionalEnvVar(key);
 
         if (strValue != null) {
-            value = (T) Enum.valueOf(clazz, strValue.toLowerCase());
+            value = (T) Enum.valueOf(clazz, strValue.toUpperCase());
         }
 
         bind(clazz)

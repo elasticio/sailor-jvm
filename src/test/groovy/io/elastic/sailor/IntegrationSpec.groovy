@@ -11,6 +11,7 @@ import io.elastic.sailor.component.StartupShutdownAction
 import io.elastic.sailor.impl.AmqpServiceImpl
 import io.elastic.sailor.impl.CryptoServiceImpl
 import io.elastic.sailor.impl.MessageEncoding
+import io.elastic.sailor.impl.MessageFormat
 import io.elastic.sailor.impl.MessagePublisherImpl
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -86,6 +87,7 @@ class IntegrationSpec extends Specification {
         System.setProperty(Constants.ENV_VAR_EXEC_ID, 'some-exec-id')
         System.setProperty(Constants.ENV_VAR_CONTAINER_ID, 'container_12345')
         System.setProperty(Constants.ENV_VAR_WORKSPACE_ID, "workspace_123")
+        System.setProperty(Constants.ENV_VAR_INPUT_FORMAT, MessageFormat.DEFAULT.name())
 
         System.setProperty(Constants.ENV_VAR_AMQP_URI, 'amqp://guest:guest@localhost:5672')
         System.setProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON, prefix + ':messages')
