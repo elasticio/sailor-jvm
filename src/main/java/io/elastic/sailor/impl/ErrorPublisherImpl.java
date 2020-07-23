@@ -3,7 +3,6 @@ package io.elastic.sailor.impl;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
-import io.elastic.api.Message;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.ErrorPublisher;
 import io.elastic.sailor.MessagePublisher;
@@ -13,24 +12,32 @@ import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import java.io.UnsupportedEncodingException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class ErrorPublisherImpl implements ErrorPublisher {
+
+    public static final String ERROR_PROPERTY = "error";
+    public static final String ERROR_INPUT_PROPERTY = "errorInput";
 
     private MessagePublisher messagePublisher;
     private CryptoServiceImpl cipher;
     private String routingKey;
+    private boolean noErrorsReply;
 
     @Inject
     public ErrorPublisherImpl(MessagePublisher messagePublisher,
                               CryptoServiceImpl cipher,
-                              @Named(Constants.ENV_VAR_ERROR_ROUTING_KEY) String routingKey) {
+                              @Named(Constants.ENV_VAR_ERROR_ROUTING_KEY) String routingKey,
+                              @Named(Constants.ENV_VAR_NO_ERROR_REPLIES) boolean noErrorsReply) {
         this.messagePublisher = messagePublisher;
         this.cipher = cipher;
         this.routingKey = routingKey;
+        this.noErrorsReply = noErrorsReply;
     }
 
     @Override
-    public void publish(Throwable e, AMQP.BasicProperties options, Message originalMessage) {
+    public void publish(Throwable e, AMQP.BasicProperties options, byte[] message) {
 
         final String stackTrace = Utils.getStackTrace(e);
 
@@ -44,11 +51,14 @@ public class ErrorPublisherImpl implements ErrorPublisher {
 
         final JsonObject error = builder.build();
 
-        final JsonObjectBuilder payloadBuilder = Json.createObjectBuilder()
-                .add("error", toString(cipher.encryptJsonObject(error, MessageEncoding.BASE64)));
+        final String encryptedError = toString(cipher.encryptJsonObject(error, MessageEncoding.BASE64));
 
-        if (originalMessage != null) {
-            payloadBuilder.add("errorInput", toString(cipher.encryptMessage(originalMessage, MessageEncoding.BASE64)));
+        final JsonObjectBuilder payloadBuilder = Json.createObjectBuilder()
+                .add(ErrorPublisherImpl.ERROR_PROPERTY, encryptedError);
+
+        if (message != null) {
+            final byte[] errorInput = createErrorInput(options, message);
+            payloadBuilder.add(ErrorPublisherImpl.ERROR_INPUT_PROPERTY, toString(errorInput));
         }
 
         final JsonObject payload = payloadBuilder.build();
@@ -56,6 +66,44 @@ public class ErrorPublisherImpl implements ErrorPublisher {
         byte[] errorPayload = payload.toString().getBytes();
 
         messagePublisher.publish(this.routingKey, errorPayload, options);
+
+        sendHttpReplyIfRequired(encryptedError, options);
+
+    }
+
+    private void sendHttpReplyIfRequired(final String encryptedError, final AMQP.BasicProperties properties) {
+        final Map<String, Object> headers = properties.getHeaders();
+        final Object replyTo = headers.get(Constants.AMQP_HEADER_REPLY_TO);
+
+        if (noErrorsReply) {
+            return;
+        }
+
+        if (replyTo == null) {
+            return;
+        }
+
+        final Map<String, Object> newHeaders = new HashMap<>(headers);
+        newHeaders.put(Constants.AMQP_HEADER_ERROR_RESPONSE, true);
+
+        final AMQP.BasicProperties newProperties = Utils.copy(properties)
+                .headers(newHeaders)
+                .build();
+
+        messagePublisher.publish(replyTo.toString(), encryptedError.getBytes(), newProperties);
+    }
+
+    private byte[] createErrorInput(final AMQP.BasicProperties originalMessageProperties, final byte[] message) {
+
+        final MessageEncoding messageEncoding = Utils.getMessageEncoding(originalMessageProperties);
+
+        if (messageEncoding == MessageEncoding.UTF8) {
+            final String decrypted = cipher.decrypt(message, MessageEncoding.UTF8);
+
+            return cipher.encrypt(decrypted, MessageEncoding.BASE64);
+        }
+
+        return message;
     }
 
     private String toString(byte[] bytes) {

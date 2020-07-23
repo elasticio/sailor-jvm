@@ -1,9 +1,10 @@
 package io.elastic.sailor;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import io.elastic.sailor.impl.MessageEncoding;
+import io.elastic.sailor.impl.MessageFormat;
 
-public class SailorTestModule extends AbstractModule {
+public class SailorTestModule extends AbstractSailorTestModule {
 
     @Override
     protected void configure() {
@@ -67,30 +68,18 @@ public class SailorTestModule extends AbstractModule {
 
         bindRequiredBooleanEnvVar(Constants.ENV_VAR_EMIT_LIGHTWEIGHT_MESSAGE, false);
 
-    }
+        bind(MessageEncoding.class)
+                .annotatedWith(Names.named(Constants.ENV_VAR_PROTOCOL_VERSION))
+                .toInstance(MessageEncoding.BASE64);
 
-    void bindRequiredStringEnvVar(final String name, final String value) {
-        bind(String.class)
-                .annotatedWith(Names.named(name))
-                .toInstance(value);
-    }
+        bind(MessageFormat.class)
+                .annotatedWith(Names.named(Constants.ENV_VAR_INPUT_FORMAT))
+                .toInstance(MessageFormat.DEFAULT);
 
-    void bindRequiredIntegerEnvVar(final String name, final Integer value) {
-        bind(Integer.class)
-                .annotatedWith(Names.named(name))
-                .toInstance(value);
-    }
-
-    void bindRequiredLongEnvVar(final String name, final Long value) {
-        bind(Long.class)
-                .annotatedWith(Names.named(name))
-                .toInstance(value);
-    }
-
-    void bindRequiredBooleanEnvVar(final String name, final Boolean value) {
         bind(Boolean.class)
-                .annotatedWith(Names.named(name))
-                .toInstance(value);
+                .annotatedWith(Names.named(Constants.ENV_VAR_NO_ERROR_REPLIES))
+                .toInstance(true);
+
     }
 
 }

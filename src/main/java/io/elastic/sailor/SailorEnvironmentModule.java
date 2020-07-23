@@ -1,10 +1,6 @@
 package io.elastic.sailor;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.name.Names;
-import io.elastic.sailor.impl.MessageResolverImpl;
-
-public class SailorEnvironmentModule extends AbstractModule {
+public class SailorEnvironmentModule extends AbstractSailorModule {
 
     @Override
     protected void configure() {
@@ -34,6 +30,7 @@ public class SailorEnvironmentModule extends AbstractModule {
         bindOptionalStringEnvVar(Constants.ENV_VAR_TENANT_ID);
         bindOptionalStringEnvVar(Constants.ENV_VAR_OBJECT_STORAGE_URI);
         bindOptionalStringEnvVar(Constants.ENV_VAR_OBJECT_STORAGE_TOKEN);
+        bindOptionalStringEnvVar(Constants.ENV_VAR_INPUT_FORMAT);
 
 
         // optional env vars
@@ -62,74 +59,6 @@ public class SailorEnvironmentModule extends AbstractModule {
 
         // 5 mins
         bindOptionalLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY, 5 * 60 * 1000L);
-
-
     }
 
-    void bindRequiredStringEnvVar(final String name) {
-        bind(String.class)
-                .annotatedWith(Names.named(name))
-                .toInstance(Utils.getEnvVar(name));
-    }
-
-    void bindOptionalStringEnvVar(final String name) {
-
-        final String value = Utils.getOptionalEnvVar(name);
-
-        if (value == null) {
-            return;
-        }
-
-        bind(String.class)
-                .annotatedWith(Names.named(name))
-                .toInstance(value);
-    }
-
-    void bindOptionalIntegerEnvVar(final String name, int defaultValue) {
-        bind(Integer.class)
-                .annotatedWith(Names.named(name))
-                .toInstance(getOptionalIntegerValue(name, defaultValue));
-    }
-
-    void bindOptionalLongEnvVar(final String name, long defaultValue) {
-        bind(Long.class)
-                .annotatedWith(Names.named(name))
-                .toInstance(getOptionalLongValue(name, defaultValue));
-    }
-
-    void bindOptionalYesNoEnvVar(final String name) {
-        bind(Boolean.class)
-                .annotatedWith(Names.named(name))
-                .toInstance(getOptionalYesNoValue(name));
-    }
-
-    public static int getOptionalIntegerValue(final String key, int defaultValue) {
-        final String value = Utils.getOptionalEnvVar(key);
-
-        if (value != null) {
-            return Integer.parseInt(value);
-        }
-
-        return defaultValue;
-    }
-
-    public static long getOptionalLongValue(final String key, long defaultValue) {
-        final String value = Utils.getOptionalEnvVar(key);
-
-        if (value != null) {
-            return Long.parseLong(value);
-        }
-
-        return defaultValue;
-    }
-
-    public static boolean getOptionalYesNoValue(final String key) {
-        final String value = Utils.getOptionalEnvVar(key);
-
-        if (value != null) {
-            return true;
-        }
-
-        return false;
-    }
 }

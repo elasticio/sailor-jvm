@@ -5,8 +5,10 @@ import com.google.inject.assistedinject.Assisted;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.EventEmitter;
 import io.elastic.api.HttpReply;
+import io.elastic.sailor.Constants;
 import io.elastic.sailor.ExecutionContext;
 import io.elastic.sailor.MessagePublisher;
+import io.elastic.sailor.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +20,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
 import java.util.Map;
 
 public class HttpReplyCallback implements EventEmitter.Callback {
@@ -53,7 +56,16 @@ public class HttpReplyCallback implements EventEmitter.Callback {
         // encrypt
         byte[] encryptedPayload = cipher.encryptJsonObject(payload, MessageEncoding.BASE64);
 
-        sendHttpReply(encryptedPayload, executionContext.buildAmqpProperties());
+        sendHttpReply(encryptedPayload, createProperties());
+    }
+
+    private AMQP.BasicProperties createProperties() {
+        final AMQP.BasicProperties properties = executionContext.buildAmqpProperties();
+
+        final Map<String, Object> headers = new HashMap<>(properties.getHeaders());
+        headers.put(Constants.AMQP_HEADER_PROTOCOL_VERSION, MessageEncoding.BASE64.protocolVersion);
+
+        return Utils.buildAmqpProperties(headers);
     }
 
     private String getContentAsString(final HttpReply reply) {

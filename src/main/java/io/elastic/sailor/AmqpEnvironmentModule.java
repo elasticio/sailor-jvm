@@ -1,11 +1,12 @@
 package io.elastic.sailor;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
+import io.elastic.sailor.impl.MessageEncoding;
+import io.elastic.sailor.impl.MessageFormat;
 import io.elastic.sailor.impl.MessageResolverImpl;
-import static io.elastic.sailor.SailorEnvironmentModule.getOptionalIntegerValue;
 
-public class AmqpEnvironmentModule extends AbstractModule {
+
+public class AmqpEnvironmentModule extends AbstractSailorModule {
     @Override
     protected void configure() {
 
@@ -22,18 +23,35 @@ public class AmqpEnvironmentModule extends AbstractModule {
         // 1MB
         bindOptionalIntegerEnvVar(Constants.ENV_VAR_OBJECT_STORAGE_SIZE_THRESHOLD,
                 MessageResolverImpl.OBJECT_STORAGE_SIZE_THRESHOLD_DEFAULT);
+
+        bindProtocolVersion();
+
+        bindEnum(MessageFormat.class, Constants.ENV_VAR_INPUT_FORMAT, MessageFormat.DEFAULT);
+
+        bindOptionalBooleanValue(Constants.ENV_VAR_NO_ERROR_REPLIES, false);
     }
 
+    private  void bindProtocolVersion() {
 
-    void bindRequiredStringEnvVar(final String name) {
-        bind(String.class)
-                .annotatedWith(Names.named(name))
-                .toInstance(Utils.getEnvVar(name));
+        final int protocolVersion = getOptionalIntegerValue(Constants.ENV_VAR_PROTOCOL_VERSION,
+                MessageEncoding.BASE64.protocolVersion);
+
+        bind(MessageEncoding.class)
+                .annotatedWith(Names.named(Constants.ENV_VAR_PROTOCOL_VERSION))
+                .toInstance(MessageEncoding.fromProtocolVersion(protocolVersion));
     }
 
-    void bindOptionalIntegerEnvVar(final String name, int defaultValue) {
-        bind(Integer.class)
-                .annotatedWith(Names.named(name))
-                .toInstance(getOptionalIntegerValue(name, defaultValue));
+    private void bindMessageFormat() {
+        MessageFormat format = MessageFormat.DEFAULT;
+
+        final String value = Utils.getOptionalEnvVar(Constants.ENV_VAR_INPUT_FORMAT);
+
+        if (value != null) {
+            format = MessageFormat.valueOf(value.toLowerCase());
+        }
+
+        bind(MessageFormat.class)
+                .annotatedWith(Names.named(Constants.ENV_VAR_INPUT_FORMAT))
+                .toInstance(format);
     }
 }

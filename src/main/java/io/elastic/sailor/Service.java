@@ -3,7 +3,6 @@ package io.elastic.sailor;
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
-import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import io.elastic.sailor.impl.HttpUtils;
 import org.slf4j.Logger;
@@ -18,34 +17,26 @@ import java.io.StringWriter;
 public class Service {
     private static final Logger logger = LoggerFactory.getLogger(Service.class.getName());
 
-    private final String postResultUrl;
-    private final ServiceExecutionParameters params;
-    private final int retryCount;
+    private ComponentDescriptorResolver resolver;
+    private String postResultUrl;
+    private JsonObject configuration;
+    private String triggerOrAction;
+    private String metaModelName;
+    private int retryCount;
 
-    @Inject()
-    public Service(ComponentDescriptorResolver resolver,
-                   @Named(Constants.ENV_VAR_POST_RESULT_URL) String postResultUrl,
-                   @Named(Constants.NAME_CFG_JSON) JsonObject configuration,
-                   @Named(Constants.ENV_VAR_ACTION_OR_TRIGGER) Provider<String> triggerOrActionProvider,
-                   @Named(Constants.ENV_VAR_GET_MODEL_METHOD) Provider<String> metaModelName,
-                   @Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount) {
-        this.postResultUrl = postResultUrl;
-        this.retryCount = retryCount;
-
-        final String triggerOrAction = triggerOrActionProvider.get();
-
+    protected ServiceExecutionParameters createServiceExecutionParameters() {
 
         JsonObject triggerOrActionObj = null;
 
-        if (triggerOrAction != null) {
+        if (this.triggerOrAction != null) {
             triggerOrActionObj = resolver
-                    .findModuleObject(triggerOrAction);
+                    .findModuleObject(this.triggerOrAction);
         }
 
-        params = new ServiceExecutionParameters.Builder()
-                .configuration(configuration)
+        return new ServiceExecutionParameters.Builder()
+                .configuration(this.configuration)
                 .triggerOrAction(triggerOrActionObj)
-                .modelClassName(metaModelName.get())
+                .modelClassName(this.metaModelName)
                 .credentialsVerifierClassName(resolver.findCredentialsVerifier())
                 .build();
     }
@@ -77,9 +68,10 @@ public class Service {
             final ServiceMethods method, final Injector injector) {
 
         final Service service = injector.getInstance(Service.class);
+        final ServiceExecutionParameters params = service.createServiceExecutionParameters();
 
         try {
-            service.executeMethod(method);
+            service.executeMethod(method, params);
         } catch (Exception e) {
             service.processException(e);
 
@@ -98,8 +90,8 @@ public class Service {
         sendData(this.postResultUrl, payload, this.retryCount);
     }
 
-    public void executeMethod(final ServiceMethods method) {
-        final JsonObject data = method.execute(this.params);
+    public void executeMethod(final ServiceMethods method, final ServiceExecutionParameters params) {
+        final JsonObject data = method.execute(params);
 
         createResponseAndSend("success", data);
     }
@@ -125,5 +117,34 @@ public class Service {
         String response = HttpUtils.postJson(url, payload, new HttpUtils.BasicURLAuthorizationHandler(), retryCnt);
 
         logger.info("Received response from server: {}", response.toString());
+    }
+
+    @Inject
+    public void setResolver(final ComponentDescriptorResolver resolver) {
+        this.resolver = resolver;
+    }
+
+    @Inject
+    public void setPostResultUrl(@Named(Constants.ENV_VAR_POST_RESULT_URL) final String postResultUrl) {
+        this.postResultUrl = postResultUrl;
+    }
+
+    @Inject
+    public void setConfiguration(@Named(Constants.NAME_CFG_JSON) final JsonObject configuration) {
+        this.configuration = configuration;
+    }
+
+    @Inject(optional = true)
+    public void setTriggerOrAction(@Named(Constants.ENV_VAR_ACTION_OR_TRIGGER) final String triggerOrAction) {
+        this.triggerOrAction = triggerOrAction;
+    }
+
+    @Inject(optional = true)
+    public void setMetaModelName(@Named(Constants.ENV_VAR_GET_MODEL_METHOD) final String metaModelName) {
+        this.metaModelName = metaModelName;
+    }
+    @Inject
+    public void setRetryCount(@Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount) {
+        this.retryCount = retryCount;
     }
 }

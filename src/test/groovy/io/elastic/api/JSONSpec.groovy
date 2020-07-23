@@ -9,6 +9,8 @@ import javax.json.Json
 class JSONSpec extends Specification {
 
     def "parse JSON object from #input results in #result"() {
+        setup:
+
         expect:
         JSON.parseObject(input) == result
 

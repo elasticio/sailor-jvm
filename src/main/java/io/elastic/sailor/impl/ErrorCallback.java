@@ -20,7 +20,7 @@ public class ErrorCallback extends CountingCallbackImpl {
 
     @Override
     public void receiveData(Object data) {
-        this.errorPublisher.publish((Throwable) data, executionContext.buildAmqpProperties(), executionContext.getMessage());
+        this.errorPublisher.publish((Throwable) data, executionContext.buildAmqpProperties(), executionContext.getRawMessage());
 
     }
 }

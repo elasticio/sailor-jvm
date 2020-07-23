@@ -3,11 +3,7 @@ package io.elastic.sailor
 import com.google.inject.Guice
 import com.google.inject.Injector
 import io.elastic.api.Message
-import io.elastic.sailor.impl.DataCallback
-import io.elastic.sailor.impl.ErrorCallback
-import io.elastic.sailor.impl.ReboundCallback
-import io.elastic.sailor.impl.SnapshotCallback
-import io.elastic.sailor.impl.UpdateKeysCallback
+import io.elastic.sailor.impl.*
 import spock.lang.Shared
 
 class EmitterCallbackFactorySpec extends ApiAwareSpecification {
@@ -17,7 +13,7 @@ class EmitterCallbackFactorySpec extends ApiAwareSpecification {
     EmitterCallbackFactory factory;
 
     ExecutionContext ctx = new ExecutionContext(
-            TestUtils.createStep(), new Message.Builder().build(), Utils.buildAmqpProperties([:]), new ContainerContext());
+            TestUtils.createStep(), new byte[0], new Message.Builder().build(), Utils.buildAmqpProperties([:]), new ContainerContext());
 
     def setupSpec() {
         Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule(), new AmqpAwareModule());

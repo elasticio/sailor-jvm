@@ -2,19 +2,20 @@ package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.rabbitmq.client.AMQP;
+import io.elastic.api.JSON;
 import io.elastic.api.Message;
 import io.elastic.sailor.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.json.*;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.List;
 
 public class MessageResolverImpl implements MessageResolver {
 
-    public static final int OBJECT_STORAGE_SIZE_THRESHOLD_DEFAULT = 1024*1024;
+    public static final int OBJECT_STORAGE_SIZE_THRESHOLD_DEFAULT = 1024 * 1024;
     private static final Logger logger = LoggerFactory.getLogger(MessageResolverImpl.class);
 
     private ComponentDescriptorResolver componentDescriptorResolver;
@@ -22,11 +23,18 @@ public class MessageResolverImpl implements MessageResolver {
     private ObjectStorage objectStorage;
     private CryptoServiceImpl cryptoService;
     private int objectStorageSizeThreshold = OBJECT_STORAGE_SIZE_THRESHOLD_DEFAULT;
+    private MessageFormat messageFormat;
 
     @Override
-    public Message materialize(byte[] body) {
+    public Message materialize(final byte[] body, final AMQP.BasicProperties properties) {
 
-        final JsonObject payload = cryptoService.decryptMessageContent(body, MessageEncoding.BASE64);
+        if (messageFormat == MessageFormat.ERROR) {
+            return createErrorMessage(body, properties);
+        }
+
+        final MessageEncoding encoding = Utils.getMessageEncoding(properties);
+
+        final JsonObject payload = cryptoService.decryptMessageContent(body, encoding);
 
         final String function = step.getFunction();
 
@@ -69,6 +77,42 @@ public class MessageResolverImpl implements MessageResolver {
         return Utils.createMessage(resolved.build());
     }
 
+    private Message createErrorMessage(final byte[] body, final AMQP.BasicProperties properties) {
+        final JsonObject errorBody = JSON.parse(body);
+        logger.info("Error message:{}", new String(body));
+
+        final JsonObjectBuilder headers = Json.createObjectBuilder();
+        final JsonObjectBuilder builder = Json.createObjectBuilder();
+
+        decryptPropertyAndAddToBuilder(errorBody, ErrorPublisherImpl.ERROR_PROPERTY, builder);
+        decryptPropertyAndAddToBuilder(errorBody, ErrorPublisherImpl.ERROR_INPUT_PROPERTY, builder);
+
+        properties.getHeaders().entrySet()
+                .stream()
+                .forEach(s -> headers.add(s.getKey(), s.getValue().toString()));
+        ;
+
+        return new Message.Builder()
+                .body(builder.build())
+                .headers(headers.build())
+                .build();
+    }
+
+    private void decryptPropertyAndAddToBuilder(final JsonObject object,
+                                                final String propertyName,
+                                                final JsonObjectBuilder builder) {
+        final JsonString value = object.getJsonString(propertyName);
+
+        if (value == null) {
+            return;
+        }
+
+        final JsonObject decrypted = cryptoService.decryptMessageContent(
+                value.getString().getBytes(), MessageEncoding.BASE64);
+
+        builder.add(propertyName, decrypted);
+    }
+
     @Override
     public JsonObject externalize(final JsonObject message) {
         logger.info("Externalizing message body");
@@ -77,7 +121,7 @@ public class MessageResolverImpl implements MessageResolver {
         final List<MessageHolder> passthroughHolders = new ArrayList<>();
         final JsonObject passthrough = message.getJsonObject(Message.PROPERTY_PASSTHROUGH);
 
-        if (passthrough != null){
+        if (passthrough != null) {
             for (String stepId : passthrough.keySet()) {
                 logger.info("Externalizing passthrough step={}", stepId);
                 final JsonObject msg = passthrough.getJsonObject(stepId);
@@ -194,8 +238,13 @@ public class MessageResolverImpl implements MessageResolver {
 
     @Inject
     public void setObjectStorageSizeThreshold(final @Named(Constants.ENV_VAR_OBJECT_STORAGE_SIZE_THRESHOLD)
-                                                          int objectStorageSizeThreshold) {
+                                                      int objectStorageSizeThreshold) {
         this.objectStorageSizeThreshold = objectStorageSizeThreshold;
+    }
+
+    @Inject
+    public void setMessageFormat(final @Named(Constants.ENV_VAR_INPUT_FORMAT) MessageFormat messageFormat) {
+        this.messageFormat = messageFormat;
     }
 
 

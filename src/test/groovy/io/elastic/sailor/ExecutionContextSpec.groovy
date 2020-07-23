@@ -19,6 +19,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
+                new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
                 new ContainerContext());
@@ -47,6 +48,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
+                new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
                 new ContainerContext());
@@ -78,6 +80,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
+                new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
                 new ContainerContext());
@@ -112,6 +115,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
+                new byte[0],
                 msg,
                 props,
                 new ContainerContext());
@@ -143,6 +147,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
+                new byte[0],
                 msg,
                 props,
                 new ContainerContext());
@@ -183,6 +188,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
+                new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
                 new ContainerContext());
@@ -209,6 +215,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 TestUtils.createStep(),
+                new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
                 new ContainerContext());
@@ -247,6 +254,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 new Step(step),
+                new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
                 new ContainerContext());
@@ -306,6 +314,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 new Step(step),
+                new byte[0],
                 new Message.Builder().passthrough(passthroughSoFar).build(),
                 Utils.buildAmqpProperties(originalHeaders),
                 new ContainerContext());
@@ -353,6 +362,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 new Step(step, true),
+                new byte[0],
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),
                 new ContainerContext());
@@ -401,6 +411,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 new Step(step, true),
+                new byte[0],
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),
                 new ContainerContext());
@@ -470,6 +481,7 @@ class ExecutionContextSpec extends Specification {
 
         ExecutionContext ctx = new ExecutionContext(
                 new Step(step, true),
+                new byte[0],
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),
                 new ContainerContext());

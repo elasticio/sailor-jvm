@@ -3,6 +3,7 @@ package io.elastic.sailor;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.JSON;
 import io.elastic.api.Message;
+import io.elastic.sailor.impl.MessageEncoding;
 
 import javax.json.Json;
 import javax.json.JsonObject;
@@ -49,6 +50,24 @@ public class Utils {
         }
 
         return value;
+    }
+
+    public static AMQP.BasicProperties.Builder copy(final AMQP.BasicProperties properties) {
+        return new AMQP.BasicProperties.Builder()
+                .appId(properties.getAppId())
+                .contentType(properties.getContentType())
+                .contentEncoding(properties.getContentEncoding())
+                .clusterId(properties.getClusterId())
+                .correlationId(properties.getCorrelationId())
+                .headers(properties.getHeaders())
+                .deliveryMode(properties.getDeliveryMode())
+                .expiration(properties.getExpiration())
+                .messageId(properties.getMessageId())
+                .priority(properties.getPriority())
+                .replyTo(properties.getReplyTo())
+                .timestamp(properties.getTimestamp())
+                .type(properties.getType())
+                .userId(properties.getUserId());
     }
 
     public static AMQP.BasicProperties buildAmqpProperties(final Map<String, Object> headers) {
@@ -162,5 +181,13 @@ public class Utils {
         e.printStackTrace(new PrintWriter(writer));
 
         return writer.toString();
+    }
+
+    public static MessageEncoding getMessageEncoding(final AMQP.BasicProperties properties) {
+
+        final Number protocolVersion = (Number) properties.getHeaders().getOrDefault(
+                Constants.AMQP_HEADER_PROTOCOL_VERSION, MessageEncoding.BASE64.protocolVersion);
+
+        return MessageEncoding.fromProtocolVersion(protocolVersion.intValue());
     }
 }

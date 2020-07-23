@@ -86,7 +86,7 @@ public final class CryptoServiceImpl {
         }
     }
 
-    private String decrypt(byte[] bytes, final MessageEncoding encoding) {
+    public String decrypt(byte[] bytes, final MessageEncoding encoding) {
         try {
 
             Cipher cipher = Cipher.getInstance(ALGORITHM);

@@ -113,9 +113,9 @@ public class MessageConsumer extends DefaultConsumer {
 
     private ExecutionContext createExecutionContext(final byte[] body, final AMQP.BasicProperties properties) {
 
-        final Message message = messageResolver.materialize(body);
+        final Message message = messageResolver.materialize(body, properties);
 
-        return new ExecutionContext(this.step, message, properties, this.containerContext);
+        return new ExecutionContext(this.step, body, message, properties, this.containerContext);
     }
 
 
