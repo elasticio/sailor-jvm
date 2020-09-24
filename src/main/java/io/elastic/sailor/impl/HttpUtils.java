@@ -193,7 +193,7 @@ public class HttpUtils {
                 })
                 .build();
 
-        logger.info("Sending {} request to {}", request.getMethod(), request.getURI());
+        logger.info("Sending {} request to {}", request.getMethod(), request.getURI().getPath());
         try {
             authorizationHandler.authorize(request);
             final CloseableHttpResponse response = httpClient.execute(request);
