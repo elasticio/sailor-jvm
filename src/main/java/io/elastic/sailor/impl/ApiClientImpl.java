@@ -38,9 +38,10 @@ public class ApiClientImpl implements ApiClient {
 
     @Override
     public Step retrieveFlowStep(final String taskId, final String stepId) {
-        final String uri = String.format("%s/v1/tasks/%s/steps/%s", this.apiBaseUri, taskId, stepId);
+        final String path = String.format("/v1/tasks/%s/steps/%s", taskId, stepId);
+        final String uri = this.apiBaseUri + path;
 
-        logger.info("Retrieving step data for user {} at: {}", this.authorizationHandler.getUsername(), uri);
+        logger.info("Retrieving step data at: {}", path);
 
         final JsonObject step = HttpUtils.getJson(uri, authorizationHandler, this.retryCount);
 

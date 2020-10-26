@@ -114,9 +114,9 @@ public class Service {
 
         logger.info("Sending response");
 
-        String response = HttpUtils.postJson(url, payload, new HttpUtils.BasicURLAuthorizationHandler(), retryCnt);
+        HttpUtils.postJson(url, payload, new HttpUtils.BasicURLAuthorizationHandler(), retryCnt);
 
-        logger.info("Received response from server: {}", response.toString());
+        logger.info("Received response from server");
     }
 
     @Inject
