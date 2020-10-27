@@ -50,9 +50,10 @@ public class ApiClientImpl implements ApiClient {
 
     @Override
     public JsonObject updateAccount(final String accountId, final JsonObject body) {
-        final String uri = String.format("%s/v1/accounts/%s", this.apiBaseUri, accountId);
+        final String path = String.format("/v1/accounts/%s", accountId);
+        final String uri = this.apiBaseUri + path;
 
-        logger.info("Updating account for user {} at: {}", this.authorizationHandler.getUsername(), uri);
+        logger.info("Updating account for user {} at: {}", this.authorizationHandler.getUsername(), path);
 
         return HttpUtils.putJson(uri, body, authorizationHandler, this.retryCount);
 
