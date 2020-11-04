@@ -44,7 +44,6 @@ public class MessagePublisherImpl implements MessagePublisher {
     public void publish(String routingKey, byte[] payload, AMQP.BasicProperties options) {
 
         logger.info("Pushing to exchange={}, routingKey={}", this.publishExchangeName, routingKey);
-        logger.info("Message headers: {}", options.getHeaders());
 
         boolean retryPublish = true;
         int retryCount = 0;
