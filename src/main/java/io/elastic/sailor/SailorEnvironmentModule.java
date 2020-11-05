@@ -61,4 +61,5 @@ public class SailorEnvironmentModule extends AbstractSailorModule {
         bindOptionalLongEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY, 5 * 60 * 1000L);
     }
 
+
 }

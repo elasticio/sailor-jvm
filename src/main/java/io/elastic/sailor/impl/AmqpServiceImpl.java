@@ -3,24 +3,29 @@ package io.elastic.sailor.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.*;
 import io.elastic.api.Function;
 import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Singleton
 public class AmqpServiceImpl implements AmqpService {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AmqpServiceImpl.class);
 
-    private Connection amqp;
-    private Channel subscribeChannel;
+    private static AtomicInteger reconnectCount = new AtomicInteger();
+    private static AtomicInteger recreateChannelCount = new AtomicInteger();
 
+    private static final String CLIENT_PROPERTY_PRODUCT = "product";
+    private static final String CLIENT_PROPERTY_VERSION = "version";
+
+    private Connection connection;
+    private Channel subscribeChannel;
     private String amqpUri;
     private String subscribeExchangeName;
     private Integer prefetchCount;
@@ -30,6 +35,7 @@ public class AmqpServiceImpl implements AmqpService {
     private String consumerTag;
     private ContainerContext containerContext;
     private MessageResolver messageResolver;
+    private Function function;
 
     @Inject
     public AmqpServiceImpl(CryptoServiceImpl cipher) {
@@ -75,9 +81,10 @@ public class AmqpServiceImpl implements AmqpService {
         this.messageResolver = messageResolver;
     }
 
-    public void connectAndSubscribe() {
-        openConnection();
-        openSubscribeChannel();
+
+    @Inject
+    public void setFunction(@Named(Constants.NAME_FUNCTION_OBJECT) final Function function) {
+        this.function = function;
     }
 
     @Override
@@ -89,19 +96,21 @@ public class AmqpServiceImpl implements AmqpService {
             logger.info("Subscription channel is already closed: " + e);
         }
         try {
-            amqp.close();
+            connection.close();
         } catch (IOException e) {
             logger.info("AMQP connection is already closed: " + e);
         }
+        this.subscribeChannel = null;
+        this.connection = null;
         logger.info("Successfully disconnected from AMQP");
     }
 
-    public void subscribeConsumer(final Function function) {
+    public void subscribeConsumer() {
         final MessageConsumer consumer = new MessageConsumer(
-                subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext, this.messageResolver);
+                subscribeChannel, this.messageProcessor, this.function, step, this.containerContext, this.messageResolver);
 
         try {
-            consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
+            consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer, new ConsumerShutdownCallback());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -140,38 +149,76 @@ public class AmqpServiceImpl implements AmqpService {
         }
     }
 
-    private AmqpServiceImpl openConnection() {
+    public void connect() {
         try {
-            if (amqp == null) {
-                ConnectionFactory factory = new ConnectionFactory();
+            if (connection == null) {
+                final ConnectionFactory factory = new ConnectionFactory();
                 factory.setUri(new URI(this.amqpUri));
-                amqp = factory.newConnection();
+                final Map<String, Object> clientProperties = factory.getClientProperties();
+                clientProperties.put(CLIENT_PROPERTY_PRODUCT, "Java Sailor");
+                if (this.containerContext != null) {
+
+                    clientProperties.put(CLIENT_PROPERTY_VERSION, this.containerContext.getSailorVersion());
+                }
+                connection = factory.newConnection();
                 logger.info("Connected to AMQP");
             }
-            return this;
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private AmqpServiceImpl openSubscribeChannel() {
+    @Override
+    public void reconnect() {
+        final int count = AmqpServiceImpl.reconnectCount.incrementAndGet();
+        logger.info("About to reconnect (#{}).", count);
+        this.connection = null;
+        this.connect();
+    }
+
+    public void createSubscribeChannel() {
         try {
             if (subscribeChannel == null) {
-                subscribeChannel = amqp.createChannel();
+                subscribeChannel = connection.createChannel();
                 subscribeChannel.basicQos(this.prefetchCount);
                 logger.info("Opened subscribe channel");
             }
-            return this;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    public void setSubscribeChannel(Channel subscribeChannel) {
-        this.subscribeChannel = subscribeChannel;
+    @Override
+    public void recreateSubscribeChannel() {
+        final int count = AmqpServiceImpl.recreateChannelCount.incrementAndGet();
+        logger.info("About to recreate channel (#{}).", count);
+        this.subscribeChannel = null;
+        this.createSubscribeChannel();
     }
 
     public Connection getConnection() {
-        return this.amqp;
+        return this.connection;
+    }
+
+    private class ConsumerShutdownCallback implements ConsumerShutdownSignalCallback {
+
+        @Override
+        public void handleShutdownSignal(final String consumerTag, final ShutdownSignalException sig) {
+            logger.info("Received AMQP shutdown signal for consumer {}", consumerTag);
+
+            final boolean hardError = sig.isHardError();
+
+            if (hardError) {
+                // connection error
+                logger.info("Consumer shutdown is caused by a connection error.");
+                AmqpServiceImpl.this.reconnect();
+            } else {
+                // channel error
+                logger.info("Consumer shutdown is caused by a channel error.");
+
+            }
+            AmqpServiceImpl.this.recreateSubscribeChannel();
+            AmqpServiceImpl.this.subscribeConsumer();
+        }
     }
 }

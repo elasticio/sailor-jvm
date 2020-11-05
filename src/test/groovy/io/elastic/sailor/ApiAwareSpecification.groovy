@@ -25,7 +25,7 @@ abstract class ApiAwareSpecification extends Specification {
                         "{" +
                                 "\"id\":\"step_1\"," +
                                 "\"comp_id\":\"testcomponent\"," +
-                                "\"function\":\"test\", " +
+                                "\"function\":\"helloworldaction\", " +
                                 "\"config\":{\"apiKey\":\"secret\"}, " +
                                 "\"snapshot\":{\"timestamp\":\"19700101\"}}",
                         'application/json')

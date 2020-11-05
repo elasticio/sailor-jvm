@@ -22,6 +22,7 @@ public class ContainerContext {
     private String flowUserEmail;
     private String tenantId;
     private String workspaceId;
+    private String sailorVersion;
 
     public String getFlowId() {
         return flowId;
@@ -176,6 +177,15 @@ public class ContainerContext {
         this.workspaceId = workspaceId;
     }
 
+    public String getSailorVersion() {
+        return sailorVersion;
+    }
+
+    @Inject
+    public void setSailorVersion(@Named(Constants.NAME_SAILOR_VERSION) final String sailorVersion) {
+        this.sailorVersion = sailorVersion;
+    }
+
 
     @Override
     public String toString() {
@@ -197,6 +207,7 @@ public class ContainerContext {
                 ", flowUserEmail='" + flowUserEmail + '\'' +
                 ", tenantId='" + tenantId + '\'' +
                 ", workspaceId='" + workspaceId + '\'' +
+                ", sailorVersion='" + sailorVersion + '\'' +
                 '}';
     }
 }

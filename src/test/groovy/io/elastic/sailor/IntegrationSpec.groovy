@@ -20,6 +20,7 @@ import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Stepwise
 import spock.util.concurrent.BlockingVariable
+import spock.util.concurrent.PollingConditions
 
 import javax.json.Json
 import javax.json.JsonObject
@@ -117,7 +118,8 @@ class IntegrationSpec extends Specification {
         amqp.setSubscribeExchangeName(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
         amqp.setPrefetchCount(1)
 
-        amqp.connectAndSubscribe()
+        amqp.connect()
+        amqp.createSubscribeChannel()
 
         amqp.subscribeChannel.exchangeDeclare(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON), 'direct', true, false, [:])
@@ -220,6 +222,7 @@ class IntegrationSpec extends Specification {
         shutdownFlowId = null
     }
 
+
     def "run sailor successfully"() {
         def blockingVar = new BlockingVariable(5)
         setup:
@@ -274,7 +277,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
 
         then: "AMQP properties headers are all set"
@@ -361,7 +364,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
 
         then: "AMQP properties headers are all set"
@@ -458,7 +461,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
 
         then: "AMQP properties headers are all set"
@@ -546,7 +549,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
@@ -626,7 +629,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
@@ -676,7 +679,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
         then: "Blocking var exists"
         def result = blockingVar.get()
@@ -758,7 +761,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
@@ -862,7 +865,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
         then: "AMQP properties headers are all set"
         def result = httpReplyBlockingVar.get()
@@ -990,7 +993,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
 
         then: "AMQP properties headers are all set"
@@ -1089,7 +1092,7 @@ class IntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
 
         then: "AMQP properties headers are all set"
@@ -1115,5 +1118,197 @@ class IntegrationSpec extends Specification {
         cleanup:
         sailor.amqp.cancelConsumer()
         publishChannel.basicCancel(consumerTag)
+    }
+
+
+    def "should recreate connection if in was aborted"() {
+        def blockingVar = new BlockingVariable(30)
+        def conditions = new PollingConditions(timeout: 20)
+        setup:
+        System.setProperty(Constants.ENV_VAR_FUNCTION, 'helloworldaction')
+
+        def headers = [
+                'execId'  : 'some-exec-id',
+                'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
+                'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
+                start     : System.currentTimeMillis(),
+                messageId: messageId,
+                "source": "Integration Test",
+                (Constants.AMQP_META_HEADER_TRACE_ID): traceId
+        ]
+
+        def options = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .priority(1)
+                .deliveryMode(2)
+                .build()
+
+        def msg = new Message.Builder()
+                .body(Json.createObjectBuilder().add('message', 'Just do it!').build())
+                .build()
+
+        byte[] payload = cipher.encryptMessage(msg, MessageEncoding.BASE64)
+
+
+        def consumer = new DefaultConsumer(publishChannel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body)
+                    throws IOException {
+
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                def message = Utils.createMessage(
+                        IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64))
+                blockingVar.set([message:message, properties:properties]);
+            }
+        }
+
+        def consumerTag = publishChannel.basicConsume(dataQueue, consumer)
+
+        when:
+
+        sailor = Sailor.createAndStartSailor()
+
+
+        sailor.amqp.connection.abort()
+
+        publishChannel.basicPublish(
+                System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
+                System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
+                options,
+                payload);
+
+        then: "Reconnected properly"
+        conditions.within(2) {
+            amqp.reconnectCount.get() == 1
+        }
+
+
+        then: "AMQP properties headers are all set"
+        def result = blockingVar.get()
+
+        result.properties.headers.size() == 14
+        result.properties.headers.start != null
+        result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
+        result.properties.headers.function.toString() == System.getProperty(Constants.ENV_VAR_FUNCTION)
+        result.properties.headers.stepId.toString() == "step_1"
+        result.properties.headers.userId.toString() == "5559edd38968ec0736000002"
+        result.properties.headers.taskId.toString() == headers.taskId
+        result.properties.headers.execId.toString() == headers.execId
+        result.properties.headers.containerId.toString() == 'container_12345'
+        result.properties.headers.workspaceId.toString() == 'workspace_123'
+        result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        result.properties.headers.threadId.toString() == traceId
+        result.properties.headers.messageId.toString() == result.message.id.toString()
+        result.properties.headers.parentMessageId.toString() == messageId
+        result.properties.headers.protocolVersion == 1
+
+        then: "Emitted message is received"
+        result.message.headers.isEmpty()
+        JSON.stringify(result.message.body) == '{"echo":{"message":"Just do it!"}}'
+
+        cleanup:
+        sailor.amqp.cancelConsumer()
+        publishChannel.basicCancel(consumerTag)
+    }
+
+    def "should recreate subscriber channel if in was aborted"() {
+
+        def conditions = new PollingConditions(timeout: 20)
+        def blockingVar = new BlockingVariable(30)
+        setup:
+        System.setProperty(Constants.ENV_VAR_FUNCTION, 'helloworldaction')
+
+        def headers = [
+                'execId'  : 'some-exec-id',
+                'taskId'  : System.getProperty(Constants.ENV_VAR_FLOW_ID),
+                'userId'  : System.getProperty(Constants.ENV_VAR_USER_ID),
+                start     : System.currentTimeMillis(),
+                messageId: messageId,
+                "source": "Integration Test",
+                (Constants.AMQP_META_HEADER_TRACE_ID): traceId
+        ]
+
+        def options = new AMQP.BasicProperties.Builder()
+                .contentType("application/json")
+                .contentEncoding("utf8")
+                .headers(headers)
+                .priority(1)
+                .deliveryMode(2)
+                .build()
+
+        def msg = new Message.Builder()
+                .body(Json.createObjectBuilder().add('message', 'Just do it!').build())
+                .build()
+
+        byte[] payload = cipher.encryptMessage(msg, MessageEncoding.BASE64)
+
+
+        def consumer = new DefaultConsumer(publishChannel) {
+            @Override
+            public void handleDelivery(String consumerTag,
+                                       Envelope envelope,
+                                       AMQP.BasicProperties properties,
+                                       byte[] body)
+                    throws IOException {
+
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                def message = Utils.createMessage(
+                        IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64))
+                blockingVar.set([message:message, properties:properties]);
+            }
+        }
+
+        def consumerTag = publishChannel.basicConsume(dataQueue, consumer)
+
+        when:
+
+        sailor = Sailor.createAndStartSailor()
+
+
+        sailor.amqp.subscribeChannel.abort()
+
+        publishChannel.basicPublish(
+                System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
+                System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY),
+                options,
+                payload);
+
+        then: "Reconnected properly"
+        conditions.within(2) {
+            amqp.recreateChannelCount.get() == 1
+        }
+
+        then: "AMQP properties headers are all set"
+        def result = blockingVar.get()
+
+        println result.properties
+        result.properties.headers.size() == 14
+        result.properties.headers.start != null
+        result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
+        result.properties.headers.function.toString() == System.getProperty(Constants.ENV_VAR_FUNCTION)
+        result.properties.headers.stepId.toString() == "step_1"
+        result.properties.headers.userId.toString() == "5559edd38968ec0736000002"
+        result.properties.headers.taskId.toString() == headers.taskId
+        result.properties.headers.execId.toString() == headers.execId
+        result.properties.headers.containerId.toString() == 'container_12345'
+        result.properties.headers.workspaceId.toString() == 'workspace_123'
+        result.properties.headers[Constants.AMQP_META_HEADER_TRACE_ID].toString() == traceId
+        result.properties.headers.threadId.toString() == traceId
+        result.properties.headers.messageId.toString() == result.message.id.toString()
+        result.properties.headers.parentMessageId.toString() == messageId
+        result.properties.headers.protocolVersion == 1
+
+        then: "Emitted message is received"
+        result.message.headers.isEmpty()
+        JSON.stringify(result.message.body) == '{"echo":{"message":"Just do it!"}}'
+
+        //cleanup:
+        //sailor.amqp.cancelConsumer()
+        //publishChannel.basicCancel(consumerTag)
     }
 }

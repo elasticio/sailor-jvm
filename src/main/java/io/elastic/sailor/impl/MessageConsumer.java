@@ -1,9 +1,6 @@
 package io.elastic.sailor.impl;
 
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.*;
 import io.elastic.api.Function;
 import io.elastic.api.Message;
 import io.elastic.sailor.*;
@@ -12,25 +9,23 @@ import org.slf4j.MDC;
 
 import java.io.IOException;
 
-public class MessageConsumer extends DefaultConsumer {
+public class MessageConsumer implements DeliverCallback {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
-    private final CryptoServiceImpl cipher;
+    private final Channel channel;
     private final MessageProcessor processor;
     private final Function function;
     private final Step step;
     private final ContainerContext containerContext;
     private final MessageResolver messageResolver;
 
-    public MessageConsumer(Channel channel,
-                           CryptoServiceImpl cipher,
-                           MessageProcessor processor,
-                           Function function,
-                           Step step,
+    public MessageConsumer(final Channel channel,
+                           final MessageProcessor processor,
+                           final Function function,
+                           final Step step,
                            final ContainerContext containerContext,
                            final MessageResolver messageResolver) {
-        super(channel);
-        this.cipher = cipher;
+        this.channel = channel;
         this.processor = processor;
         this.function = function;
         this.step = step;
@@ -39,8 +34,9 @@ public class MessageConsumer extends DefaultConsumer {
     }
 
     @Override
-    public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
-            throws IOException {
+    public void handle(String consumerTag, Delivery message) throws IOException {
+        final Envelope envelope = message.getEnvelope();
+        final AMQP.BasicProperties properties = message.getProperties();
 
         if (Sailor.gracefulShutdownHandler != null) {
             Sailor.gracefulShutdownHandler.increment();
@@ -55,9 +51,9 @@ public class MessageConsumer extends DefaultConsumer {
         putIntoMDC(properties);
 
         try {
-            executionContext = createExecutionContext(body, properties);
+            executionContext = createExecutionContext(message.getBody(), properties);
         } catch (Exception e) {
-            this.getChannel().basicReject(deliveryTag, false);
+            this.channel.basicReject(deliveryTag, false);
             logger.error("Failed to parse or resolve message to process {}", Utils.getStackTrace(e));
 
             decrement();
@@ -106,7 +102,7 @@ public class MessageConsumer extends DefaultConsumer {
     private static void removeFromMDC(final String key) {
         try {
             MDC.remove(key);
-        }catch(Exception e) {
+        } catch (Exception e) {
             logger.warn("Failed to remove {} from MDC: {}", key, Utils.getStackTrace(e));
         }
     }
@@ -124,17 +120,16 @@ public class MessageConsumer extends DefaultConsumer {
 
         if (stats == null || stats.getErrorCount() > 0) {
             logger.info("Reject received messages {}", deliveryTag);
-            this.getChannel().basicReject(deliveryTag, false);
+            this.channel.basicReject(deliveryTag, false);
 
             return;
         }
 
         logger.info("Acknowledging received message with deliveryTag={}", deliveryTag);
-        this.getChannel().basicAck(deliveryTag, true);
+        this.channel.basicAck(deliveryTag, true);
     }
 
     private Object getHeaderValue(final AMQP.BasicProperties properties, final String headerName) {
         return properties.getHeaders().getOrDefault(headerName, "unknown");
     }
-
 }

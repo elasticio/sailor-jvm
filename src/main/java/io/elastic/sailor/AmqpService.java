@@ -1,15 +1,20 @@
 package io.elastic.sailor;
 
 import com.rabbitmq.client.Connection;
-import io.elastic.api.Function;
 
 public interface AmqpService {
 
-    void connectAndSubscribe();
+    void connect();
+
+    void reconnect();
+
+    void createSubscribeChannel();
+
+    void recreateSubscribeChannel();
 
     void disconnect();
 
-    void subscribeConsumer(Function function);
+    void subscribeConsumer();
 
     void cancelConsumer();
 

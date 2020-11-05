@@ -55,7 +55,8 @@ public class StartupShutdownAction implements Function {
         amqp.setAmqpUri(configuration.getString(Constants.ENV_VAR_AMQP_URI));
         amqp.setPrefetchCount(1);
 
-        amqp.connectAndSubscribe();
+        amqp.connect();
+        amqp.createSubscribeChannel();
 
 
         final MessagePublisherImpl publisher = new MessagePublisherImpl(

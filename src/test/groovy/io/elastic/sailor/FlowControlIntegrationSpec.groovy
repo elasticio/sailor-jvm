@@ -108,7 +108,8 @@ class FlowControlIntegrationSpec extends Specification {
         amqp.setSubscribeExchangeName(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
         amqp.setPrefetchCount(1)
 
-        amqp.connectAndSubscribe()
+        amqp.connect()
+        amqp.createSubscribeChannel()
 
         amqp.subscribeChannel.exchangeDeclare(
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON), 'direct', true, false, [:])
@@ -273,7 +274,7 @@ class FlowControlIntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
 
         then: "AMQP properties headers are all set"

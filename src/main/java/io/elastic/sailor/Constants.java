@@ -3,6 +3,8 @@ package io.elastic.sailor;
 public final class Constants {
 
     public static final String NAME_STEP_JSON = "StepJson";
+    public static final String NAME_FUNCTION_OBJECT = "FunctionObject";
+    public static final String NAME_SAILOR_VERSION = "SailorVersion";
     public static final String NAME_CFG_JSON = "ConfigurationJson";
     public static final String NAME_CALLBACK_DATA = "dataCallback";
     public static final String NAME_CALLBACK_REBOUND = "reboundCallback";

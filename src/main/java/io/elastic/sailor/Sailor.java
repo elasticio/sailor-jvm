@@ -15,14 +15,13 @@ import org.slf4j.LoggerFactory;
 
 import javax.json.Json;
 import javax.json.JsonObject;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class Sailor {
 
     private static final Logger logger = LoggerFactory.getLogger(Sailor.class);
-    private FunctionBuilder functionBuilder;
+    private Function function;
     private Step step;
     private ContainerContext containerContext;
     private ApiClient apiClient;
@@ -31,14 +30,14 @@ public class Sailor {
     private ErrorPublisher errorPublisher;
     public static GracefulShutdownHandler gracefulShutdownHandler;
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
         logger.info("About to init Sailor");
-        createAndStartSailor(true);
+        createAndStartSailor();
     }
 
-    static Sailor createAndStartSailor(final boolean initGracefulShutdownHandler) throws IOException {
+    static Sailor createAndStartSailor() {
 
-        com.google.inject.Module[] modules = new com.google.inject.Module[] {
+        com.google.inject.Module[] modules = new com.google.inject.Module[]{
                 new SailorModule(), new SailorEnvironmentModule()
         };
 
@@ -46,14 +45,14 @@ public class Sailor {
 
         final Sailor sailor = injector.getInstance(Sailor.class);
 
-        sailor.startOrShutdown(injector, initGracefulShutdownHandler);
+        sailor.startOrShutdown(injector);
 
         return sailor;
     }
 
     @Inject
-    public void setFunctionBuilder(final FunctionBuilder functionBuilder) {
-        this.functionBuilder = functionBuilder;
+    public void setFunction(@Named(Constants.NAME_FUNCTION_OBJECT) final Function function) {
+        this.function = function;
     }
 
     @Inject
@@ -77,7 +76,7 @@ public class Sailor {
         this.isShutdownRequired = shutdownRequired;
     }
 
-    public void startOrShutdown(final Injector injector, final boolean initGracefulShutdownHandler) {
+    public void startOrShutdown(final Injector injector) {
         if (this.isShutdownRequired) {
             shutdown();
             return;
@@ -92,7 +91,8 @@ public class Sailor {
 
         amqp = injector.getInstance(AmqpService.class);
         logger.info("Connecting to AMQP");
-        amqp.connectAndSubscribe();
+        amqp.connect();
+        amqp.createSubscribeChannel();
 
         errorPublisher = injector.getInstance(ErrorPublisher.class);
 
@@ -105,9 +105,7 @@ public class Sailor {
 
             final JsonObject cfg = this.step.getCfg();
 
-            final Function function = functionBuilder.build();
-
-            startupModule(function, cfg);
+            startupModule(cfg);
 
             logger.info("Initializing function for execution");
             final InitParameters initParameters = new InitParameters.Builder()
@@ -116,7 +114,7 @@ public class Sailor {
             function.init(initParameters);
 
             logger.info("Subscribing to queues");
-            amqp.subscribeConsumer(function);
+            amqp.subscribeConsumer();
         } catch (Exception e) {
             reportException(e);
         }
@@ -124,14 +122,14 @@ public class Sailor {
         logger.info("Sailor started");
     }
 
-    private void startupModule(final Function function, final JsonObject cfg) {
+    private void startupModule(final JsonObject cfg) {
 
         if (containerContext.isStartupRequired()) {
             logger.info("Starting up component function");
             final StartupParameters startupParameters = new StartupParameters.Builder()
                     .configuration(cfg)
                     .build();
-            JsonObject state = function.startup(startupParameters);
+            JsonObject state = this.function.startup(startupParameters);
 
             if (state == null || state.isEmpty()) {
                 state = Json.createObjectBuilder().build();
@@ -153,7 +151,6 @@ public class Sailor {
 
         final String flowId = containerContext.getFlowId();
         final JsonObject cfg = this.step.getCfg();
-        final Function function = functionBuilder.build();
 
         final JsonObject state = this.apiClient.retrieveStartupState(flowId);
 
@@ -162,7 +159,7 @@ public class Sailor {
                 .state(state)
                 .build();
 
-        function.shutdown(shutdownParameters);
+        this.function.shutdown(shutdownParameters);
 
         this.apiClient.deleteStartupState(flowId);
 

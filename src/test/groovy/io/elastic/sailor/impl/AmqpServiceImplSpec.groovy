@@ -24,7 +24,7 @@ class AmqpServiceImplSpec extends ApiAwareSpecification {
     }
 
     def setup() {
-        amqp.setSubscribeChannel(subscribeChannel)
+        amqp.subscribeChannel = subscribeChannel
     }
 
     def getOptions() {

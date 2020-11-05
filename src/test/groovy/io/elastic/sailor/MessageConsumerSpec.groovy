@@ -2,6 +2,7 @@ package io.elastic.sailor
 
 import com.rabbitmq.client.AMQP
 import com.rabbitmq.client.Channel
+import com.rabbitmq.client.Delivery
 import com.rabbitmq.client.Envelope
 import io.elastic.api.JSON
 import io.elastic.api.Message
@@ -63,14 +64,14 @@ class MessageConsumerSpec extends Specification {
 
     def setup() {
         component = new HelloWorldAction()
-        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver)
+        consumer = new MessageConsumer(channel, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver)
     }
 
 
     def "should decrypt and process message successfully"() {
 
         when:
-        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage);
+        consumer.handle(consumerTag, new Delivery(envelope, amqpProperties, encryptedMessage))
 
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
@@ -88,7 +89,7 @@ class MessageConsumerSpec extends Specification {
     def "should reject message if error callback has count > 0"() {
 
         when:
-        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage);
+        consumer.handle(consumerTag, new Delivery(envelope, amqpProperties, encryptedMessage))
 
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
@@ -105,7 +106,7 @@ class MessageConsumerSpec extends Specification {
     def "should reject message if processing fails"() {
 
         when:
-        consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage);
+        consumer.handle(consumerTag, new Delivery(envelope, amqpProperties, encryptedMessage))
 
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
@@ -120,7 +121,7 @@ class MessageConsumerSpec extends Specification {
 
     def "should reject message if decryption fails"() {
         when:
-        consumer.handleDelivery(consumerTag, envelope, amqpProperties, "here be monsters".getBytes());
+        consumer.handle(consumerTag, new Delivery(envelope, amqpProperties, "here be monsters".getBytes()))
 
         then:
         1 * channel.basicReject(123456, false)

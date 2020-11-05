@@ -2,19 +2,20 @@ package io.elastic.sailor
 
 import com.google.inject.AbstractModule
 import com.google.inject.Guice
+import io.elastic.api.Function
 import io.elastic.sailor.component.HelloWorldAction
 
 class SailorSpec extends ApiAwareSpecification {
 
     def amqp = Mock(AmqpService)
     def errorPublisher = Mock(ErrorPublisher)
-    def componentBuilder = Mock(FunctionBuilder)
+    def function = Mock(Function)
     def injector
 
     def sailor;
 
     def setup() {
-
+        Sailor.gracefulShutdownHandler = null
         injector = Guice.createInjector(new SailorModule(), new SailorTestModule(), new AbstractModule() {
             @Override
             protected void configure() {
@@ -24,7 +25,7 @@ class SailorSpec extends ApiAwareSpecification {
         })
 
         sailor = injector.getInstance(Sailor.class)
-        sailor.setFunctionBuilder(componentBuilder)
+        sailor.setFunction(function)
         sailor.setStep(TestUtils.createStep())
     }
 
@@ -36,9 +37,11 @@ class SailorSpec extends ApiAwareSpecification {
         sailor.start(injector)
 
         then:
-        1 * componentBuilder.build() >> component
-        1 * amqp.connectAndSubscribe()
-        1 * amqp.subscribeConsumer(component)
+        1 * amqp.connect()
+        1 * amqp.createSubscribeChannel()
+        1 * function.init(_)
+        1 * amqp.subscribeConsumer()
+        Sailor.gracefulShutdownHandler != null
     }
 
     def "it should fail and report exception"() {
@@ -46,12 +49,14 @@ class SailorSpec extends ApiAwareSpecification {
         sailor.start(injector)
 
         then:
-        1 * componentBuilder.build() >> { throw new RuntimeException("OMG. I can't build the component") }
-        1 * amqp.connectAndSubscribe()
+        1 * amqp.connect()
+        1 * amqp.createSubscribeChannel()
+        0 * amqp.subscribeConsumer()
+        1 * function.init(_) >> { throw new RuntimeException("OMG. I can't start up the component") }
         1 * errorPublisher.publish(
                 {
 
-                    it.message == "OMG. I can't build the component"
+                    it.message == "OMG. I can't start up the component"
                 },
                 {
                     it.headers == ['stepId':'step_1',

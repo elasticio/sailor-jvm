@@ -93,7 +93,8 @@ class ShutdownIntegrationSpec extends Specification {
         amqp.setSubscribeExchangeName(stepCfg.getString(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
         amqp.setPrefetchCount(1)
 
-        amqp.connectAndSubscribe()
+        amqp.connect()
+        amqp.createSubscribeChannel()
 
         amqp.subscribeChannel.exchangeDeclare(
                 stepCfg.getString(Constants.ENV_VAR_LISTEN_MESSAGES_ON), 'direct', true, false, [:])
@@ -214,7 +215,7 @@ class ShutdownIntegrationSpec extends Specification {
 
         when:
 
-        sailor = Sailor.createAndStartSailor(false)
+        sailor = Sailor.createAndStartSailor()
 
         then: "Blocking var exists"
         def result = blockingVar.get()
