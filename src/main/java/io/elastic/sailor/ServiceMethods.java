@@ -4,6 +4,7 @@ import io.elastic.api.CredentialsVerifier;
 import io.elastic.api.DynamicMetadataProvider;
 import io.elastic.api.InvalidCredentialsException;
 import io.elastic.api.SelectModelProvider;
+import javax.json.JsonObjectBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,26 +26,27 @@ public enum ServiceMethods {
             if (verifierClassName == null) {
                 logger.info("No implementation of {} found",
                         CredentialsVerifier.class.getName());
-                return createResult(true);
+                return createResult(true, null);
 
             }
 
             final CredentialsVerifier verifier = newInstance(verifierClassName);
 
-            boolean verified = true;
             try {
                 verifier.verify(params.getConfiguration());
+                return createResult(true, null);
             } catch (InvalidCredentialsException e) {
-                verified = false;
+                return createResult(false, e.getMessage());
             }
-
-            return createResult(verified);
         }
 
-        private JsonObject createResult(boolean verified) {
-            return Json.createObjectBuilder()
-                    .add("verified", verified)
-                    .build();
+        private JsonObject createResult(boolean verified, String errMessage) {
+            JsonObjectBuilder result = Json.createObjectBuilder()
+                .add("verified", verified);
+            if (errMessage != null){
+                result.add("reason", errMessage);
+            }
+            return result.build();
         }
     },
 
