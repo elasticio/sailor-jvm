@@ -1,4 +1,4 @@
-## 3.3.3 (January 26, 2020)
+## 3.3.2 (January 28, 2020)
 
 * Fixed a bug when a credentials verification reason was not displayed on the UI 
 
