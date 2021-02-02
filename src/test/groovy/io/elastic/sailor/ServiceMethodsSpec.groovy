@@ -19,7 +19,7 @@ class ServiceMethodsSpec extends Specification {
                 .className(SimpleSelectModelProvider.class.getName())
                 .configuration(cfg)
                 .modelClassName(SimpleSelectModelProvider.class.getName())
-                .build();
+                .build()
 
         when:
         def result = ServiceMethods.selectModel.execute(params)
@@ -42,7 +42,7 @@ class ServiceMethodsSpec extends Specification {
                 .className(SimpleMetadataProvider.class.getName())
                 .configuration(cfg)
                 .triggerOrAction(triggerOrAction)
-                .build();
+                .build()
 
         when:
         def result = ServiceMethods.getMetaModel.execute(params)
@@ -59,7 +59,7 @@ class ServiceMethodsSpec extends Specification {
 
         def params = new ServiceExecutionParameters.Builder()
                 .configuration(cfg)
-                .build();
+                .build()
 
         when:
         def result = ServiceMethods.verifyCredentials.execute(params)
@@ -77,7 +77,7 @@ class ServiceMethodsSpec extends Specification {
         def params = new ServiceExecutionParameters.Builder()
                 .configuration(cfg)
                 .credentialsVerifierClassName(CredentialsVerifierImpl.class.getName())
-                .build();
+                .build()
 
         when:
         def result = ServiceMethods.verifyCredentials.execute(params)
@@ -97,12 +97,12 @@ class ServiceMethodsSpec extends Specification {
         def params = new ServiceExecutionParameters.Builder()
                 .configuration(cfg)
                 .credentialsVerifierClassName(CredentialsVerifierImpl.class.getName())
-                .build();
+                .build()
 
         when:
         def result = ServiceMethods.verifyCredentials.execute(params)
 
         then:
-        result.toString() == '{"verified":false}'
+        result.toString() == '{"verified":false,"reason":"Invalid credentials"}'
     }
 }
