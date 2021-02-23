@@ -1,6 +1,7 @@
 package io.elastic.sailor.impl;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
@@ -15,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
 
+@Singleton
 public class MessagePublisherImpl implements MessagePublisher {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessagePublisherImpl.class);
