@@ -1,3 +1,7 @@
+## 3.3.3 (February 22, 2021)
+
+* Fixed issue [Publish exceptions under load #63](https://github.com/elasticio/sailor-jvm/issues/63)
+
 ## 3.3.2 (February 2, 2021)
 
 * Fixed a bug when a credentials verification reason was not displayed on the UI 
