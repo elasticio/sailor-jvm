@@ -8,7 +8,7 @@ To build the project run in terminal
 
 
 
-###Environment variables
+### Environment variables
 
 
  - `AMQP_PUBLISH_CONFIRM_ENABLED` - Enable publish confirm functionality. Default value: `true`
