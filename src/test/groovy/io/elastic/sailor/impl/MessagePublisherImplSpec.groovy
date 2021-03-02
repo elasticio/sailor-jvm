@@ -19,7 +19,7 @@ class MessagePublisherImplSpec extends Specification {
 
     def headers = Utils.buildAmqpProperties(["flow_id": "flow_123"])
 
-    def publisher = new MessagePublisherImpl(exchangeName, 3, 1, 35, amqp)
+    def publisher = new MessagePublisherImpl(exchangeName, 3, 1, 35, true, amqp)
 
     def "should  publish and receive confirmation successfully"() {
         setup:

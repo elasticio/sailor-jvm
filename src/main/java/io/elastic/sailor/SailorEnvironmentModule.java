@@ -52,6 +52,8 @@ public class SailorEnvironmentModule extends AbstractSailorModule {
         bindOptionalYesNoEnvVar(Constants.ENV_VAR_HOOK_SHUTDOWN);
         bindOptionalYesNoEnvVar(Constants.ENV_VAR_EMIT_LIGHTWEIGHT_MESSAGE);
 
+        bindOptionalBooleanValue(Constants.ENV_VAR_AMQP_PUBLISH_CONFIRM_ENABLED, true);
+
         bindOptionalIntegerEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_ATTEMPTS, Integer.MAX_VALUE);
 
         // 100 ms

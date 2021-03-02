@@ -108,7 +108,7 @@ class ShutdownIntegrationSpec extends Specification {
         def messagePublisher = new MessagePublisherImpl(
                 System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
                 Integer.MAX_VALUE,
-                100, 5 * 60 * 1000, amqp)
+                100, 5 * 60 * 1000, true, amqp)
 
         publishChannel = messagePublisher.getPublishChannel()
 

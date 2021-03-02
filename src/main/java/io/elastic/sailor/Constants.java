@@ -103,4 +103,5 @@ public final class Constants {
     public static final String MDC_THREAD_ID = AMQP_HEADER_THREAD_ID;
     public static final String MDC_MESSAGE_ID = AMQP_HEADER_MESSAGE_ID;
     public static final String MDC_PARENT_MESSAGE_ID = AMQP_HEADER_PARENT_MESSAGE_ID;
+    public static final String ENV_VAR_AMQP_PUBLISH_CONFIRM_ENABLED = "AMQP_PUBLISH_CONFIRM_ENABLED";
 }
