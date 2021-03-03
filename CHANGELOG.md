@@ -1,3 +1,7 @@
+## 3.3.4 (March 3, 2021)
+
+* [New environment variable AMQP_PUBLISH_CONFIRM_ENABLED is introduced](https://github.com/elasticio/elasticio/issues/5191)
+
 ## 3.3.3 (February 22, 2021)
 
 * Fixed issue [Publish exceptions under load #63](https://github.com/elasticio/sailor-jvm/issues/63)

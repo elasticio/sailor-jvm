@@ -6,15 +6,17 @@ import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
-import io.elastic.sailor.AmqpService;
-import io.elastic.sailor.Constants;
-import io.elastic.sailor.MessagePublisher;
+
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeoutException;
+
+import io.elastic.sailor.AmqpService;
+import io.elastic.sailor.Constants;
+import io.elastic.sailor.MessagePublisher;
 
 @Singleton
 public class MessagePublisherImpl implements MessagePublisher {
@@ -28,18 +30,21 @@ public class MessagePublisherImpl implements MessagePublisher {
     private long publishRetryDelay;
     private long publishMaxRetryDelay;
     private Channel publishChannel;
+    private final boolean isPublishConfirmEnabled;
 
     @Inject
     public MessagePublisherImpl(@Named(Constants.ENV_VAR_PUBLISH_MESSAGES_TO) final String publishExchangeName,
                                 @Named(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_ATTEMPTS) int publishMaxRetries,
                                 @Named(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_DELAY) long publishRetryDelay,
                                 @Named(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY) long publishMaxRetryDelay,
+                                @Named(Constants.ENV_VAR_AMQP_PUBLISH_CONFIRM_ENABLED) boolean isPublishConfirmEnabled,
                                 final AmqpService amqpService) {
         this.publishExchangeName = publishExchangeName;
         this.publishMaxRetries = publishMaxRetries;
         this.publishRetryDelay = publishRetryDelay;
         this.publishMaxRetryDelay = publishMaxRetryDelay;
         this.amqpService = amqpService;
+        this.isPublishConfirmEnabled = isPublishConfirmEnabled;
     }
 
     @Override
@@ -58,21 +63,22 @@ public class MessagePublisherImpl implements MessagePublisher {
             } catch (IOException e) {
                 throw new RuntimeException(String.format("Failed to publish message to exchange %s", publishExchangeName), e);
             }
+            if (isPublishConfirmEnabled) {
+                retryPublish = !waitForConfirms(publishChannel);
+                if (retryPublish) {
+                    sleep(retryCount + 1);
 
-            retryPublish = !waitForConfirms(publishChannel);
-
-            if (retryPublish) {
-                sleep(retryCount + 1);
-
-                if (retryCount >= this.publishMaxRetries) {
-                    throw new IllegalStateException(
+                    if (retryCount >= this.publishMaxRetries) {
+                        throw new IllegalStateException(
                             String.format("Failed to publish the message to a queue after %s retries. " +
                                     "The limit of %s retries reached.",
-                                    retryCount, this.publishMaxRetries));
+                                retryCount, this.publishMaxRetries));
+                    }
+                    retryCount++;
                 }
-                retryCount++;
+            } else {
+                retryPublish = false;
             }
-
             logger.info("Successfully published data to {}", this.publishExchangeName);
         }
     }
@@ -100,7 +106,7 @@ public class MessagePublisherImpl implements MessagePublisher {
             throw new RuntimeException("Waiting for publisher confirmation timed out", e);
         } catch (IllegalStateException e) {
             logger.info("Looks like publisher confirmation was asked on a non-Confirm channel. " +
-                    "Please check if the publisher channel was created with publisher confirms enabled.");
+                "Please check if the publisher channel was created with publisher confirms enabled.");
             throw e;
         }
     }
@@ -109,7 +115,7 @@ public class MessagePublisherImpl implements MessagePublisher {
         long sleep = calculateSleepDuration(currentPublishAttempt);
 
         logger.info("Published message to {} was not confirmed. Trying again in {} millis.",
-                this.publishExchangeName, sleep);
+            this.publishExchangeName, sleep);
         try {
             Thread.sleep(sleep);
         } catch (InterruptedException e) {
@@ -140,7 +146,9 @@ public class MessagePublisherImpl implements MessagePublisher {
             if (publishChannel == null) {
                 final Connection connection = amqpService.getConnection();
                 publishChannel = connection.createChannel();
-                publishChannel.confirmSelect();
+                if (isPublishConfirmEnabled) {
+                    publishChannel.confirmSelect();
+                }
                 logger.info("Opened publish channel");
             }
             return publishChannel;
