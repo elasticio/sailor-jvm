@@ -11,4 +11,4 @@ To build the project run in terminal
 ### Environment variables
 
 
- - `AMQP_PUBLISH_CONFIRM_ENABLED` - Enable publish confirm functionality. Default value: `true`
+ - `ELASTICIO_AMQP_PUBLISH_CONFIRM_ENABLED` - Enable publish confirm functionality. Default value: `true`

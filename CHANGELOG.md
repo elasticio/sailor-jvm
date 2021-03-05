@@ -1,3 +1,7 @@
+## 3.3.5 (March 5, 2021)
+
+* [AMQP_PUBLISH_CONFIRM_ENABLED was renamed to the ELASTICIO_AMQP_PUBLISH_CONFIRM_ENABLED](https://github.com/elasticio/elasticio/issues/5191)
+
 ## 3.3.4 (March 3, 2021)
 
 * [New environment variable AMQP_PUBLISH_CONFIRM_ENABLED is introduced](https://github.com/elasticio/elasticio/issues/5191)
