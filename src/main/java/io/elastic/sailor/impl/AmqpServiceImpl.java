@@ -13,15 +13,19 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.TimeoutException;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ExecutorService;
 
 @Singleton
 public class AmqpServiceImpl implements AmqpService {
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(AmqpServiceImpl.class);
 
+    private ExecutorService executorService;
     private Connection amqp;
     private Channel subscribeChannel;
 
     private String amqpUri;
+    private Integer threadPoolSize;
     private String subscribeExchangeName;
     private Integer prefetchCount;
     private CryptoServiceImpl cipher;
@@ -40,6 +44,12 @@ public class AmqpServiceImpl implements AmqpService {
     public void setAmqpUri(
             @Named(Constants.ENV_VAR_AMQP_URI) String amqpUri) {
         this.amqpUri = amqpUri;
+    }
+
+    @Inject
+    public void setThreadPoolSize(
+            @Named(Constants.ENV_VAR_CONSUMER_THREAD_POOL_SIZE) Integer threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
     }
 
     @Inject
@@ -93,6 +103,7 @@ public class AmqpServiceImpl implements AmqpService {
         } catch (IOException e) {
             logger.info("AMQP connection is already closed: " + e);
         }
+        executorService.shutdown();
         logger.info("Successfully disconnected from AMQP");
     }
 
@@ -145,8 +156,9 @@ public class AmqpServiceImpl implements AmqpService {
             if (amqp == null) {
                 ConnectionFactory factory = new ConnectionFactory();
                 factory.setUri(new URI(this.amqpUri));
-                amqp = factory.newConnection();
-                logger.info("Connected to AMQP");
+                executorService = Executors.newFixedThreadPool(threadPoolSize);
+                amqp = factory.newConnection(executorService);
+                logger.info("Connected to AMQP with thread pool of {} threads", threadPoolSize);
             }
             return this;
         } catch (Exception e) {

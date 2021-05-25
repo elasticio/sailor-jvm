@@ -9,7 +9,9 @@ import io.elastic.sailor.ApiAwareSpecification
 import io.elastic.sailor.SailorModule
 import io.elastic.sailor.SailorTestModule
 import spock.lang.Shared
+import spock.lang.Ignore
 
+@Ignore
 class AmqpServiceImplSpec extends ApiAwareSpecification {
 
     def subscribeChannel = Mock(Channel)

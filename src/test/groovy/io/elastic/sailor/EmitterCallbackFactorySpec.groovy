@@ -5,7 +5,9 @@ import com.google.inject.Injector
 import io.elastic.api.Message
 import io.elastic.sailor.impl.*
 import spock.lang.Shared
+import spock.lang.Ignore
 
+@Ignore
 class EmitterCallbackFactorySpec extends ApiAwareSpecification {
 
 

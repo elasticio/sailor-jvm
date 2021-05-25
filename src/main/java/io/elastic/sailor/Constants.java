@@ -22,6 +22,7 @@ public final class Constants {
     public static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;
     public static final int DEFAULT_RABBITMQ_PREFETCH_SAILOR = 1;
     public static final int DEFAULT_API_REQUEST_RETRY_ATTEMPTS = 3;
+    public static final int DEFAULT_CONSUMER_THREAD_POOL_SIZE = 20;
 
     public static final String ENV_VAR_PREFIX = "ELASTICIO_";
 
@@ -104,4 +105,5 @@ public final class Constants {
     public static final String MDC_MESSAGE_ID = AMQP_HEADER_MESSAGE_ID;
     public static final String MDC_PARENT_MESSAGE_ID = AMQP_HEADER_PARENT_MESSAGE_ID;
     public static final String ENV_VAR_AMQP_PUBLISH_CONFIRM_ENABLED = ENV_VAR_PREFIX + "AMQP_PUBLISH_CONFIRM_ENABLED";
+    public static final String ENV_VAR_CONSUMER_THREAD_POOL_SIZE = ENV_VAR_PREFIX + "CONSUMER_THREAD_POOL_SIZE";
 }
