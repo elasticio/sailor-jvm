@@ -14,6 +14,7 @@ import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
 import spock.lang.Shared
+import spock.lang.Ignore
 import spock.lang.Specification
 import spock.lang.Stepwise
 import spock.util.concurrent.BlockingVariable
@@ -25,6 +26,7 @@ import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
 @Stepwise
+@Ignore
 class FlowControlIntegrationSpec extends Specification {
 
     @Shared
