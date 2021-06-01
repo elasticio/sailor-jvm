@@ -21,6 +21,7 @@ public final class Constants {
     public static final int DEFAULT_REBOUND_LIMIT = 20;
     public static final int DEFAULT_REBOUND_INITIAL_EXPIRATION = 15000;
     public static final int DEFAULT_RABBITMQ_PREFETCH_SAILOR = 1;
+    public static final int DEFAULT_CONSUMER_THREAD_POOL_SIZE_SAILOR = 20;
     public static final int DEFAULT_API_REQUEST_RETRY_ATTEMPTS = 3;
 
     public static final String ENV_VAR_PREFIX = "ELASTICIO_";
@@ -59,6 +60,7 @@ public final class Constants {
     public static final String ENV_VAR_TENANT_ID = ENV_VAR_PREFIX + "TENANT_ID";
     public static final String ENV_VAR_WORKSPACE_ID = ENV_VAR_PREFIX + "WORKSPACE_ID";
     public static final String ENV_VAR_RABBITMQ_PREFETCH_SAILOR = ENV_VAR_PREFIX + "RABBITMQ_PREFETCH_SAILOR";
+    public static final String ENV_VAR_CONSUMER_THREAD_POOL_SIZE_SAILOR = ENV_VAR_PREFIX + "CONSUMER_THREAD_POOL_SIZE";
     public static final String ENV_VAR_STARTUP_REQUIRED = ENV_VAR_PREFIX + "STARTUP_REQUIRED";
     public static final String ENV_VAR_HOOK_SHUTDOWN = ENV_VAR_PREFIX + "HOOK_SHUTDOWN";
     public static final String ENV_VAR_API_REQUEST_RETRY_ATTEMPTS =

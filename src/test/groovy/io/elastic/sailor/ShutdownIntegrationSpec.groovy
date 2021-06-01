@@ -92,6 +92,7 @@ class ShutdownIntegrationSpec extends Specification {
         amqp.setAmqpUri(stepCfg.getString(Constants.ENV_VAR_AMQP_URI))
         amqp.setSubscribeExchangeName(stepCfg.getString(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
         amqp.setPrefetchCount(1)
+        amqp.setThreadPoolSize(1)
 
         amqp.connectAndSubscribe()
 

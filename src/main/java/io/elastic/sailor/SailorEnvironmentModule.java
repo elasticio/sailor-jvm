@@ -44,6 +44,9 @@ public class SailorEnvironmentModule extends AbstractSailorModule {
                 Constants.ENV_VAR_RABBITMQ_PREFETCH_SAILOR,
                 Constants.DEFAULT_RABBITMQ_PREFETCH_SAILOR);
         bindOptionalIntegerEnvVar(
+                Constants.ENV_VAR_CONSUMER_THREAD_POOL_SIZE_SAILOR,
+                Constants.DEFAULT_CONSUMER_THREAD_POOL_SIZE_SAILOR);
+        bindOptionalIntegerEnvVar(
                 Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS,
                 Constants.DEFAULT_API_REQUEST_RETRY_ATTEMPTS);
 
