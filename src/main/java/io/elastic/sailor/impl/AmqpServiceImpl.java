@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Optional;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +35,7 @@ public class AmqpServiceImpl implements AmqpService {
     private ContainerContext containerContext;
     private MessageResolver messageResolver;
     private ThreadPoolExecutor threadPoolExecutor;
-    private int threadPoolSize;
+    private Integer threadPoolSize;
 
     @Inject
     public AmqpServiceImpl(CryptoServiceImpl cipher) {
@@ -80,7 +81,7 @@ public class AmqpServiceImpl implements AmqpService {
         this.messageResolver = messageResolver;
     }
 
-    @Inject
+    @Inject(optional = true)
     public void setThreadPoolSize(
              @Named(Constants.ENV_VAR_CONSUMER_THREAD_POOL_SIZE_SAILOR) Integer threadPoolSize) {
         this.threadPoolSize = threadPoolSize;
@@ -152,7 +153,8 @@ public class AmqpServiceImpl implements AmqpService {
     }
 
     private AmqpServiceImpl openConnection() {
-        this.threadPoolExecutor =  new ThreadPoolExecutor(this.threadPoolSize, this.threadPoolSize,
+        Integer threadPoolSize = Optional.ofNullable(this.threadPoolSize).orElse(this.prefetchCount);
+        this.threadPoolExecutor =  new ThreadPoolExecutor(threadPoolSize, threadPoolSize,
             0L, TimeUnit.MILLISECONDS,
             new LinkedBlockingQueue<>());
         try {
@@ -160,8 +162,7 @@ public class AmqpServiceImpl implements AmqpService {
                 ConnectionFactory factory = new ConnectionFactory();
                 factory.setUri(new URI(this.amqpUri));
                 amqp = factory.newConnection();
-                logger.info("Connected to AMQP");
-            }
+                logger.info("Connected to AMQP with thread pool of {} threads", threadPoolSize);            }
             return this;
         } catch (Exception e) {
             throw new RuntimeException(e);
