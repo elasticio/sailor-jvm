@@ -4,13 +4,16 @@ import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.DefaultConsumer;
 import com.rabbitmq.client.Envelope;
+
 import io.elastic.api.Function;
 import io.elastic.api.Message;
 import io.elastic.sailor.*;
+
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.IOException;
+import java.util.concurrent.ExecutorService;
 
 public class MessageConsumer extends DefaultConsumer {
 
@@ -21,6 +24,8 @@ public class MessageConsumer extends DefaultConsumer {
     private final Step step;
     private final ContainerContext containerContext;
     private final MessageResolver messageResolver;
+    private final Channel channel;
+    private final ExecutorService threadPool;
 
     public MessageConsumer(Channel channel,
                            CryptoServiceImpl cipher,
@@ -28,57 +33,62 @@ public class MessageConsumer extends DefaultConsumer {
                            Function function,
                            Step step,
                            final ContainerContext containerContext,
-                           final MessageResolver messageResolver) {
+                           final MessageResolver messageResolver,
+                           ExecutorService threadPool) {
         super(channel);
+        this.channel = channel;
         this.cipher = cipher;
         this.processor = processor;
         this.function = function;
         this.step = step;
         this.containerContext = containerContext;
         this.messageResolver = messageResolver;
+        this.threadPool = threadPool;
     }
 
     @Override
-    public void handleDelivery(String consumerTag, Envelope envelope, AMQP.BasicProperties properties, byte[] body)
-            throws IOException {
+    public void handleDelivery(String consumerTag,
+                               Envelope envelope,
+                               AMQP.BasicProperties properties,
+                               final byte[] body) throws IOException {
+            threadPool.submit(() -> {
+                if (Sailor.gracefulShutdownHandler != null) {
+                    Sailor.gracefulShutdownHandler.increment();
+                }
+                ExecutionContext executionContext = null;
+                long deliveryTag = envelope.getDeliveryTag();
+                putIntoMDC(properties);
 
-        if (Sailor.gracefulShutdownHandler != null) {
-            Sailor.gracefulShutdownHandler.increment();
-        }
+                try {
+                    executionContext = createExecutionContext(body, properties);
+                } catch (Exception e) {
+                    try {
+                        channel.basicReject(deliveryTag, false);
+                    } catch (IOException ioException) {
+                        logger.error("Failed to basicReject message: {}", Utils.getStackTrace(e));
+                    }
+                    logger.error("Failed to parse or resolve message to process {}", Utils.getStackTrace(e));
+                    decrement();
+                    return;
+                }
 
-        ExecutionContext executionContext = null;
-        long deliveryTag = envelope.getDeliveryTag();
-
-
-        logger.info("Consumer {} received message: deliveryTag={}", consumerTag, deliveryTag);
-
-        putIntoMDC(properties);
-
-        try {
-            executionContext = createExecutionContext(body, properties);
-        } catch (Exception e) {
-            this.getChannel().basicReject(deliveryTag, false);
-            logger.error("Failed to parse or resolve message to process {}", Utils.getStackTrace(e));
-
-            decrement();
-
-            return;
-        }
-
-        ExecutionStats stats = null;
-
-        try {
-            stats = processor.processMessage(executionContext, this.function);
-        } catch (Exception e) {
-            logger.error("Failed to process message: {}", Utils.getStackTrace(e));
-        } finally {
-            removeFromMDC(Constants.MDC_THREAD_ID);
-            removeFromMDC(Constants.MDC_MESSAGE_ID);
-            removeFromMDC(Constants.MDC_PARENT_MESSAGE_ID);
-            ackOrReject(stats, deliveryTag);
-
-            decrement();
-        }
+                ExecutionStats stats = null;
+                try {
+                    stats = processor.processMessage(executionContext, this.function);
+                } catch (Exception e) {
+                    logger.error("Failed to process message: {}", Utils.getStackTrace(e));
+                } finally {
+                    removeFromMDC(Constants.MDC_THREAD_ID);
+                    removeFromMDC(Constants.MDC_MESSAGE_ID);
+                    removeFromMDC(Constants.MDC_PARENT_MESSAGE_ID);
+                    try {
+                        ackOrReject(stats, deliveryTag);
+                    } catch (IOException e) {
+                        logger.error("Failed to ackOrReject message: {}", Utils.getStackTrace(e));
+                    }
+                    decrement();
+                }
+            });
     }
 
     private void decrement() {
@@ -106,7 +116,7 @@ public class MessageConsumer extends DefaultConsumer {
     private static void removeFromMDC(final String key) {
         try {
             MDC.remove(key);
-        }catch(Exception e) {
+        } catch (Exception e) {
             logger.warn("Failed to remove {} from MDC: {}", key, Utils.getStackTrace(e));
         }
     }
@@ -130,11 +140,18 @@ public class MessageConsumer extends DefaultConsumer {
         }
 
         logger.info("Acknowledging received message with deliveryTag={}", deliveryTag);
-        this.getChannel().basicAck(deliveryTag, true);
+        this.getChannel().basicAck(deliveryTag, false);
     }
 
     private Object getHeaderValue(final AMQP.BasicProperties properties, final String headerName) {
         return properties.getHeaders().getOrDefault(headerName, "unknown");
+    }
+
+    /**
+     * Called when consumer is registered.
+     */
+    public void handleConsumeOk(String consumerTag) {
+        logger.debug("Consumer {} is registered", consumerTag);
     }
 
 }

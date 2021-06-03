@@ -1,3 +1,7 @@
+## 3.3.6 (June 3, 2021)
+
+* [Make sailor-jvm process messages in parallel #5433](https://github.com/elasticio/elasticio/issues/5433)
+
 ## 3.3.5 (March 5, 2021)
 
 * [AMQP_PUBLISH_CONFIRM_ENABLED was renamed to the ELASTICIO_AMQP_PUBLISH_CONFIRM_ENABLED](https://github.com/elasticio/elasticio/issues/5191)

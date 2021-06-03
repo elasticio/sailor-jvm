@@ -12,6 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Optional;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 @Singleton
@@ -30,6 +34,8 @@ public class AmqpServiceImpl implements AmqpService {
     private String consumerTag;
     private ContainerContext containerContext;
     private MessageResolver messageResolver;
+    private ThreadPoolExecutor threadPoolExecutor;
+    private Integer threadPoolSize;
 
     @Inject
     public AmqpServiceImpl(CryptoServiceImpl cipher) {
@@ -75,6 +81,12 @@ public class AmqpServiceImpl implements AmqpService {
         this.messageResolver = messageResolver;
     }
 
+    @Inject(optional = true)
+    public void setThreadPoolSize(
+             @Named(Constants.ENV_VAR_CONSUMER_THREAD_POOL_SIZE_SAILOR) Integer threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
+    }
+
     public void connectAndSubscribe() {
         openConnection();
         openSubscribeChannel();
@@ -93,13 +105,13 @@ public class AmqpServiceImpl implements AmqpService {
         } catch (IOException e) {
             logger.info("AMQP connection is already closed: " + e);
         }
+        threadPoolExecutor.shutdown();
         logger.info("Successfully disconnected from AMQP");
     }
 
     public void subscribeConsumer(final Function function) {
         final MessageConsumer consumer = new MessageConsumer(
-                subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext, this.messageResolver);
-
+            subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext, this.messageResolver, this.threadPoolExecutor);
         try {
             consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
         } catch (IOException e) {
@@ -141,13 +153,16 @@ public class AmqpServiceImpl implements AmqpService {
     }
 
     private AmqpServiceImpl openConnection() {
+        Integer threadPoolSize = Optional.ofNullable(this.threadPoolSize).orElse(this.prefetchCount);
+        this.threadPoolExecutor =  new ThreadPoolExecutor(threadPoolSize, threadPoolSize,
+            0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>());
         try {
             if (amqp == null) {
                 ConnectionFactory factory = new ConnectionFactory();
                 factory.setUri(new URI(this.amqpUri));
                 amqp = factory.newConnection();
-                logger.info("Connected to AMQP");
-            }
+                logger.info("Connected to AMQP with thread pool of {} threads", threadPoolSize);            }
             return this;
         } catch (Exception e) {
             throw new RuntimeException(e);

@@ -13,6 +13,9 @@ import spock.lang.Shared
 import spock.lang.Specification
 
 import javax.json.Json
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
 class MessageConsumerSpec extends Specification {
 
@@ -24,6 +27,7 @@ class MessageConsumerSpec extends Specification {
     CryptoServiceImpl cipher = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 
     def consumer
+    ThreadPoolExecutor threadPoolExecutor
 
     @Shared
     def amqpProperties
@@ -63,7 +67,10 @@ class MessageConsumerSpec extends Specification {
 
     def setup() {
         component = new HelloWorldAction()
-        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver)
+        threadPoolExecutor =  new ThreadPoolExecutor(1, 1,
+                0L, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>());
+        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver, threadPoolExecutor)
     }
 
 
@@ -71,7 +78,9 @@ class MessageConsumerSpec extends Specification {
 
         when:
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage);
-
+        threadPoolExecutor.shutdown();
+        threadPoolExecutor.awaitTermination(5000, TimeUnit.SECONDS);
+        println 'finished'
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
         1 * processor.processMessage({
@@ -79,7 +88,7 @@ class MessageConsumerSpec extends Specification {
             assert it.step != null
             it.amqpProperties == amqpProperties
         }, component) >> new ExecutionStats(1, 0, 0)
-        1 * channel.basicAck(123456, true)
+        1 * channel.basicAck(123456, false)
         0 * _
 
     }
@@ -89,7 +98,8 @@ class MessageConsumerSpec extends Specification {
 
         when:
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage);
-
+        threadPoolExecutor.shutdown();
+        threadPoolExecutor.awaitTermination(5000, TimeUnit.SECONDS);
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
         1 * processor.processMessage({
@@ -106,6 +116,8 @@ class MessageConsumerSpec extends Specification {
 
         when:
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage);
+        threadPoolExecutor.shutdown();
+        threadPoolExecutor.awaitTermination(5000, TimeUnit.SECONDS);
 
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
@@ -121,6 +133,8 @@ class MessageConsumerSpec extends Specification {
     def "should reject message if decryption fails"() {
         when:
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, "here be monsters".getBytes());
+        threadPoolExecutor.shutdown();
+        threadPoolExecutor.awaitTermination(5000, TimeUnit.SECONDS);
 
         then:
         1 * channel.basicReject(123456, false)

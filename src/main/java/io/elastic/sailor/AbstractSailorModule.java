@@ -30,6 +30,20 @@ abstract class AbstractSailorModule extends AbstractModule {
                 .toInstance(getOptionalIntegerValue(name, defaultValue));
     }
 
+    void bindOptionalIntegerEnvVarIfExists(final String name) {
+
+        final String value = Utils.getOptionalEnvVar(name);
+
+        if (value == null) {
+            return;
+        }
+
+        bind(Integer.class)
+            .annotatedWith(Names.named(name))
+            .toInstance(Integer.parseInt(value));
+    }
+
+
     void bindOptionalLongEnvVar(final String name, long defaultValue) {
         bind(Long.class)
                 .annotatedWith(Names.named(name))

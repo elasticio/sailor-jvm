@@ -116,6 +116,7 @@ class IntegrationSpec extends Specification {
         amqp.setAmqpUri(System.getProperty(Constants.ENV_VAR_AMQP_URI))
         amqp.setSubscribeExchangeName(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
         amqp.setPrefetchCount(1)
+        amqp.setThreadPoolSize(1)
 
         amqp.connectAndSubscribe()
 
@@ -263,7 +264,7 @@ class IntegrationSpec extends Specification {
                                        byte[] body)
                     throws IOException {
 
-                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
+                IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), false)
                 def message = Utils.createMessage(
                         IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64))
                 blockingVar.set([message:message, properties:properties]);
