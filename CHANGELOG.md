@@ -1,3 +1,7 @@
+## 3.3.7 (December 10, 2021)
+
+* [Make sure message contains all webhooks related info #68](https://github.com/elasticio/sailor-jvm/issues/68)
+
 ## 3.3.6 (June 3, 2021)
 
 * [Make sailor-jvm process messages in parallel #5433](https://github.com/elasticio/elasticio/issues/5433)

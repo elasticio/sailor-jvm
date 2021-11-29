@@ -86,21 +86,29 @@ public class Utils {
 
     public static Message createMessage(final JsonObject payload) {
         JsonString id = payload.getJsonString(Message.PROPERTY_ID);
-        JsonObject headers = payload.getJsonObject(Message.PROPERTY_HEADERS);
-        JsonObject body = payload.getJsonObject(Message.PROPERTY_BODY);
         JsonObject attachments = payload.getJsonObject(Message.PROPERTY_ATTACHMENTS);
+        JsonObject body = payload.getJsonObject(Message.PROPERTY_BODY);
+        JsonObject headers = payload.getJsonObject(Message.PROPERTY_HEADERS);
+        JsonString method = payload.getJsonString(Message.PROPERTY_METHOD);
+        JsonString originalUrl = payload.getJsonString(Message.PROPERTY_ORIGINAL_URL);
+        JsonObject query = payload.getJsonObject(Message.PROPERTY_QUERY);
         JsonObject passthrough = payload.getJsonObject(Message.PROPERTY_PASSTHROUGH);
+        JsonString url = payload.getJsonString(Message.PROPERTY_URL);
 
-        if (headers == null) {
-            headers = Json.createObjectBuilder().build();
+        if (attachments == null) {
+            attachments = Json.createObjectBuilder().build();
         }
 
         if (body == null) {
             body = Json.createObjectBuilder().build();
         }
 
-        if (attachments == null) {
-            attachments = Json.createObjectBuilder().build();
+        if (headers == null) {
+            headers = Json.createObjectBuilder().build();
+        }
+
+        if (query == null) {
+            query = Json.createObjectBuilder().build();
         }
 
         if (passthrough == null) {
@@ -108,13 +116,23 @@ public class Utils {
         }
 
         final Message.Builder builder = new Message.Builder()
-                .headers(headers)
-                .body(body)
                 .attachments(attachments)
+                .body(body)
+                .headers(headers)
+                .query(query)
                 .passthrough(passthrough);
 
         if (id != null) {
             builder.id(UUID.fromString(id.getString()));
+        }
+        if (method != null) {
+            builder.method(method.getString());
+        }
+        if (originalUrl != null) {
+            builder.originalUrl(originalUrl.getString());
+        }
+        if (url != null) {
+            builder.url(url.getString());
         }
 
         return builder.build();
