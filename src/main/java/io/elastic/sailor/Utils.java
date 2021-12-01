@@ -84,18 +84,6 @@ public class Utils {
                 .deliveryMode(2);
     }
 
-    public static void main(String[] args) {
-        JsonObject payload = Json.createObjectBuilder()
-            .add("method", "POST")
-            .add("body", Json.createObjectBuilder()
-                .add("foo", "bar")
-                .build())
-            .build();
-        System.out.println("1. method: " + payload.getJsonString("method"));
-        System.out.println("1. UNmethod: " + payload.getJsonObject("UNmethod"));
-    }
-
-
     public static Message createMessage(final JsonObject payload) {
         JsonString id = payload.getJsonString(Message.PROPERTY_ID);
         JsonObject attachments = payload.getJsonObject(Message.PROPERTY_ATTACHMENTS);

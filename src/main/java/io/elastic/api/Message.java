@@ -258,7 +258,6 @@ public class Message implements Serializable {
             this.attachments = Json.createObjectBuilder().build();
             this.body = Json.createObjectBuilder().build();
             this.headers = Json.createObjectBuilder().build();
-            this.query = Json.createObjectBuilder().build();
             this.passthrough = Json.createObjectBuilder().build();
         }
 

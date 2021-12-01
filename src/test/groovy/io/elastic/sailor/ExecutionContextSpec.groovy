@@ -101,7 +101,6 @@ class ExecutionContextSpec extends Specification {
         headers[Constants.AMQP_META_HEADER_PREFIX + "mixedcase"] == 'Eventually to become lowercase'
     }
 
-
     def "should build with parent message id"() {
         given:
         def msg = new Message.Builder().build();
@@ -195,9 +194,9 @@ class ExecutionContextSpec extends Specification {
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
-
+        println(JSON.stringify(result));
         then:
-        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{},"attachments":{}}'
+        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{},"headers":{}}'
     }
 
     def "should not create passthrough is step is not configured to handle passthrough even though component emitted a message with passthrough"() {
@@ -224,7 +223,7 @@ class ExecutionContextSpec extends Specification {
         def result = ctx.createPublisheableMessage(emittedMessage)
 
         then:
-        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{},"attachments":{}}'
+        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{},"headers":{}}'
     }
 
     def "should create passthrough in the message by putting own message into it"() {
@@ -261,9 +260,9 @@ class ExecutionContextSpec extends Specification {
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
-
+println(JSON.stringify(result))
         then:
-        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{},"passthrough":{"step_1":{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{}}}}'
+        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{"greeting":"Hello, world!"},"headers":{},"passthrough":{"step_1":{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{"greeting":"Hello, world!"},"headers":{}}}}'
     }
 
     def "should add own message into existing passthrough"() {
@@ -323,7 +322,7 @@ class ExecutionContextSpec extends Specification {
         def result = ctx.createPublisheableMessage(emittedMsg)
 
         then:
-        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{},"passthrough":{"step_0":{"id":"5594bf23-611f-4bc2-acff-d897409614ec","headers":{},"body":{"time":"2017-03-20T18:45:02.122Z"},"attachments":{}},"step_1":{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{}}}}'
+        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{"greeting":"Hello, world!"},"headers":{},"passthrough":{"step_0":{"id":"5594bf23-611f-4bc2-acff-d897409614ec","attachments":{},"body":{"time":"2017-03-20T18:45:02.122Z"},"headers":{}},"step_1":{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{"greeting":"Hello, world!"},"headers":{}}}}'
     }
 
     def "should add anything to passthrough in the message because the component is a trigger (stepId is missing in AMQP headers)"() {
@@ -371,7 +370,7 @@ class ExecutionContextSpec extends Specification {
         def result = ctx.createPublisheableMessage(emittedMessage)
 
         then:
-        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"answer":"Hello, again!"},"attachments":{},"passthrough":{}}'
+        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{"answer":"Hello, again!"},"headers":{},"passthrough":{}}'
     }
 
     def "should create passthrough in the message by putting incoming message into it"() {
@@ -420,7 +419,7 @@ class ExecutionContextSpec extends Specification {
         def result = ctx.createPublisheableMessage(emittedMessage)
 
         then:
-        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"answer":"Hello, again!"},"attachments":{},"passthrough":{"step_0":{"id":"2c5ea4c0-4067-11e9-8bad-9b1deb4d3b7d","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{}}}}'
+        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{"answer":"Hello, again!"},"headers":{},"passthrough":{"step_0":{"id":"2c5ea4c0-4067-11e9-8bad-9b1deb4d3b7d","attachments":{},"body":{"greeting":"Hello, world!"},"headers":{}}}}'
     }
 
     def "should add incoming message into existing passthrough"() {
@@ -490,6 +489,6 @@ class ExecutionContextSpec extends Specification {
         def result = ctx.createPublisheableMessage(emittedMessage)
 
         then:
-        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","headers":{},"body":{"answer":"Hello, again!"},"attachments":{},"passthrough":{"step_0":{"id":"5594bf23-611f-4bc2-acff-d897409614ec","headers":{},"body":{"time":"2017-03-20T18:45:02.122Z"},"attachments":{}},"step_1":{"id":"2c5ea4c0-4067-11e9-8bad-9b1deb4d3b7d","headers":{},"body":{"greeting":"Hello, world!"},"attachments":{}}}}'
+        JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{"answer":"Hello, again!"},"headers":{},"passthrough":{"step_0":{"id":"5594bf23-611f-4bc2-acff-d897409614ec","attachments":{},"body":{"time":"2017-03-20T18:45:02.122Z"},"headers":{}},"step_1":{"id":"2c5ea4c0-4067-11e9-8bad-9b1deb4d3b7d","attachments":{},"body":{"greeting":"Hello, world!"},"headers":{}}}}'
     }
 }
