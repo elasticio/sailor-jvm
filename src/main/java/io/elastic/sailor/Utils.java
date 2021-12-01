@@ -3,6 +3,7 @@ package io.elastic.sailor;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.JSON;
 import io.elastic.api.Message;
+import io.elastic.api.Message.Builder;
 import io.elastic.sailor.impl.MessageEncoding;
 
 import javax.json.Json;
@@ -83,6 +84,17 @@ public class Utils {
                 .deliveryMode(2);
     }
 
+    public static void main(String[] args) {
+        JsonObject payload = Json.createObjectBuilder()
+            .add("method", "POST")
+            .add("body", Json.createObjectBuilder()
+                .add("foo", "bar")
+                .build())
+            .build();
+        System.out.println("1. method: " + payload.getJsonString("method"));
+        System.out.println("1. UNmethod: " + payload.getJsonObject("UNmethod"));
+    }
+
 
     public static Message createMessage(final JsonObject payload) {
         JsonString id = payload.getJsonString(Message.PROPERTY_ID);
@@ -107,10 +119,6 @@ public class Utils {
             headers = Json.createObjectBuilder().build();
         }
 
-        if (query == null) {
-            query = Json.createObjectBuilder().build();
-        }
-
         if (passthrough == null) {
             passthrough = Json.createObjectBuilder().build();
         }
@@ -119,7 +127,6 @@ public class Utils {
                 .attachments(attachments)
                 .body(body)
                 .headers(headers)
-                .query(query)
                 .passthrough(passthrough);
 
         if (id != null) {
@@ -130,6 +137,9 @@ public class Utils {
         }
         if (originalUrl != null) {
             builder.originalUrl(originalUrl.getString());
+        }
+        if (query != null) {
+            builder.query(query);
         }
         if (url != null) {
             builder.url(url.getString());

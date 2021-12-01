@@ -3,6 +3,7 @@ package io.elastic.api;
 
 import javax.json.Json;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.JsonWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
@@ -77,12 +78,12 @@ public class Message implements Serializable {
      * @param passthrough passthrough of the message
      * @param url         URL of the message
      */
-    private Message(final UUID id,
+    private Message(final UUID        id,
                     final JsonObject attachments,
                     final JsonObject body,
                     final JsonObject headers,
-                    final String method,
-                    final String originalUrl,
+                    final String     method,
+                    final String     originalUrl,
                     final JsonObject query,
                     final JsonObject passthrough,
                     final String url) {
@@ -98,20 +99,8 @@ public class Message implements Serializable {
         if (headers == null) {
             throw new IllegalArgumentException("Message headers must not be null");
         }
-        if (method == null) {
-            throw new IllegalArgumentException("Message method must not be null");
-        }
-        if (originalUrl == null) {
-            throw new IllegalArgumentException("Message originalUrl must not be null");
-        }
-        if (query == null) {
-            throw new IllegalArgumentException("Message query must not be null");
-        }
         if (passthrough == null) {
             throw new IllegalArgumentException("Message passthrough must not be null");
-        }
-        if (url == null) {
-            throw new IllegalArgumentException("Message URL must not be null");
         }
         this.id = id;
         this.attachments = attachments;
@@ -211,17 +200,30 @@ public class Message implements Serializable {
      * @return message as JSON object
      */
     public JsonObject toJsonObject() {
-        return Json.createObjectBuilder()
+        JsonObjectBuilder builder = Json.createObjectBuilder()
                 .add(PROPERTY_ID, id.toString())
                 .add(PROPERTY_ATTACHMENTS, attachments)
                 .add(PROPERTY_BODY, body)
                 .add(PROPERTY_HEADERS, headers)
-                .add(PROPERTY_METHOD, method)
-                .add(PROPERTY_ORIGINAL_URL, originalUrl)
-                .add(PROPERTY_QUERY, query)
-                .add(PROPERTY_PASSTHROUGH, passthrough)
-                .add(PROPERTY_URL, url)
-                .build();
+                .add(PROPERTY_PASSTHROUGH, passthrough);
+        addJsonFieldToBuilderIfExist(builder, PROPERTY_METHOD, method);
+        addJsonFieldToBuilderIfExist(builder, PROPERTY_ORIGINAL_URL, originalUrl);
+        addJsonFieldToBuilderIfExist(builder, PROPERTY_QUERY, query);
+        addJsonFieldToBuilderIfExist(builder, PROPERTY_URL, url);
+        return builder.build();
+    }
+
+    private static JsonObjectBuilder addJsonFieldToBuilderIfExist(JsonObjectBuilder builder, String name, Object value) {
+        if (value != null) {
+            if (value instanceof JsonObject) {
+                builder.add(name, (JsonObject) value);
+            } else if (value instanceof String) {
+                builder.add(name, (String) value);
+            } else {
+                throw new RuntimeException("Unknown type of the property to add to the Message");
+            }
+        }
+        return builder;
     }
 
     @Override
