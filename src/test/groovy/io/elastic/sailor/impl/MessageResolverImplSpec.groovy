@@ -124,7 +124,6 @@ class MessageResolverImplSpec extends Specification {
 
         then:
         1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()
-        println(JSON.stringify(msg))
         JSON.stringify(msg) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{}}'
         JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{"from":"storage"},"headers":{},"passthrough":{}}'
 

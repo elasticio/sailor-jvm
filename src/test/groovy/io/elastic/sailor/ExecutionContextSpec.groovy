@@ -194,7 +194,6 @@ class ExecutionContextSpec extends Specification {
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
-        println(JSON.stringify(result));
         then:
         JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{},"headers":{}}'
     }
@@ -260,7 +259,6 @@ class ExecutionContextSpec extends Specification {
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
-println(JSON.stringify(result))
         then:
         JSON.stringify(result) == '{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{"greeting":"Hello, world!"},"headers":{},"passthrough":{"step_1":{"id":"df6db9ec-8522-4577-9171-989f0859a249","attachments":{},"body":{"greeting":"Hello, world!"},"headers":{}}}}'
     }

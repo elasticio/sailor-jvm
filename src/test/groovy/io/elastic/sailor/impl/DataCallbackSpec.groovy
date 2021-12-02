@@ -112,7 +112,6 @@ class DataCallbackSpec extends Specification {
                 "aRoutingKey",
                 {
                     def payload = crypto.decrypt(it, MessageEncoding.UTF8)
-                    println payload
                     assert payload == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{},"headers":{"external-id":"123"},"passthrough":{}}'
                     it
                 },
