@@ -33,7 +33,6 @@ class CryptoServiceImplSpec extends Specification {
     def "should encrypt & decrypt strings - utf8"() {
         when:
         def result = cipher.encrypt("Hello world!", MessageEncoding.UTF8)
-
         def decryptedResult = cipher.decrypt(result, MessageEncoding.UTF8)
         then:
         decryptedResult.toString() == "Hello world!"
@@ -82,7 +81,7 @@ class CryptoServiceImplSpec extends Specification {
         when:
         def result = cipher.encrypt(getMessage().toString(), MessageEncoding.BASE64);
         then:
-        new String(result) == "yM4zPVWl1cDydyIRhie5MB6imzdt9gAxsdeHxu7re4i8MmV3oYGOQ5oRiAWWHeZHPNgCR7v9Dn0GV1pr5wAsIudUSSPldoRmggRlqg+VyTKrsxmdSyM7h6vqyRqPRNJic/ZJwJL3GxU/EEW5rHXrcJdBxQa7GZOV1MuFxC0vMh9cRJxErtWoojI3hWnEwtr0Qhj70/9JQ7l2ueejDfDeKoHM5z2OFY5dzoyQPEAkUVaOm/lrp97DOAY85xiuIkbl/RGvDy98boDd0QZloWNdwXlmDEGzVsFnBGMM29T5USM9n1jD+kmpT2qgLXNNe0YRCHG7Tz1InYdg4h7UA2D8xMjvPYjllg7qvV3DOazKCQfoWARuzEZUOIl2Ev0814wR";
+        new String(result) == "yM4zPVWl1cDydyIRhie5MB6imzdt9gAxsdeHxu7re4h/mUjCGbVNNOZSq/uBGe9eMt6uqDI3OZ4CnruatPT0XF0YxaWPLZxuaET1AoFUqYuNr+n/pxJ0XKkoaAtvFdH5McqftOxzMGGh8CRC+4ZYwF0PYeLT2vyzy+Lri55HNnbRc0bYLfY+UovG2uIFFMPfqV+qQgvyNXT0IFmawaV92Rb26iKqeOD9eYo9gXaYikwXaHBh6DpbdM4mJSmGEf0pIHwAyIajTGuPfGjo9jm1SMfIivX2gb0YanmQlP0a/VF9IdBYe/PKwESqKdrCBdaZ1amjhcpMOzQzwVaWetHKtUebmDShJKJzumvoBL0cPpQNjYY0eCiC2RHX/5tJig5tPBv5vbetkl2duS6UZFu5kw==";
     }
 
     def getMessage() {
@@ -101,6 +100,8 @@ class CryptoServiceImplSpec extends Specification {
                 .headers(Json.createObjectBuilder().build())
                 .body(body)
                 .attachments(attachments)
+                .method("GET")
+                .query(Json.createObjectBuilder().build())
                 .build();
     }
 
@@ -108,7 +109,7 @@ class CryptoServiceImplSpec extends Specification {
         when:
         def result = cipher.encryptMessage(getMessage(), MessageEncoding.BASE64);
         then:
-        new String(result) == "yM4zPVWl1cDydyIRhie5MB6imzdt9gAxsdeHxu7re4i8MmV3oYGOQ5oRiAWWHeZHPNgCR7v9Dn0GV1pr5wAsIudUSSPldoRmggRlqg+VyTKrsxmdSyM7h6vqyRqPRNJic/ZJwJL3GxU/EEW5rHXrcJdBxQa7GZOV1MuFxC0vMh9cRJxErtWoojI3hWnEwtr0Qhj70/9JQ7l2ueejDfDeKoHM5z2OFY5dzoyQPEAkUVaOm/lrp97DOAY85xiuIkbl/RGvDy98boDd0QZloWNdwXlmDEGzVsFnBGMM29T5USM9n1jD+kmpT2qgLXNNe0YRCHG7Tz1InYdg4h7UA2D8xMjvPYjllg7qvV3DOazKCQfoWARuzEZUOIl2Ev0814wR"
+        new String(result) == "yM4zPVWl1cDydyIRhie5MB6imzdt9gAxsdeHxu7re4h/mUjCGbVNNOZSq/uBGe9eMt6uqDI3OZ4CnruatPT0XF0YxaWPLZxuaET1AoFUqYuNr+n/pxJ0XKkoaAtvFdH5McqftOxzMGGh8CRC+4ZYwF0PYeLT2vyzy+Lri55HNnbRc0bYLfY+UovG2uIFFMPfqV+qQgvyNXT0IFmawaV92Rb26iKqeOD9eYo9gXaYikwXaHBh6DpbdM4mJSmGEf0pIHwAyIajTGuPfGjo9jm1SMfIivX2gb0YanmQlP0a/VF9IdBYe/PKwESqKdrCBdaZ1amjhcpMOzQzwVaWetHKtUebmDShJKJzumvoBL0cPpQNjYY0eCiC2RHX/5tJig5tPBv5vbetkl2duS6UZFu5kw=="
     }
 
     def "should not fail in case of null message"() {

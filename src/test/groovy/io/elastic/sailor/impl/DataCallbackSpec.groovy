@@ -39,7 +39,7 @@ class DataCallbackSpec extends Specification {
                 "aRoutingKey",
                 {
                     def payload = crypto.decrypt(it, MessageEncoding.BASE64)
-                    assert payload == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"hello":"world"},"attachments":{}}'
+                    assert payload == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{"hello":"world"},"headers":{}}'
                     it
                 },
                 _)
@@ -62,7 +62,7 @@ class DataCallbackSpec extends Specification {
                 "aRoutingKey",
                 {
                     def payload = crypto.decrypt(it, MessageEncoding.UTF8)
-                    assert payload == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"hello":"world"},"attachments":{}}'
+                    assert payload == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{"hello":"world"},"headers":{}}'
                     it
                 },
                 _)
@@ -87,7 +87,7 @@ class DataCallbackSpec extends Specification {
                 "aRoutingKey",
                 {
                     def payload = crypto.decrypt(it, MessageEncoding.BASE64)
-                    assert payload == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"external-id":"123"},"body":{},"attachments":{},"passthrough":{}}'
+                    assert payload == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{},"headers":{"external-id":"123"},"passthrough":{}}'
                     it
                 },
                 _)
@@ -112,8 +112,7 @@ class DataCallbackSpec extends Specification {
                 "aRoutingKey",
                 {
                     def payload = crypto.decrypt(it, MessageEncoding.UTF8)
-                    println payload
-                    assert payload == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"external-id":"123"},"body":{},"attachments":{},"passthrough":{}}'
+                    assert payload == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{},"headers":{"external-id":"123"},"passthrough":{}}'
                     it
                 },
                 _)

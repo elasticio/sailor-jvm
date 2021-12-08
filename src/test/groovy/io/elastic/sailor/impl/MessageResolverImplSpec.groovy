@@ -63,7 +63,7 @@ class MessageResolverImplSpec extends Specification {
         def result = resolver.materialize(encryptedMessage, amqpHeaders)
 
         then:
-        JSON.stringify(result.toJsonObject()) == '{"id":"8c33707b-57cf-4001-86fe-4494cdf3d2a0","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{},"attachments":{},"passthrough":{}}'
+        JSON.stringify(result.toJsonObject()) == '{"id":"8c33707b-57cf-4001-86fe-4494cdf3d2a0","attachments":{},"body":{},"headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"passthrough":{}}'
         JSON.stringify(result.toJsonObject()) == JSON.stringify(msg.toJsonObject())
 
     }
@@ -93,7 +93,7 @@ class MessageResolverImplSpec extends Specification {
         then:
         1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()
         JSON.stringify(msg) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{}}'
-        JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"from":"storage"},"attachments":{},"passthrough":{}}'
+        JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{"from":"storage"},"headers":{},"passthrough":{}}'
 
     }
 
@@ -125,7 +125,7 @@ class MessageResolverImplSpec extends Specification {
         then:
         1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()
         JSON.stringify(msg) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{}}'
-        JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"from":"storage"},"attachments":{},"passthrough":{}}'
+        JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{"from":"storage"},"headers":{},"passthrough":{}}'
 
     }
 
@@ -201,8 +201,8 @@ class MessageResolverImplSpec extends Specification {
         then:
         1 * storage.getJsonObject("55e5eeb460a8e2070000001e") >> Json.createObjectBuilder().add("from", "storage").build()
         1 * storage.getJsonObject("5b62c918fd98ea00112d5291") >> Json.createObjectBuilder().add("i am", "passthrough").build()
-        JSON.stringify(msg.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"body":{"hello":"world"},"attachments":{},"passthrough":{"step_1":{"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3","headers":{"x-ipaas-object-storage-id":"5b62c918fd98ea00112d5291"},"body":{"hello":"again"},"attachments":{},"passthrough":{}}}}'
-        JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"from":"storage"},"attachments":{},"passthrough":{"step_1":{"body":{"i am":"passthrough"},"headers":{},"attachments":{},"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3"}}}'
+        JSON.stringify(msg.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{"hello":"world"},"headers":{"x-ipaas-object-storage-id":"55e5eeb460a8e2070000001e"},"passthrough":{"step_1":{"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3","attachments":{},"body":{"hello":"again"},"headers":{"x-ipaas-object-storage-id":"5b62c918fd98ea00112d5291"},"passthrough":{}}}}'
+        JSON.stringify(result.toJsonObject()) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{"from":"storage"},"headers":{},"passthrough":{"step_1":{"body":{"i am":"passthrough"},"headers":{},"attachments":{},"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3"}}}'
 
     }
 
@@ -230,8 +230,7 @@ class MessageResolverImplSpec extends Specification {
         then:
         0 * storage.post(_)
         result == msgJson
-        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{},"body":{"hello":"world"},"attachments":{},"passthrough":{}}'
-
+        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{"hello":"world"},"headers":{},"passthrough":{}}'
     }
 
 
@@ -324,7 +323,7 @@ class MessageResolverImplSpec extends Specification {
         then:
         1 * storage.post('{"hello":"world"}') >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
         1 * storage.post('{"hello":"again"}') >> Json.createObjectBuilder().add("objectId", "588763137d802200192b485c").build()
-        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"body":{},"attachments":{},"passthrough":{"step_1":{"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3","headers":{"foo":"bar","x-ipaas-object-storage-id":"588763137d802200192b485c"},"body":{},"attachments":{},"passthrough":{}}}}'
+        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{},"headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"passthrough":{"step_1":{"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3","attachments":{},"body":{},"headers":{"foo":"bar","x-ipaas-object-storage-id":"588763137d802200192b485c"},"passthrough":{}}}}'
 
     }
 }

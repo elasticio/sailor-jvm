@@ -280,7 +280,6 @@ class FlowControlIntegrationSpec extends Specification {
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
 
-        println result.properties
         result.properties.headers.size() == 13
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'

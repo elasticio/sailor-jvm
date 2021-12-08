@@ -113,9 +113,13 @@ public class ExecutionContext {
 
         final JsonObject messageAsJson = Utils.pick(message.toJsonObject(),
                 Message.PROPERTY_ID,
-                Message.PROPERTY_HEADERS,
+                Message.PROPERTY_ATTACHMENTS,
                 Message.PROPERTY_BODY,
-                Message.PROPERTY_ATTACHMENTS);
+                Message.PROPERTY_HEADERS,
+                Message.PROPERTY_METHOD,
+                Message.PROPERTY_ORIGINAL_URL,
+                Message.PROPERTY_QUERY,
+                Message.PROPERTY_URL);
 
         if (!this.step.isPassThroughRequired()) {
             return messageAsJson;
@@ -135,9 +139,9 @@ public class ExecutionContext {
 
                 final JsonObject incomingMessageWithoutPassThrough = Utils.pick(this.message.toJsonObject(),
                         Message.PROPERTY_ID,
-                        Message.PROPERTY_HEADERS,
+                        Message.PROPERTY_ATTACHMENTS,
                         Message.PROPERTY_BODY,
-                        Message.PROPERTY_ATTACHMENTS);
+                        Message.PROPERTY_HEADERS);
 
                 passthroughBuilder.add(previousStepId.toString(), incomingMessageWithoutPassThrough);
             }

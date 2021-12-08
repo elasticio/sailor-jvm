@@ -281,7 +281,6 @@ class IntegrationSpec extends Specification {
         then: "AMQP properties headers are all set"
         def result = blockingVar.get()
 
-        println result.properties
         result.properties.headers.size() == 14
         result.properties.headers.start != null
         result.properties.headers.compId.toString() == '5559edd38968ec0736000456'
@@ -875,7 +874,6 @@ class IntegrationSpec extends Specification {
 
         then: "Emitted message is received"
         def message = JSON.parseObject(result.message)
-        println message
         message.getString('name') == 'java.lang.RuntimeException'
         message.getString('stack').startsWith('java.lang.RuntimeException: Ouch. Something went wrong')
         message.getString('message') == 'Ouch. Something went wrong'
@@ -1004,7 +1002,6 @@ class IntegrationSpec extends Specification {
 
         then: "Emitted message is received"
         def message = JSON.parseObject(result.message)
-        println message
         message.getString('name') == 'java.lang.RuntimeException'
         message.getString('stack').startsWith('java.lang.RuntimeException: Ouch. Something went wrong')
         message.getString('message') == 'Ouch. Something went wrong'
