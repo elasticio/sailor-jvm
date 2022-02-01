@@ -1,3 +1,7 @@
+## 3.3.8 (February 11, 2022)
+
+* Get rid of high and critical vulnerabilities in dependencies
+
 ## 3.3.7 (December 10, 2021)
 
 * [Make sure message contains all webhooks related info #68](https://github.com/elasticio/sailor-jvm/issues/68)
