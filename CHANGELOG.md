@@ -1,4 +1,4 @@
-## 3.3.8 (February 11, 2022)
+## 3.3.8 (March 10, 2022)
 
 * Get rid of high and critical vulnerabilities in dependencies
 
