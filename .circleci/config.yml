@@ -11,7 +11,9 @@ jobs:
     steps:
 
       - checkout
-      
+      - run:
+          name: Audit Dependencies
+          command: ./gradlew dependencyCheckAnalyze
       - run: export TERM=${TERM:-dumb} && ./gradlew build --refresh-dependencies uploadArchives -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
       
       - store_test_results:

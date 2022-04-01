@@ -1,3 +1,8 @@
+## 3.3.9 (April 8, 2022)
+
+* Get rid of high vulnerabilities in dependencies
+* Add dependency check job to Circle CI
+
 ## 3.3.8 (February 11, 2022)
 
 * Get rid of high and critical vulnerabilities in dependencies
