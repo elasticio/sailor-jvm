@@ -771,7 +771,7 @@ class IntegrationSpec extends Specification {
         def message = JSON.parseObject(result.message)
         message.statusCode.intValue() == HttpReply.Status.ACCEPTED.statusCode
         message.getJsonString('body').getString() == '{"echo":{"message":"Send me a reply"}}'
-        JSON.stringify(message.get('headers')) == '{"Content-type":"application/json","x-custom-header":"abcdef"}'
+        JSON.stringify(message.get('headers')) == '{"Content-type":"application/json","x-custom-header":"abcdef","x-eio-status-code":"202"}'
 
         cleanup:
         sailor.amqp.cancelConsumer()

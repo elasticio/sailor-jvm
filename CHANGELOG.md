@@ -1,3 +1,7 @@
+## 3.3.10 (July 29, 2022)
+
+* Added 'x-eio-status-code' header containing status code when set the status in the component manually. This is required to pass the code to the Webhook service
+
 ## 3.3.9 (April 8, 2022)
 
 * Get rid of high vulnerabilities in dependencies

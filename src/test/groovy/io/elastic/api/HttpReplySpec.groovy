@@ -26,6 +26,6 @@ class HttpReplySpec extends Specification {
         then:
         reply.status == HttpReply.Status.ACCEPTED.statusCode
         reply.content == stream
-        reply.headers == ['X-Powered-By': 'elastic.io']
+        reply.headers == ['x-eio-status-code': '202', 'X-Powered-By': 'elastic.io']
     }
 }

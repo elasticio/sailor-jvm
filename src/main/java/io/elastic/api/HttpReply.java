@@ -55,7 +55,15 @@ public final class HttpReply {
 
         public Builder status(int statusCode) {
             this.status = statusCode;
+            this.header("x-eio-status-code", String.valueOf(statusCode));
             return this;
+        }
+
+        public Builder status(final Status status) {
+            if (status == null) {
+                throw new IllegalArgumentException("Status must not be null");
+            }
+            return status(status.getStatusCode());
         }
 
         public Builder header(final String name, final String value) {
@@ -71,13 +79,6 @@ public final class HttpReply {
             this.content = content;
 
             return this;
-        }
-
-        public Builder status(final Status status) {
-            if (status == null) {
-                throw new IllegalArgumentException("Status must not be null");
-            }
-            return status(status.getStatusCode());
         }
 
         public HttpReply build() {
