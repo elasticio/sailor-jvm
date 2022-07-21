@@ -5,7 +5,7 @@ jobs:
     working_directory: ~/sailor-jvm
 
     docker:
-      - image: circleci/openjdk:8-jdk-browsers
+      - image: cimg/openjdk:18.0.1
       - image: rabbitmq:3.8.3
 
     steps:
