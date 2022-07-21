@@ -1,6 +1,7 @@
 ## 3.3.10 (July 29, 2022)
 
 * Added 'x-eio-status-code' header containing status code when set the status in the component manually. This is required to pass the code to the Webhook service
+* Enabled Java 17, 18 build by bumping Google Guice from 4.1.0 to 5.1.0 
 
 ## 3.3.9 (April 8, 2022)
 
