@@ -131,7 +131,7 @@ public class MessagePublisherImpl implements MessagePublisher {
             return this.publishMaxRetryDelay;
         }
 
-        return new Double(sleep).longValue();
+        return Double.valueOf(sleep).longValue();
     }
 
     private Channel getPublishChannel() {
