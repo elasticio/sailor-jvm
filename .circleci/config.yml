@@ -1,20 +1,22 @@
-version: 2
+version: 2.1
 jobs:
   build:
-    
     working_directory: ~/sailor-jvm
-
     docker:
-      - image: cimg/openjdk:18.0.1
+      - image: << parameters.base-image >>
       - image: rabbitmq:3.8.3
-
     steps:
-
       - checkout
       - run:
           name: Audit Dependencies
           command: ./gradlew dependencyCheckAnalyze
       - run: export TERM=${TERM:-dumb} && ./gradlew build --refresh-dependencies publish -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
-      
       - store_test_results:
           path: build/reports
+workflows:
+  workflow:
+    jobs:
+      - build:
+          matrix:
+            parameters:
+              base-image: ["amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:18-alpine-jdk"]
