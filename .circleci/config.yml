@@ -1,9 +1,17 @@
 version: 2.1
+executors:
+  docker:
+    docker:
+      - image: cimg/base:stable
 jobs:
   build:
+    parameters:
+      jdk-version:
+        type: string
     working_directory: ~/sailor-jvm
+    executor: docker
     docker:
-      - image: << parameters.base-image >>
+      - image: << parameters.jdk-version >>
       - image: rabbitmq:3.8.3
     steps:
       - checkout
@@ -19,4 +27,4 @@ workflows:
       - build:
           matrix:
             parameters:
-              base-image: ["amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:18-alpine-jdk"]
+              jdk-version: ["amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:18-alpine-jdk"]
