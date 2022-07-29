@@ -25,6 +25,7 @@ jobs:
     executor: docker
     docker:
       - image: amazoncorretto:18-alpine-jdk
+    working_directory: ~/sailor-jvm
     steps:
       - checkout
       - run: export TERM=${TERM:-dumb} && ./gradlew publish -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
