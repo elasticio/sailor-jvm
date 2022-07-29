@@ -24,16 +24,17 @@ jobs:
   publish:
     executor: docker
     steps:
+      - checkout
       - run: export TERM=${TERM:-dumb} && ./gradlew publish -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
 workflows:
-  test_different_java:
+  test_and_publish:
     jobs:
       - build:
           name: "Run Sailor tests against different JDK versions"
           matrix:
             parameters:
               jdk-version: ["amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:18-alpine-jdk"]
-  publish_release:
-    jobs:
       - publish:
           name: "Publish artifacts to Maven"
+          requires:
+            - build
