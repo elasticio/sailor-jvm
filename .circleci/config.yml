@@ -18,9 +18,13 @@ jobs:
       - run:
           name: Audit Dependencies
           command: ./gradlew dependencyCheckAnalyze
-      - run: export TERM=${TERM:-dumb} && ./gradlew build --refresh-dependencies publish -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
+      - run: export TERM=${TERM:-dumb} && ./gradlew build --refresh-dependencies
       - store_test_results:
           path: build/reports
+  publish:
+    executor: docker
+    steps:
+      - run: export TERM=${TERM:-dumb} && ./gradlew publish -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
 workflows:
   workflow:
     jobs:
