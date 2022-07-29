@@ -1,20 +1,43 @@
-version: 2
+version: 2.1
+executors:
+  docker:
+    docker:
+      - image: cimg/base:stable
 jobs:
   build:
-    
+    parameters:
+      jdk-version:
+        type: string
     working_directory: ~/sailor-jvm
-
+    executor: docker
     docker:
-      - image: circleci/openjdk:8-jdk-browsers
+      - image: << parameters.jdk-version >>
       - image: rabbitmq:3.8.3
-
     steps:
-
       - checkout
       - run:
           name: Audit Dependencies
           command: ./gradlew dependencyCheckAnalyze
-      - run: export TERM=${TERM:-dumb} && ./gradlew build --refresh-dependencies uploadArchives -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
-      
+      - run: export TERM=${TERM:-dumb} && ./gradlew build --refresh-dependencies
       - store_test_results:
           path: build/reports
+  publish:
+    executor: docker
+    docker:
+      - image: amazoncorretto:18-alpine-jdk
+    working_directory: ~/sailor-jvm
+    steps:
+      - checkout
+      - run: export TERM=${TERM:-dumb} && ./gradlew publish -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
+workflows:
+  test_and_publish:
+    jobs:
+      - build:
+          name: "Run Sailor tests in Java 8/11/18"
+          matrix:
+            parameters:
+              jdk-version: ["amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:18-alpine-jdk"]
+      - publish:
+          name: "Publish artifacts to Maven"
+          requires:
+            - build

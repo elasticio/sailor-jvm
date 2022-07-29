@@ -491,7 +491,7 @@ class IntegrationSpec extends Specification {
         publishChannel.basicCancel(consumerTag)
     }
 
-    def "should execute startup/init successfully"() {
+    def "should execute startup and init successfully"() {
         def blockingVar = new BlockingVariable(5)
         setup:
         System.setProperty(Constants.ENV_VAR_STARTUP_REQUIRED, "1");
