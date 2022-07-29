@@ -26,9 +26,14 @@ jobs:
     steps:
       - run: export TERM=${TERM:-dumb} && ./gradlew publish -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
 workflows:
-  workflow:
+  test_different_java:
     jobs:
       - build:
+          name: "Run Sailor tests against different JDK versions"
           matrix:
             parameters:
               jdk-version: ["amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:18-alpine-jdk"]
+  publish_release:
+    jobs:
+      - publish:
+          name: "Publish artifacts to Maven"
