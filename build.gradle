@@ -10,9 +10,6 @@ apply plugin: org.owasp.dependencycheck.gradle.DependencyCheckPlugin
 group = 'io.elastic'
 version = '3.3.10-SNAPSHOT'
 
-sourceCompatibility = 18
-targetCompatibility = 18
-
 repositories {
     mavenCentral()
 }
