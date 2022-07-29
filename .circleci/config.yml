@@ -23,6 +23,8 @@ jobs:
           path: build/reports
   publish:
     executor: docker
+    docker:
+      - image: amazoncorretto:18-alpine-jdk
     steps:
       - checkout
       - run: export TERM=${TERM:-dumb} && ./gradlew publish -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
@@ -30,7 +32,7 @@ workflows:
   test_and_publish:
     jobs:
       - build:
-          name: "Run Sailor tests against different JDK versions"
+          name: "Run Sailor tests in Java 8/11/18"
           matrix:
             parameters:
               jdk-version: ["amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:18-alpine-jdk"]
