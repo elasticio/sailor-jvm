@@ -1,11 +1,23 @@
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-apply plugin: 'groovy'
-apply plugin: 'maven-publish'
-apply plugin: 'signing'
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.owasp:dependency-check-gradle:6.0.3'
+    }
+}
 
-apply plugin: org.owasp.dependencycheck.gradle.DependencyCheckPlugin
+plugins {
+    id 'eclipse'
+    id 'groovy'
+    id 'idea'
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+}
+
+    apply plugin: org.owasp.dependencycheck.gradle.DependencyCheckPlugin
 
 group = 'io.elastic'
 version = '3.3.10-SNAPSHOT'
@@ -54,9 +66,45 @@ def getRepositoryPassword() {
     return project.hasProperty('sonatypePassword') ? sonatypePassword : ""
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+//artifacts {
+//    archives sourceJar
+//}
+
+//task sourceJar(type: Jar) {
+//    from sourceSets.main.allJava
+//    archiveClassifier = 'sources'
+//}
+
+//tasks.register('uberJar', Jar) {
+//    archiveClassifier = 'uber'
+//
+//    from sourceSets.main.output
+//
+//    dependsOn configurations.runtimeClasspath
+//    from {
+//        configurations.runtimeClasspath.findAll { it.name.endsWith('jar') }.collect { zipTree(it) }
+//    }
+//}
+
 publishing {
     publications {
         mavenJava(MavenPublication) {
+            artifactId = 'sailor-jvm'
+            from components.java
+//            artifact sourceJar
+//            versionMapping {
+//                usage('java-api') {
+//                    fromResolutionOf('runtimeClasspath')
+//                }
+//                usage('java-runtime') {
+//                    fromResolutionResult()
+//                }
+//            }
             pom {
                 name = 'elasticio-sailor-jvm'
                 packaging = 'jar'
@@ -116,37 +164,34 @@ signing {
     sign publishing.publications.mavenJava
 }
 
-task sourceJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allJava
-}
+//
+//task javadocJar(type: Jar, dependsOn: javadoc) {
+//    classifier = 'javadoc'
+//    from javadoc.destinationDir
+//}
+//
+//task javadocs(type: Javadoc) {
+//    source = sourceSets.main.allJava
+//    classpath = configurations.implementation
+//}
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-task javadocs(type: Javadoc) {
-    source = sourceSets.main.allJava
-    classpath = configurations.implementation
-}
-
-artifacts {
-    archives sourceJar
-    archives javadocJar
-}
+//artifacts {
+//    archives sourceJar
+//    archives javadocJar
+//}
 
 wrapper {
     gradleVersion = '7.5'
 }
 
-jar {
-    manifest {
-        attributes("Implementation-Vendor": "elastic.io Gmbh",
-                "Implementation-Title": "elastic.io Sailor form JVM",
-                "Implementation-Version": version)
-    }
-}
+//jar {
+//    enabled = true
+//    manifest {
+//        attributes("Implementation-Vendor": "elastic.io Gmbh",
+//                "Implementation-Title": "elastic.io Sailor form JVM",
+//                "Implementation-Version": version)
+//    }
+//}
 
 check.dependsOn dependencyCheckAnalyze
 
@@ -157,13 +202,4 @@ dependencyCheck {
     // and log4j issues which does not have any updates that solve the problem
     failBuildOnCVSS = 7
     suppressionFile = './dependencycheck-base-suppression.xml'
-}
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'org.owasp:dependency-check-gradle:6.0.3'
-    }
 }
