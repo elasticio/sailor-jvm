@@ -31,6 +31,7 @@ public class MessagePublisherImpl implements MessagePublisher {
     private long publishMaxRetryDelay;
     private Channel publishChannel;
     private final boolean isPublishConfirmEnabled;
+    private final boolean isPersistentMessagesEnabled;
 
     @Inject
     public MessagePublisherImpl(@Named(Constants.ENV_VAR_PUBLISH_MESSAGES_TO) final String publishExchangeName,
@@ -38,6 +39,7 @@ public class MessagePublisherImpl implements MessagePublisher {
                                 @Named(Constants.ENV_VAR_AMQP_PUBLISH_RETRY_DELAY) long publishRetryDelay,
                                 @Named(Constants.ENV_VAR_AMQP_PUBLISH_MAX_RETRY_DELAY) long publishMaxRetryDelay,
                                 @Named(Constants.ENV_VAR_AMQP_PUBLISH_CONFIRM_ENABLED) boolean isPublishConfirmEnabled,
+                                @Named(Constants.ENV_VAR_AMQP_AMQP_PERSISTENT_MESSAGES) boolean isPersistentMessagesEnabled,
                                 final AmqpService amqpService) {
         this.publishExchangeName = publishExchangeName;
         this.publishMaxRetries = publishMaxRetries;
@@ -45,6 +47,7 @@ public class MessagePublisherImpl implements MessagePublisher {
         this.publishMaxRetryDelay = publishMaxRetryDelay;
         this.amqpService = amqpService;
         this.isPublishConfirmEnabled = isPublishConfirmEnabled;
+        this.isPersistentMessagesEnabled = isPersistentMessagesEnabled;
     }
 
     @Override
@@ -57,8 +60,14 @@ public class MessagePublisherImpl implements MessagePublisher {
 
         while (retryPublish) {
             final Channel publishChannel = getPublishChannel();
-            final AMQP.BasicProperties properties = getRetryProperties(options, retryCount);
+            AMQP.BasicProperties.Builder propertiesBuilder = getRetryProperties(options, retryCount);
+
+            propertiesBuilder.deliveryMode(isPersistentMessagesEnabled ? 2 : 1); // 2 - persistent 1 - transient
+            AMQP.BasicProperties properties = propertiesBuilder.build();
+            logger.debug("isPersistentMessagesEnabled={}, isPublishConfirmEnabled={}, properties={}", isPersistentMessagesEnabled, isPublishConfirmEnabled, properties);
+
             try {
+                logger.trace("Publish options={}, retryCount={}", this.publishExchangeName, routingKey, properties, options, retryCount);
                 publishChannel.basicPublish(this.publishExchangeName, routingKey, properties, payload);
             } catch (IOException e) {
                 throw new RuntimeException(String.format("Failed to publish message to exchange %s", publishExchangeName), e);
@@ -83,16 +92,16 @@ public class MessagePublisherImpl implements MessagePublisher {
         }
     }
 
-    private AMQP.BasicProperties getRetryProperties(final AMQP.BasicProperties properties, final int retryCount) {
+    private AMQP.BasicProperties.Builder getRetryProperties(final AMQP.BasicProperties properties, final int retryCount) {
         if (retryCount < 1) {
-            return properties;
+            return properties.builder();
         }
 
         final Map<String, Object> retryHeaders = new HashMap();
         retryHeaders.putAll(properties.getHeaders());
         retryHeaders.put(Constants.AMQP_HEADER_RETRY, retryCount);
 
-        return properties.builder().headers(retryHeaders).build();
+        return properties.builder().headers(retryHeaders);
     }
 
     private boolean waitForConfirms(Channel publishChannel) {
