@@ -1,6 +1,6 @@
 ## 3.4.0 (September 20, 2022)
 
-* Add AMQP delivery mode configuration by `AMQP_PERSISTENT_MESSAGES` env var
+* [Add AMQP delivery mode configuration](https://github.com/elasticio/elasticio/issues/6247) by `AMQP_PERSISTENT_MESSAGES` env var
 
 ## 3.3.9 (April 8, 2022)
 
