@@ -59,7 +59,7 @@ public class StartupShutdownAction implements Function {
 
 
         final MessagePublisherImpl publisher = new MessagePublisherImpl(
-                publishExchangeName, Integer.MAX_VALUE, 0,0, true, amqp);
+                publishExchangeName, Integer.MAX_VALUE, 0,0, true, true, amqp);
 
         final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")

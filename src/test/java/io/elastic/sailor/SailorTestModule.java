@@ -70,6 +70,7 @@ public class SailorTestModule extends AbstractSailorTestModule {
         bindRequiredBooleanEnvVar(Constants.ENV_VAR_EMIT_LIGHTWEIGHT_MESSAGE, false);
 
         bindRequiredBooleanEnvVar(Constants.ENV_VAR_AMQP_PUBLISH_CONFIRM_ENABLED, true);
+        bindRequiredBooleanEnvVar(Constants.ENV_VAR_AMQP_AMQP_PERSISTENT_MESSAGES, true);
 
         bind(MessageEncoding.class)
                 .annotatedWith(Names.named(Constants.ENV_VAR_PROTOCOL_VERSION))
