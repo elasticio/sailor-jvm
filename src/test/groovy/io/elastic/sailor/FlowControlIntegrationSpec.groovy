@@ -259,8 +259,7 @@ class FlowControlIntegrationSpec extends Specification {
             public void handleDelivery(String consumerTag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
-                                       byte[] body)
-                    throws IOException {
+                                       byte[] body) throws IOException {
 
                 FlowControlIntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def errorJson = JSON.parseObject(new String(body, "UTF-8"))
@@ -270,7 +269,7 @@ class FlowControlIntegrationSpec extends Specification {
             }
         }
 
-        def consumerTag = publishChannel.basicConsume(errorsQueue, consumer)
+        def tag = publishChannel.basicConsume(errorsQueue, consumer)
 
         when:
 
@@ -295,13 +294,13 @@ class FlowControlIntegrationSpec extends Specification {
 
 
         then: "Emitted error received"
-        def errorJson = JSON.parseObject(result.error);
-        errorJson.getString('name') == 'java.lang.IllegalStateException'
-        errorJson.getString('message') == 'Failed to publish the message to a queue after 2 retries. The limit of 2 retries reached.'
-        errorJson.getString('stack').startsWith('java.lang.IllegalStateException: Failed to publish the message to a queue after 2 retries. The limit of 2 retries reached.')
+        def resJsonError = JSON.parseObject(result.error);
+        resJsonError.getString('name') == 'java.lang.IllegalStateException'
+        resJsonError.getString('message') == 'Failed to publish the message to a queue after 2 retries. The limit of 2 retries reached.'
+        resJsonError.getString('stack').startsWith('java.lang.IllegalStateException: Failed to publish the message to a queue after 2 retries. The limit of 2 retries reached.')
 
         cleanup:
         sailor.amqp.cancelConsumer()
-        publishChannel.basicCancel(consumerTag)
+        publishChannel.basicCancel(tag)
     }
 }

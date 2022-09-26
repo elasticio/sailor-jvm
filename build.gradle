@@ -1,123 +1,73 @@
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-apply plugin: 'groovy'
-apply plugin: 'maven'
-apply plugin: 'signing'
+plugins {
+    // Apply the groovy plugin to also add support for Groovy (needed for Spock)
+    id 'groovy'
+    id 'java'
 
-apply plugin: org.owasp.dependencycheck.gradle.DependencyCheckPlugin
+    // Apply the java-library plugin for API and implementation separation.
+    id 'java-library'
+    id 'application'
+    id 'application'
+}
 
 group = 'io.elastic'
 version = '3.4.1-SNAPSHOT'
-ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-signing {
-    required { isReleaseVersion }
-    sign configurations.archives
-}
+sourceCompatibility = '1.8'
 
 repositories {
     mavenCentral()
     maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots"
+        url 'https://oss.sonatype.org/content/repositories/snapshots'
     }
 }
 
-dependencies {
-    compile "org.glassfish:javax.json:1.0.4"
-    compile "com.rabbitmq:amqp-client:5.9.0"
-    compile "commons-codec:commons-codec:1.10"
-    compile "commons-io:commons-io:2.7"
-    compile "org.apache.httpcomponents:httpclient:4.5.13"
-    compile "com.google.inject:guice:4.1.0"
-    compile "com.google.inject.extensions:guice-assistedinject:4.1.0"
-    compile "ch.qos.logback:logback-classic:1.2.10"
-    compile "ch.qos.logback.contrib:logback-json-classic:0.1.5"
-    compile "ch.qos.logback.contrib:logback-jackson:0.1.5"
-    compile "com.fasterxml.jackson.core:jackson-databind:2.13.2.2"
-
-    testRuntime 'org.codehaus.groovy:groovy-all:2.0.5'
-    testCompile "org.spockframework:spock-core:1.3-groovy-2.4"
-    testCompile "com.github.rest-driver:rest-client-driver:2.0.0"
-    testCompile "org.eclipse.jetty:jetty-server:9.4.1.v20170120"
-    testCompile 'com.github.tomakehurst:wiremock-standalone:2.20.0'
+def isReleaseBuild() {
+    return !version.endsWith('SNAPSHOT')
 }
 
-uploadArchives {
-    repositories {
-        mavenLocal()
-        if (project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')) {
-            mavenDeployer {
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: sonatypeUsername, password: sonatypePassword)
-                }
+dependencies {
+    testRuntimeOnly 'org.codehaus.groovy:groovy-all:3.0.13'
+    testImplementation 'org.spockframework:spock-junit4:2.2-groovy-3.0'
+    testImplementation 'org.spockframework:spock-core:2.2-groovy-3.0'
+    testImplementation 'com.github.rest-driver:rest-client-driver:2.0.0'
+    testImplementation 'org.eclipse.jetty:jetty-server:9.4.1.v20170120'
+    testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:2.33.2'
 
-                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                    authentication(userName: sonatypeUsername, password: sonatypePassword)
-                }
 
-                pom.project {
-                    name 'elasticio-sailor-jvm'
-                    packaging 'jar'
-                    description 'Sailor for JVM'
-                    url 'http://www.elastic.io'
-                    inceptionYear '2015'
+    implementation 'org.glassfish:javax.json:1.0.4'
+    implementation 'com.rabbitmq:amqp-client:5.9.0'
+    implementation 'commons-codec:commons-codec:1.10'
+    implementation 'commons-io:commons-io:2.7'
+    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
+    implementation 'com.google.inject:guice:5.1.0'
+    implementation 'com.google.inject.extensions:guice-assistedinject:5.1.0'
+    implementation 'ch.qos.logback:logback-classic:1.2.10'
+    implementation 'ch.qos.logback.contrib:logback-json-classic:0.1.5'
+    implementation 'ch.qos.logback.contrib:logback-jackson:0.1.5'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
+}
 
-                    organization {
-                        name 'elastic.io GmbH'
-                        url 'http://www.elastic.io'
-                    }
-
-                    scm {
-                        url 'scm:git@github.com:elasticio/sailor-jvm.git'
-                        connection 'scm:git@github.com:elasticio/sailor-jvm.git'
-                        developerConnection 'scm:git@github.com:elasticio/sailor-jvm.git'
-                    }
-
-                    licenses {
-                        license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution 'repo'
-                        }
-                    }
-
-                    issueManagement {
-                        system 'GitHub'
-                        url 'https://github.com/elasticio/sailor-jvm/issues'
-                    }
-
-                    developers {
-                        developer {
-                            id 'elasticio'
-                            name 'elastic.io GmbH'
-                            email 'support@elastic.io'
-                        }
-                    }
-                }
-            }
-        }
+jar {
+    manifest {
+        attributes('Implementation-Vendor' : 'elastic.io Gmbh',
+                'Implementation-Title': 'elastic.io Sailor form JVM',
+                'Implementation-Version': archiveVersion)
     }
 }
 
 task sourceJar(type: Jar) {
-    classifier = 'sources'
+    archiveClassifier = 'sources'
     from sourceSets.main.allJava
-}
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
 }
 
 task javadocs(type: Javadoc) {
     source = sourceSets.main.allJava
-    classpath = configurations.compile
+    classpath = configurations.compileClasspath
+}
+
+task javadocJar(type: Jar, dependsOn: javadocs) {
+    archiveClassifier = 'javadoc'
+    from javadoc.destinationDir
 }
 
 artifacts {
@@ -126,33 +76,6 @@ artifacts {
 }
 
 wrapper {
-    gradleVersion = '5.4.1'
+    gradleVersion = '7.5.1'
 }
 
-jar {
-    manifest {
-        attributes("Implementation-Vendor" : "elastic.io Gmbh",
-                "Implementation-Title": "elastic.io Sailor form JVM",
-                "Implementation-Version": version)
-    }
-}
-
-check.dependsOn dependencyCheckAnalyze
-
-dependencyCheck {
-    format = 'ALL'
-    // Dependency Check script will fail in case there are critical (9.0-10.0) vulnerabilities.
-    // It should be configured to 7 (high and critical), but so far is not possible as 'axis' library
-    // and log4j issues which does not have any updates that solve the problem
-    failBuildOnCVSS = 7
-    suppressionFile='./dependencycheck-base-suppression.xml'
-}
-
-buildscript {
-    repositories {
-        mavenCentral()
-    }
-    dependencies {
-        classpath 'org.owasp:dependency-check-gradle:6.0.3'
-    }
-}

@@ -198,7 +198,7 @@ class ShutdownIntegrationSpec extends Specification {
 
         def consumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
