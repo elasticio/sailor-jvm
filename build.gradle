@@ -146,8 +146,9 @@ publishing {
 }
 
 signing {
-    required { isReleaseBuild && gradle.taskGraph.hasTask("publish") }
-    if(System.getenv('CI')) {
+    def needToSign = isReleaseBuild && gradle.taskGraph.hasTask("publish");
+    required { needToSign }
+    if(System.getenv('CI') && needToSign) {
         def signingPassword = findProperty("signingPassword")
         def signingKey = new String(findProperty("signingKeyBase64").decodeBase64())
         useInMemoryPgpKeys(signingKey, signingPassword)
