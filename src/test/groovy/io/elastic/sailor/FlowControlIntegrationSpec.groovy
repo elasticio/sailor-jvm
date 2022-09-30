@@ -13,6 +13,7 @@ import io.elastic.sailor.impl.MessagePublisherImpl
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
 import org.eclipse.jetty.server.handler.AbstractHandler
+import spock.lang.Retry
 import spock.lang.Shared
 import spock.lang.Specification
 import spock.lang.Stepwise
@@ -207,7 +208,8 @@ class FlowControlIntegrationSpec extends Specification {
         System.clearProperty(Constants.ENV_VAR_STARTUP_REQUIRED)
         System.clearProperty(Constants.ENV_VAR_HOOK_SHUTDOWN)
     }
-
+    // unstable test
+    @Retry(count = 5)
     def "should retry messages"() {
         def blockingVar = new BlockingVariable(5)
         setup:
