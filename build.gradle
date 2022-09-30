@@ -51,17 +51,17 @@ dependencies {
     testImplementation 'org.eclipse.jetty:jetty-server:9.4.1.v20170120'
     testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:2.33.2'
 
-    implementation 'org.glassfish:javax.json:1.0.4'
-    implementation 'com.rabbitmq:amqp-client:5.9.0'
-    implementation 'commons-codec:commons-codec:1.10'
-    implementation 'commons-io:commons-io:2.7'
-    implementation 'org.apache.httpcomponents:httpclient:4.5.13'
-    implementation 'com.google.inject:guice:5.1.0'
-    implementation 'com.google.inject.extensions:guice-assistedinject:5.1.0'
-    implementation 'ch.qos.logback:logback-classic:1.2.10'
-    implementation 'ch.qos.logback.contrib:logback-json-classic:0.1.5'
-    implementation 'ch.qos.logback.contrib:logback-jackson:0.1.5'
-    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
+    api 'org.glassfish:javax.json:1.0.4'
+    api 'com.rabbitmq:amqp-client:5.9.0'
+    api 'commons-codec:commons-codec:1.10'
+    api 'commons-io:commons-io:2.7'
+    api 'org.apache.httpcomponents:httpclient:4.5.13'
+    api 'com.google.inject:guice:5.1.0'
+    api 'com.google.inject.extensions:guice-assistedinject:5.1.0'
+    api 'ch.qos.logback:logback-classic:1.2.10'
+    api 'ch.qos.logback.contrib:logback-json-classic:0.1.5'
+    api 'ch.qos.logback.contrib:logback-jackson:0.1.5'
+    api 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
 }
 
 jar {
