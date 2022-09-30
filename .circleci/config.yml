@@ -57,10 +57,10 @@ workflows:
           name: "Publish artifacts to Maven"
           requires:
             - test
-  weekly:
+  nightly:
     triggers:
       - schedule:
-          cron: "0 0 * * 0"
+          cron: "0 0 * * *"
           filters:
             branches:
               only:
