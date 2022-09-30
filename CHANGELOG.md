@@ -1,4 +1,4 @@
-## 3.4.1 (September 28, 2022)
+## 3.5.0 (September 30, 2022)
 
 * [JAVA sailor doesn't support java version 17](https://github.com/elasticio/elasticio/issues/6364) 
   * upgrade gradle wrapper version to `7.5.1`

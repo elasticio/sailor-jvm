@@ -146,8 +146,9 @@ publishing {
 }
 
 signing {
+    println 'isReleaseBuild: ' + isReleaseBuild;
     required { isReleaseBuild && gradle.taskGraph.hasTask("publish"); }
-    if(project.hasProperty('signingPassword') && project.hasProperty('signingKeyBase64')) {
+    if(isReleaseBuild && project.hasProperty('signingPassword') && project.hasProperty('signingKeyBase64')) {
         def signingPassword = findProperty("signingPassword")
         def signingKey = new String(findProperty("signingKeyBase64").decodeBase64())
         useInMemoryPgpKeys(signingKey, signingPassword)
