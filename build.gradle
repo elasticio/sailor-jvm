@@ -17,7 +17,7 @@ plugins {
     id 'org.owasp.dependencycheck' version '7.2.1'
 }
 group = 'io.elastic'
-version = '3.4.1-SNAPSHOT'
+version = '3.5.0-SNAPSHOT'
 sourceCompatibility = '1.8'
 
 dependencyCheck {

@@ -45,15 +45,15 @@ jobs:
 workflows:
   test_and_publish:
     jobs:
-       - audit:
-           name: "Audit dependencies"
-       - test:
-           matrix:
-             parameters:
-               jdk-version: ["amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk"]
-           requires:
-             - "Audit dependencies"
+      - audit:
+          name: "Audit dependencies"
+      - test:
+          matrix:
+            parameters:
+              jdk-version: ["amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk"]
+          requires:
+            - "Audit dependencies"
       - publish:
           name: "Publish artifacts to Maven"
-           requires:
-             - test
+          requires:
+            - test
