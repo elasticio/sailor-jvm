@@ -1,26 +1,47 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.owasp:dependency-check-gradle:7.2.1'
+    }
+}
+
 plugins {
+    id 'idea'
     id 'groovy'
     id 'java'
     id 'java-library'
     id 'maven-publish'
     id 'signing'
+    id 'org.owasp.dependencycheck' version '7.2.1'
 }
-
 group = 'io.elastic'
 version = '3.4.1-SNAPSHOT'
 sourceCompatibility = '1.8'
 
+dependencyCheck {
+    format = 'ALL'
+    // Dependency Check script will fail in case there are critical (9.0-10.0) vulnerabilities.
+    // It should be configured to 7 (high and critical), but so far is not possible as 'axis' library
+    // and log4j issues which does not have any updates that solve the problem
+    failBuildOnCVSS = 7
+    suppressionFile = './dependencycheck-base-suppression.xml'
+}
+check.dependsOn dependencyCheckAnalyze
+
+def isReleaseBuild = !version.endsWith('SNAPSHOT');
+def snapshotRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+def releaseRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+def repositoryUsername = project.hasProperty('sonatypeUsername') ? sonatypeUsername : ""
+def repositoryPassword = project.hasProperty('sonatypePassword') ? sonatypePassword : ""
+
 repositories {
     mavenCentral()
     maven {
-        url 'https://oss.sonatype.org/content/repositories/snapshots'
+        url snapshotRepositoryUrl
     }
 }
-
-def isReleaseBuild() {
-    return !version.endsWith('SNAPSHOT')
-}
-
 
 dependencies {
     testRuntimeOnly 'org.codehaus.groovy:groovy-all:3.0.13'
@@ -29,7 +50,6 @@ dependencies {
     testImplementation 'com.github.rest-driver:rest-client-driver:2.0.0'
     testImplementation 'org.eclipse.jetty:jetty-server:9.4.1.v20170120'
     testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:2.33.2'
-
 
     implementation 'org.glassfish:javax.json:1.0.4'
     implementation 'com.rabbitmq:amqp-client:5.9.0'
@@ -46,10 +66,16 @@ dependencies {
 
 jar {
     manifest {
-        attributes('Implementation-Vendor' : 'elastic.io Gmbh',
+        attributes(
+                'Implementation-Vendor' : 'elastic.io Gmbh',
                 'Implementation-Title': 'elastic.io Sailor for JVM',
-                'Implementation-Version': archiveVersion)
+                'Implementation-Version': archiveVersion,
+                'Multi-Release': true
+        )
     }
+}
+test {
+    useJUnitPlatform()
 }
 
 java {
@@ -59,22 +85,6 @@ java {
 
 wrapper {
     gradleVersion = '7.5.1'
-}
-
-def getReleaseRepositoryUrl() {
-    return "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-}
-
-def getSnapshotRepositoryUrl() {
-    return "https://oss.sonatype.org/content/repositories/snapshots/"
-}
-
-def getRepositoryUsername() {
-    return project.hasProperty('sonatypeUsername') ? sonatypeUsername : ""
-}
-
-def getRepositoryPassword() {
-    return project.hasProperty('sonatypePassword') ? sonatypePassword : ""
 }
 
 publishing {
@@ -126,17 +136,21 @@ publishing {
 
     repositories {
         maven {
-            url = isReleaseBuild() ? getReleaseRepositoryUrl() : getSnapshotRepositoryUrl()
-
+            url = isReleaseBuild ? releaseRepositoryUrl : snapshotRepositoryUrl
             credentials {
-                username = getRepositoryUsername()
-                password = getRepositoryPassword()
+                username = repositoryUsername
+                password = repositoryPassword
             }
         }
     }
 }
 
 signing {
-    required { isReleaseBuild() && gradle.taskGraph.hasTask("publish") }
+    required { isReleaseBuild && gradle.taskGraph.hasTask("publish") }
+    if(System.getenv('CI')) {
+        def signingPassword = findProperty("signingPassword")
+        def signingKey = new String(findProperty("signingKeyBase64").decodeBase64())
+        useInMemoryPgpKeys(signingKey, signingPassword)
+    }
     sign publishing.publications.mavenJava
 }
