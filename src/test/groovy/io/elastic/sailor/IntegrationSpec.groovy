@@ -258,16 +258,16 @@ class IntegrationSpec extends Specification {
 
         def consumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), false)
-                def message = Utils.createMessage(
+                def testMsg = Utils.createMessage(
                         IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64))
-                blockingVar.set([message:message, properties:properties]);
+                blockingVar.set([message:testMsg, properties:properties]);
             }
         }
 
@@ -344,16 +344,16 @@ class IntegrationSpec extends Specification {
 
         def consumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def message = Utils.createMessage(
+                def testMsg = Utils.createMessage(
                         IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64))
-                blockingVar.set([message:message, properties:properties]);
+                blockingVar.set([message:testMsg, properties:properties]);
             }
         }
 
@@ -440,7 +440,7 @@ class IntegrationSpec extends Specification {
 
         def consumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
@@ -448,9 +448,9 @@ class IntegrationSpec extends Specification {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def decryptedJson = IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64)
-                def message = Utils.createMessage(decryptedJson)
+                def testMsg = Utils.createMessage(decryptedJson)
                 def receivedPassthrough = decryptedJson.getJsonObject(Message.PROPERTY_PASSTHROUGH)
-                blockingVar.set([message:message, properties:properties, receivedPassthrough:receivedPassthrough]);
+                blockingVar.set([message:testMsg, properties:properties, receivedPassthrough:receivedPassthrough]);
             }
         }
 
@@ -529,16 +529,16 @@ class IntegrationSpec extends Specification {
 
         def consumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def message = Utils.createMessage(
+                def testMsg = Utils.createMessage(
                         IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64))
-                blockingVar.set([message:message, properties:properties]);
+                blockingVar.set([message:testMsg, properties:properties]);
             }
         }
 
@@ -609,16 +609,16 @@ class IntegrationSpec extends Specification {
 
         def consumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def message = Utils.createMessage(
+                def testMsg = Utils.createMessage(
                         IntegrationSpec.this.cipher.decryptMessageContent(body, MessageEncoding.BASE64))
-                blockingVar.set([message:message, properties:properties]);
+                blockingVar.set([message:testMsg, properties:properties]);
             }
         }
 
@@ -659,7 +659,7 @@ class IntegrationSpec extends Specification {
 
         def consumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
@@ -667,8 +667,8 @@ class IntegrationSpec extends Specification {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
                 def bodyString = new String(body, "UTF-8");
-                def message = JSON.parseObject(bodyString)
-                blockingVar.set([message:message, properties:properties]);
+                def testMsg = JSON.parseObject(bodyString)
+                blockingVar.set([message:testMsg, properties:properties]);
             }
         }
 
@@ -742,15 +742,15 @@ class IntegrationSpec extends Specification {
 
         def consumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def message = IntegrationSpec.this.cipher.decrypt(body, MessageEncoding.BASE64);
-                blockingVar.set([message:message, properties:properties]);
+                def testMsg = IntegrationSpec.this.cipher.decrypt(body, MessageEncoding.BASE64);
+                blockingVar.set([message:testMsg, properties:properties]);
             }
         }
 
@@ -828,15 +828,15 @@ class IntegrationSpec extends Specification {
 
         def httpReplyConsumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def message = IntegrationSpec.this.cipher.decrypt(body, MessageEncoding.BASE64);
-                httpReplyBlockingVar.set([message:message, properties:properties]);
+                def testMsg = IntegrationSpec.this.cipher.decrypt(body, MessageEncoding.BASE64);
+                httpReplyBlockingVar.set([message:testMsg, properties:properties]);
             }
         }
 
@@ -844,16 +844,16 @@ class IntegrationSpec extends Specification {
 
         def errorConsumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def errorJson = JSON.parseObject(new String(body, "UTF-8"))
+                def errJson = JSON.parseObject(new String(body, "UTF-8"))
                 def error = IntegrationSpec.this.cipher.decrypt(
-                        errorJson.getString('error').getBytes(), MessageEncoding.BASE64);
+                        errJson.getString('error').getBytes(), MessageEncoding.BASE64);
                 errorBlockingVar.set([error:error, properties:properties]);
             }
         }
@@ -955,15 +955,15 @@ class IntegrationSpec extends Specification {
 
         def httpReplyConsumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def message = IntegrationSpec.this.cipher.decrypt(body, MessageEncoding.BASE64);
-                httpReplyBlockingVar.set([message:message, properties:properties]);
+                def testMsg = IntegrationSpec.this.cipher.decrypt(body, MessageEncoding.BASE64);
+                httpReplyBlockingVar.set([message:testMsg, properties:properties]);
             }
         }
 
@@ -971,16 +971,16 @@ class IntegrationSpec extends Specification {
 
         def errorConsumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def errorJson = JSON.parseObject(new String(body, "UTF-8"))
+                def errJson = JSON.parseObject(new String(body, "UTF-8"))
                 def error = IntegrationSpec.this.cipher.decrypt(
-                        errorJson.getString('error').getBytes(), MessageEncoding.BASE64);
+                        errJson.getString('error').getBytes(), MessageEncoding.BASE64);
                 errorBlockingVar.set([error:error, properties:properties]);
             }
         }
@@ -1069,16 +1069,16 @@ class IntegrationSpec extends Specification {
 
         def consumer = new DefaultConsumer(publishChannel) {
             @Override
-            public void handleDelivery(String consumerTag,
+            public void handleDelivery(String tag,
                                        Envelope envelope,
                                        AMQP.BasicProperties properties,
                                        byte[] body)
                     throws IOException {
 
                 IntegrationSpec.this.publishChannel.basicAck(envelope.getDeliveryTag(), true)
-                def errorJson = JSON.parseObject(new String(body, "UTF-8"))
+                def errJson = JSON.parseObject(new String(body, "UTF-8"))
                 def error = IntegrationSpec.this.cipher.decrypt(
-                        errorJson.getString('error').getBytes(), MessageEncoding.BASE64);
+                        errJson.getString('error').getBytes(), MessageEncoding.BASE64);
                 blockingVar.set([error:error, properties:properties]);
             }
         }

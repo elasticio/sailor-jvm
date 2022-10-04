@@ -1,143 +1,24 @@
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-apply plugin: 'groovy'
-apply plugin: 'maven'
-apply plugin: 'signing'
-
-apply plugin: org.owasp.dependencycheck.gradle.DependencyCheckPlugin
-
-group = 'io.elastic'
-version = '3.4.1-SNAPSHOT'
-ext.isReleaseVersion = !version.endsWith("SNAPSHOT")
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-signing {
-    required { isReleaseVersion }
-    sign configurations.archives
-}
-
-repositories {
-    mavenCentral()
-    maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots"
-    }
-}
-
-dependencies {
-    compile "org.glassfish:javax.json:1.0.4"
-    compile "com.rabbitmq:amqp-client:5.9.0"
-    compile "commons-codec:commons-codec:1.10"
-    compile "commons-io:commons-io:2.7"
-    compile "org.apache.httpcomponents:httpclient:4.5.13"
-    compile "com.google.inject:guice:4.1.0"
-    compile "com.google.inject.extensions:guice-assistedinject:4.1.0"
-    compile "ch.qos.logback:logback-classic:1.2.10"
-    compile "ch.qos.logback.contrib:logback-json-classic:0.1.5"
-    compile "ch.qos.logback.contrib:logback-jackson:0.1.5"
-    compile "com.fasterxml.jackson.core:jackson-databind:2.13.2.2"
-
-    testRuntime 'org.codehaus.groovy:groovy-all:2.0.5'
-    testCompile "org.spockframework:spock-core:1.3-groovy-2.4"
-    testCompile "com.github.rest-driver:rest-client-driver:2.0.0"
-    testCompile "org.eclipse.jetty:jetty-server:9.4.1.v20170120"
-    testCompile 'com.github.tomakehurst:wiremock-standalone:2.20.0'
-}
-
-uploadArchives {
+buildscript {
     repositories {
-        mavenLocal()
-        if (project.hasProperty('sonatypeUsername') && project.hasProperty('sonatypePassword')) {
-            mavenDeployer {
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-                repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                    authentication(userName: sonatypeUsername, password: sonatypePassword)
-                }
-
-                snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                    authentication(userName: sonatypeUsername, password: sonatypePassword)
-                }
-
-                pom.project {
-                    name 'elasticio-sailor-jvm'
-                    packaging 'jar'
-                    description 'Sailor for JVM'
-                    url 'http://www.elastic.io'
-                    inceptionYear '2015'
-
-                    organization {
-                        name 'elastic.io GmbH'
-                        url 'http://www.elastic.io'
-                    }
-
-                    scm {
-                        url 'scm:git@github.com:elasticio/sailor-jvm.git'
-                        connection 'scm:git@github.com:elasticio/sailor-jvm.git'
-                        developerConnection 'scm:git@github.com:elasticio/sailor-jvm.git'
-                    }
-
-                    licenses {
-                        license {
-                            name 'The Apache Software License, Version 2.0'
-                            url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                            distribution 'repo'
-                        }
-                    }
-
-                    issueManagement {
-                        system 'GitHub'
-                        url 'https://github.com/elasticio/sailor-jvm/issues'
-                    }
-
-                    developers {
-                        developer {
-                            id 'elasticio'
-                            name 'elastic.io GmbH'
-                            email 'support@elastic.io'
-                        }
-                    }
-                }
-            }
-        }
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'org.owasp:dependency-check-gradle:7.2.1'
     }
 }
 
-task sourceJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allJava
+plugins {
+    id 'idea'
+    id 'groovy'
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+    id 'signing'
+    id 'org.owasp.dependencycheck' version '7.2.1'
 }
-
-task javadocJar(type: Jar, dependsOn: javadoc) {
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-task javadocs(type: Javadoc) {
-    source = sourceSets.main.allJava
-    classpath = configurations.compile
-}
-
-artifacts {
-    archives sourceJar
-    archives javadocJar
-}
-
-wrapper {
-    gradleVersion = '5.4.1'
-}
-
-jar {
-    manifest {
-        attributes("Implementation-Vendor" : "elastic.io Gmbh",
-                "Implementation-Title": "elastic.io Sailor form JVM",
-                "Implementation-Version": version)
-    }
-}
-
-check.dependsOn dependencyCheckAnalyze
+group = 'io.elastic'
+version = '3.5.1-SHAPSHOT'
+sourceCompatibility = '1.8'
 
 dependencyCheck {
     format = 'ALL'
@@ -145,14 +26,132 @@ dependencyCheck {
     // It should be configured to 7 (high and critical), but so far is not possible as 'axis' library
     // and log4j issues which does not have any updates that solve the problem
     failBuildOnCVSS = 7
-    suppressionFile='./dependencycheck-base-suppression.xml'
+    suppressionFile = './dependencycheck-base-suppression.xml'
+}
+check.dependsOn dependencyCheckAnalyze
+
+def isReleaseBuild = !version.endsWith('SNAPSHOT');
+def snapshotRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+def releaseRepositoryUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+def repositoryUsername = project.hasProperty('sonatypeUsername') ? sonatypeUsername : ""
+def repositoryPassword = project.hasProperty('sonatypePassword') ? sonatypePassword : ""
+
+repositories {
+    mavenCentral()
+    maven {
+        url snapshotRepositoryUrl
+    }
 }
 
-buildscript {
+dependencies {
+    testRuntimeOnly 'org.codehaus.groovy:groovy-all:3.0.13'
+    testImplementation 'org.spockframework:spock-junit4:2.2-groovy-3.0'
+    testImplementation 'org.spockframework:spock-core:2.2-groovy-3.0'
+    testImplementation 'com.github.rest-driver:rest-client-driver:2.0.0'
+    testImplementation 'org.eclipse.jetty:jetty-server:9.4.1.v20170120'
+    testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:2.33.2'
+
+    api 'org.glassfish:javax.json:1.0.4'
+    api 'com.rabbitmq:amqp-client:5.9.0'
+    api 'commons-codec:commons-codec:1.10'
+    api 'commons-io:commons-io:2.7'
+    api 'org.apache.httpcomponents:httpclient:4.5.13'
+    api 'com.google.inject:guice:5.1.0'
+    api 'com.google.inject.extensions:guice-assistedinject:5.1.0'
+    api 'ch.qos.logback:logback-classic:1.2.10'
+    api 'ch.qos.logback.contrib:logback-json-classic:0.1.5'
+    api 'ch.qos.logback.contrib:logback-jackson:0.1.5'
+    api 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
+}
+
+jar {
+    manifest {
+        attributes(
+                'Implementation-Vendor' : 'elastic.io Gmbh',
+                'Implementation-Title': 'elastic.io Sailor for JVM',
+                'Implementation-Version': archiveVersion,
+                'Multi-Release': true
+        )
+    }
+}
+test {
+    useJUnitPlatform()
+}
+
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
+wrapper {
+    gradleVersion = '7.5.1'
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'sailor-jvm'
+            from components.java
+            pom {
+                name = 'elasticio-sailor-jvm'
+                packaging = 'jar'
+                description = 'Sailor for JVM'
+                url = 'http://www.elastic.io'
+                inceptionYear = '2015'
+
+                organization {
+                    name = 'elastic.io GmbH'
+                    url = 'http://www.elastic.io'
+                }
+
+                scm {
+                    url = 'scm:git@github.com:elasticio/sailor-jvm.git'
+                    connection = 'scm:git@github.com:elasticio/sailor-jvm.git'
+                    developerConnection = 'scm:git@github.com:elasticio/sailor-jvm.git'
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache Software License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        distribution = 'repo'
+                    }
+                }
+
+                issueManagement {
+                    system = 'GitHub'
+                    url = 'https://github.com/elasticio/sailor-jvm/issues'
+                }
+
+                developers {
+                    developer {
+                        id = 'elasticio'
+                        name = 'elastic.io GmbH'
+                        email = 'support@elastic.io'
+                    }
+                }
+            }
+        }
+    }
+
     repositories {
-        mavenCentral()
+        maven {
+            url = isReleaseBuild ? releaseRepositoryUrl : snapshotRepositoryUrl
+            credentials {
+                username = repositoryUsername
+                password = repositoryPassword
+            }
+        }
     }
-    dependencies {
-        classpath 'org.owasp:dependency-check-gradle:6.0.3'
+}
+
+signing {
+    println 'isReleaseBuild: ' + isReleaseBuild;
+    required { isReleaseBuild && gradle.taskGraph.hasTask("publish"); }
+    if(isReleaseBuild && project.hasProperty('signingPassword') && project.hasProperty('signingKeyBase64')) {
+        def signingPassword = findProperty("signingPassword")
+        def signingKey = new String(findProperty("signingKeyBase64").decodeBase64())
+        useInMemoryPgpKeys(signingKey, signingPassword)
     }
+    sign publishing.publications.mavenJava
 }

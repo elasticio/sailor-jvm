@@ -1,20 +1,70 @@
-version: 2
-jobs:
-  build:
-    
-    working_directory: ~/sailor-jvm
-
+version: 2.1
+executors:
+  docker:
     docker:
-      - image: circleci/openjdk:8-jdk-browsers
-      - image: rabbitmq:3.8.3
-
+      - image: cimg/base:stable
+jobs:
+  audit:
+    working_directory: ~/sailor-jvm
+    executor: docker
+    docker:
+      - image: amazoncorretto:17-alpine-jdk
     steps:
-
       - checkout
       - run:
           name: Audit Dependencies
           command: ./gradlew dependencyCheckAnalyze
-      - run: export TERM=${TERM:-dumb} && ./gradlew build --refresh-dependencies uploadArchives -PsonatypeUsername=$SONATYPE_USERNAME -PsonatypePassword=$SONATYPE_PASSWORD
-      
+
+  test:
+    parameters:
+      jdk-version:
+        type: string
+    working_directory: ~/sailor-jvm
+    executor: docker
+    docker:
+      - image: << parameters.jdk-version >>
+      - image: rabbitmq:3.8.3
+    steps:
+      - checkout
+      - run: TERM=${TERM:-dumb} ./gradlew clean test
       - store_test_results:
           path: build/reports
+  publish:
+    executor: docker
+    docker:
+      - image: amazoncorretto:17-alpine-jdk
+    working_directory: ~/sailor-jvm
+    steps:
+      - checkout
+      - run: |
+          TERM=${TERM:-dumb} ./gradlew publish -PsonatypeUsername=$SONATYPE_USERNAME \
+          -PsonatypePassword=$SONATYPE_PASSWORD \
+          -PsigningPassword=${SIGNING_PSW} \
+          -PsigningKeyBase64=${SIGNING_KEY} \
+          -PkeyId=${SIGNING_KEY_ID}
+workflows:
+  test_and_publish:
+    jobs:
+      - audit:
+          name: "Audit dependencies"
+      - test:
+          matrix:
+            parameters:
+              jdk-version: ["amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk"]
+          requires:
+            - "Audit dependencies"
+      - publish:
+          name: "Publish artifacts to Maven"
+          requires:
+            - test
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - audit:
+          name: "Audit dependencies"

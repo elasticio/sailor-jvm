@@ -1,3 +1,9 @@
+## 3.5.0 (September 30, 2022)
+
+* [JAVA sailor doesn't support java version 17](https://github.com/elasticio/elasticio/issues/6364) 
+  * upgrade gradle wrapper version to `7.5.1`
+  * new publish mechanism
+  * update libraries to support Java 17
 ## 3.4.0 (September 20, 2022)
 
 * [Add AMQP delivery mode configuration](https://github.com/elasticio/elasticio/issues/6247) by `AMQP_PERSISTENT_MESSAGES` env var
