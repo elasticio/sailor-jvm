@@ -34,7 +34,7 @@ class JSONSpec extends Specification {
 
         then:
         def e = thrown(javax.json.JsonException)
-        e.message == "Cannot read JSON object, found JSON array"
+        e.message == "JsonParser#getObject() or JsonParser#getObjectStream() is valid only for START_OBJECT parser state. But current parser state is START_ARRAY"
     }
 
     def "stringify"() {
