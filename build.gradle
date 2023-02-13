@@ -14,10 +14,10 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id 'org.owasp.dependencycheck' version '7.2.1'
+    id 'org.owasp.dependencycheck' version '8.0.2'
 }
 group = 'io.elastic'
-version = '3.5.1-SNAPSHOT'
+version = '3.6.0-SNAPSHOT'
 sourceCompatibility = '1.8'
 
 dependencyCheck {
@@ -53,15 +53,15 @@ dependencies {
 
     api 'org.glassfish:jakarta.json:1.1.6'
     api 'com.rabbitmq:amqp-client:5.9.0'
-    api 'commons-codec:commons-codec:1.10'
-    api 'commons-io:commons-io:2.7'
-    api 'org.apache.httpcomponents:httpclient:4.5.13'
+    api 'commons-codec:commons-codec:1.15'
+    api 'commons-io:commons-io:2.11.0'
+    api 'org.apache.httpcomponents:httpclient:4.5.14'
     api 'com.google.inject:guice:5.1.0'
     api 'com.google.inject.extensions:guice-assistedinject:5.1.0'
-    api 'ch.qos.logback:logback-classic:1.2.10'
+    api 'ch.qos.logback:logback-classic:1.2.11'
     api 'ch.qos.logback.contrib:logback-json-classic:0.1.5'
     api 'ch.qos.logback.contrib:logback-jackson:0.1.5'
-    api 'com.fasterxml.jackson.core:jackson-databind:2.13.2.2'
+    api 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
 }
 
 jar {
