@@ -4,13 +4,13 @@ import io.elastic.api.CredentialsVerifier;
 import io.elastic.api.DynamicMetadataProvider;
 import io.elastic.api.InvalidCredentialsException;
 import io.elastic.api.SelectModelProvider;
-import javax.json.JsonObjectBuilder;
+import jakarta.json.JsonObjectBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonString;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
 import java.lang.reflect.Constructor;
 
 public enum ServiceMethods {

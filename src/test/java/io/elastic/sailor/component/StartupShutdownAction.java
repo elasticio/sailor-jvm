@@ -7,9 +7,9 @@ import io.elastic.sailor.impl.AmqpServiceImpl;
 import io.elastic.sailor.impl.CryptoServiceImpl;
 import io.elastic.sailor.impl.MessagePublisherImpl;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 import java.util.Collections;
 
 public class StartupShutdownAction implements Function {

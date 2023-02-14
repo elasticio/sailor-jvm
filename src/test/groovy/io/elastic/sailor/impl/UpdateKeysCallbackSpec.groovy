@@ -5,7 +5,7 @@ import io.elastic.sailor.ApiClient
 import io.elastic.sailor.Step
 import spock.lang.Specification
 
-import javax.json.Json
+import jakarta.json.Json
 
 class UpdateKeysCallbackSpec extends Specification {
 

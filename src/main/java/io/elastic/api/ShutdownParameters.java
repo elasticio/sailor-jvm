@@ -1,6 +1,6 @@
 package io.elastic.api;
 
-import javax.json.JsonObject;
+import jakarta.json.JsonObject;
 import java.io.Serializable;
 
 /**

@@ -3,7 +3,7 @@ package io.elastic.sailor;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.Message;
 
-import javax.json.JsonObject;
+import jakarta.json.JsonObject;
 
 public interface MessageResolver {
 

@@ -2,9 +2,9 @@ package io.elastic.sailor.component;
 
 import io.elastic.api.*;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 
 public class StartupInitAction implements Function {
 

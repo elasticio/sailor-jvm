@@ -7,7 +7,7 @@ import io.elastic.sailor.Constants;
 import io.elastic.sailor.ExecutionContext;
 import io.elastic.sailor.MessagePublisher;
 
-import javax.json.JsonObject;
+import jakarta.json.JsonObject;
 
 public class SnapshotCallback extends CountingCallbackImpl {
 

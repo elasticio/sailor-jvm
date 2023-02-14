@@ -2,8 +2,8 @@ package io.elastic.sailor
 
 import spock.lang.Specification
 
-import javax.json.Json
-import javax.json.JsonObject
+import jakarta.json.Json
+import jakarta.json.JsonObject
 
 class UtilsSpec extends Specification {
 

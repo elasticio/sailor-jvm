@@ -9,7 +9,7 @@ import io.elastic.sailor.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.*;
+import jakarta.json.*;
 import java.util.ArrayList;
 import java.util.List;
 

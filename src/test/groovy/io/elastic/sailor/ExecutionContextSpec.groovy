@@ -4,7 +4,7 @@ import io.elastic.api.JSON
 import io.elastic.api.Message
 import spock.lang.Specification
 
-import javax.json.Json
+import jakarta.json.Json
 
 class ExecutionContextSpec extends Specification {
 

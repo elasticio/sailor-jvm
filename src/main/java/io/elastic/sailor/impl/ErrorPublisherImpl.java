@@ -8,9 +8,9 @@ import io.elastic.sailor.ErrorPublisher;
 import io.elastic.sailor.MessagePublisher;
 import io.elastic.sailor.Utils;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;

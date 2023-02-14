@@ -1,8 +1,8 @@
 package io.elastic.api;
 
 
-import javax.json.Json;
-import javax.json.JsonObject;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
 
 /**
  * A component is an unit implementing a custom business logic to be executed
@@ -19,13 +19,13 @@ import javax.json.JsonObject;
  * </p>
  *
  * <p>
- * A configuration is an instance {@link javax.json.JsonObject} containing
+ * A configuration is an instance {@link jakarta.json.JsonObject} containing
  * required information, such as API key or username/password combination, that
  * components needs to collect from user to function properly.
  * </p>
  *
  * <p>
- * A snapshot is an instance of {@link javax.json.JsonObject} that represents
+ * A snapshot is an instance of {@link jakarta.json.JsonObject} that represents
  * component's state. For example, a Twitter timeline component might store the id
  * of the last retrieved tweet for the next execution in order to ask Twitter for
  * tweets whose ids are greater than the one in the snapshot.

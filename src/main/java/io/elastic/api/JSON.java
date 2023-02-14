@@ -1,7 +1,7 @@
 package io.elastic.api;
 
 
-import javax.json.*;
+import jakarta.json.*;
 import java.io.ByteArrayInputStream;
 import java.io.StringWriter;
 

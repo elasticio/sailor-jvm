@@ -6,7 +6,7 @@ import io.elastic.api.JSON
 import org.junit.Rule
 import spock.lang.Specification
 
-import javax.json.Json
+import jakarta.json.Json
 
 import static com.github.restdriver.clientdriver.RestClientDriver.*
 

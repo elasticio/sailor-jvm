@@ -9,7 +9,7 @@ import io.elastic.sailor.SailorTestModule
 import spock.lang.Shared
 import spock.lang.Specification
 
-import javax.json.Json
+import jakarta.json.Json
 
 class CryptoServiceImplSpec extends Specification {
 

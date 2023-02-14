@@ -2,8 +2,8 @@ package io.elastic.sailor.component;
 
 import io.elastic.api.*;
 
-import javax.json.Json;
-import javax.json.JsonObject;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import java.io.ByteArrayInputStream;
 
 public class HttpReplyAction implements Function {

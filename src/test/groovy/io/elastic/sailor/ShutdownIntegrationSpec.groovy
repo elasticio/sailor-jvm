@@ -16,8 +16,8 @@ import spock.lang.Specification
 import spock.lang.Stepwise
 import spock.util.concurrent.BlockingVariable
 
-import javax.json.Json
-import javax.json.JsonObject
+import jakarta.json.Json
+import jakarta.json.JsonObject
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
