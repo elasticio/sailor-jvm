@@ -17,7 +17,7 @@ plugins {
     id 'org.owasp.dependencycheck' version '8.0.2'
 }
 group = 'io.elastic'
-version = '4.0.0-SNAPSHOT'
+version = '4.0.0'
 sourceCompatibility = '1.8'
 
 dependencyCheck {
@@ -30,6 +30,8 @@ dependencyCheck {
 }
 check.dependsOn dependencyCheckAnalyze
 
+def isCiEnv = 'true'.equals(System.getenv('CI'))
+def isCiTag = System.getenv('CIRCLE_TAG') != null;
 def isReleaseBuild = !version.endsWith('SNAPSHOT');
 def snapshotRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
 def releaseRepositoryUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
@@ -154,4 +156,14 @@ signing {
         useInMemoryPgpKeys(signingKey, signingPassword)
     }
     sign publishing.publications.mavenJava
+}
+
+afterEvaluate {
+    //  In case CI env - skip publishing of release version without created tag
+    tasks.withType(PublishToMavenRepository) { task ->
+        if (isReleaseBuild && isCiEnv && !isCiTag) {
+            println 'Can not publish release version without tag. Did not find CIRCLE_TAG env variable. Skipping publication'
+            task.enabled = false
+        }
+    }
 }

@@ -1,38 +1,3 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-  <suppress>
-    <notes><![CDATA[
-      file name: logback-jackson-0.1.5.jar
-      ]]>
-    </notes>
-    <packageUrl regex="true">^pkg:maven/ch\.qos\.logback\.contrib/logback\-jackson@.*$</packageUrl>
-    <cve>CVE-2017-5929</cve>
-    <cve>CVE-2021-42550</cve>
-  </suppress>
-  <suppress>
-    <notes><![CDATA[
-      file name: logback-json-classic-0.1.5.jar
-      ]]>
-    </notes>
-    <packageUrl regex="true">^pkg:maven/ch\.qos\.logback\.contrib/logback\-json\-classic@.*$</packageUrl>
-    <cpe>cpe:/a:qos:logback</cpe>
-  </suppress>
-  <suppress>
-    <notes><![CDATA[
-      file name: logback-json-core-0.1.5.jar
-      ]]>
-    </notes>
-    <packageUrl regex="true">^pkg:maven/ch\.qos\.logback\.contrib/logback\-json\-core@.*$</packageUrl>
-    <cpe>cpe:/a:qos:logback</cpe>
-  </suppress>
-  <suppress>
-    <notes><![CDATA[
-        CVE-2022-42003 - We do not use UNWRAP_SINGLE_VALUE_ARRAYS feature
-        CVE-2022-42004 - An application is vulnerable only with certain customized choices for deserialization. We don't use such approach.
-        Recommended to update lib after com.fasterxml.jackson.core:jackson-databind 2.13.4 will be released
-        ]]></notes>
-    <packageUrl regex="true">^pkg:maven/com\.fasterxml\.jackson\.core/jackson-databind@.*$</packageUrl>
-    <vulnerabilityName>CVE-2022-42003</vulnerabilityName>
-    <vulnerabilityName>CVE-2022-42004</vulnerabilityName>
-  </suppress>
 </suppressions>
