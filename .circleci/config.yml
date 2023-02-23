@@ -54,7 +54,7 @@ workflows:
     jobs:
       - audit:
           name: "Audit dependencies"
-  test_and_publish:
+  test_and_publish_snapshot:
     jobs:
       - audit:
           name: "Audit dependencies"
@@ -62,12 +62,40 @@ workflows:
           matrix:
             parameters:
               jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
-          requires:
-            - "Audit dependencies"
       - publish:
-          name: "Publish version to Maven"
+          name: "Publish SNAPSHOT version to Maven"
+          requires:
+            - test
+            - "Audit dependencies"
           filters:
+            tags:
+              ignore: /.*/
+  test_and_publish_release:
+    jobs:
+      - audit:
+          name: "Audit dependencies"
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
+      - test:
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
+          matrix:
+            parameters:
+              jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
+
+      - publish:
+          name: "Publish release version to Maven"
+          filters:
+            branches:
+              ignore: /.*/
             tags:
               only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
           requires:
             - test
+            - "Audit dependencies"
