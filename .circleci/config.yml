@@ -62,21 +62,21 @@ workflows:
           matrix:
             parameters:
               jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
-          requires:
-            - "Audit dependencies"
       - publish:
           name: "Publish SNAPSHOT version to Maven"
           requires:
             - test
+            - "Audit dependencies"
           filters:
             tags:
               ignore: /.*/
       - publish:
           name: "Publish release version to Maven"
           filters:
-            tags:
-              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
             branches:
               ignore: /.*/
+            tags:
+              only: /.*/
           requires:
             - test
+            - "Audit dependencies"
