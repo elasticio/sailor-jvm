@@ -5,7 +5,7 @@ import io.elastic.sailor.*
 import spock.lang.Shared
 import spock.lang.Specification
 
-import javax.json.Json
+import jakarta.json.Json
 
 class DataCallbackSpec extends Specification {
     def messagePublisher = Mock(MessagePublisher)

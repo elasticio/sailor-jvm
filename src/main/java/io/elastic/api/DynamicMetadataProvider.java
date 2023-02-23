@@ -1,7 +1,7 @@
 package io.elastic.api;
 
 
-import javax.json.JsonObject;
+import jakarta.json.JsonObject;
 
 /**
  * Interface to be implemented by components which want to provide dynamic metadata.

@@ -6,10 +6,10 @@ import io.elastic.api.Message;
 import io.elastic.api.Message.Builder;
 import io.elastic.sailor.impl.MessageEncoding;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonString;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonString;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;

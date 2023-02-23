@@ -5,7 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.name.Named;
 import io.elastic.api.JSON;
 
-import javax.json.JsonObject;
+import jakarta.json.JsonObject;
 
 
 public class ServiceModule extends AbstractModule {

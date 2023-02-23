@@ -3,7 +3,7 @@ package io.elastic.api
 import spock.lang.Specification
 import spock.lang.Unroll
 
-import javax.json.Json
+import jakarta.json.Json
 
 @Unroll
 class JSONSpec extends Specification {
@@ -33,8 +33,8 @@ class JSONSpec extends Specification {
         JSON.parseObject("[]")
 
         then:
-        def e = thrown(javax.json.JsonException)
-        e.message == "Cannot read JSON object, found JSON array"
+        def e = thrown(jakarta.json.JsonException)
+        e.message == "JsonParser#getObject() or JsonParser#getObjectStream() is valid only for START_OBJECT parser state. But current parser state is START_ARRAY"
     }
 
     def "stringify"() {

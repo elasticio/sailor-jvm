@@ -3,7 +3,7 @@ package io.elastic.api;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.JsonObject;
+import jakarta.json.JsonObject;
 
 /**
  * Used by a {@link Function} to communicate with the elastic.io runtime.

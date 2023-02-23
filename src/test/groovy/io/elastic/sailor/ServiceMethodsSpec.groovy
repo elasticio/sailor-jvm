@@ -5,7 +5,7 @@ import io.elastic.sailor.component.SimpleMetadataProvider
 import io.elastic.sailor.component.SimpleSelectModelProvider
 import spock.lang.Specification
 
-import javax.json.Json
+import jakarta.json.Json
 
 class ServiceMethodsSpec extends Specification {
 

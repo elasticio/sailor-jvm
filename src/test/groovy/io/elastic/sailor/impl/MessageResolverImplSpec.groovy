@@ -5,7 +5,7 @@ import io.elastic.api.Message
 import io.elastic.sailor.*
 import spock.lang.Specification
 
-import javax.json.Json
+import jakarta.json.Json
 
 class MessageResolverImplSpec extends Specification {
 

@@ -8,7 +8,7 @@ import io.elastic.api.Function;
 import io.elastic.sailor.*;
 import org.slf4j.LoggerFactory;
 
-import javax.json.JsonObject;
+import jakarta.json.JsonObject;
 
 public class MessageProcessorImpl implements MessageProcessor {
 

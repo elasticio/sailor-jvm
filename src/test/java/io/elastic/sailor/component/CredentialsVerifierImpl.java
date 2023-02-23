@@ -4,8 +4,8 @@ import io.elastic.api.CredentialsVerifier;
 import io.elastic.api.InvalidCredentialsException;
 import net.minidev.json.JSONValue;
 
-import javax.json.JsonObject;
-import javax.json.JsonValue;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonValue;
 
 public class CredentialsVerifierImpl implements CredentialsVerifier {
 

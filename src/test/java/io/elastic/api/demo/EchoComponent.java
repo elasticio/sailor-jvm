@@ -4,8 +4,8 @@ import io.elastic.api.Function;
 import io.elastic.api.ExecutionParameters;
 import io.elastic.api.Message;
 
-import javax.json.Json;
-import javax.json.JsonObject;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
 
 public class EchoComponent implements Function {
 

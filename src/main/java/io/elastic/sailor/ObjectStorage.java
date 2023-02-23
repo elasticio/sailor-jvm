@@ -1,6 +1,6 @@
 package io.elastic.sailor;
 
-import javax.json.JsonObject;
+import jakarta.json.JsonObject;
 
 public interface ObjectStorage {
 

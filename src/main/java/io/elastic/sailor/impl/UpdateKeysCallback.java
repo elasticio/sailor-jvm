@@ -9,9 +9,9 @@ import io.elastic.sailor.Step;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonString;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonString;
 
 public class UpdateKeysCallback implements EventEmitter.Callback {
 

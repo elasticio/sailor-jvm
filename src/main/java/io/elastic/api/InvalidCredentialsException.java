@@ -1,6 +1,6 @@
 package io.elastic.api;
 
-import javax.json.JsonObject;
+import jakarta.json.JsonObject;
 
 /**
  * Thrown by {@link CredentialsVerifier#verify(JsonObject)}

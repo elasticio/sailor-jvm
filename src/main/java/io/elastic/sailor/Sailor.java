@@ -13,8 +13,8 @@ import io.elastic.sailor.impl.GracefulShutdownHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.json.Json;
-import javax.json.JsonObject;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;

@@ -1,3 +1,6 @@
+## 4.0.0 (February 14 ♥, 2022) 
+  * [Migrate from javax.json to jakarta.json](https://github.com/elasticio/elasticio/issues/6744)
+    * Backward incompatible changes. Replaced `javax.json` with `org.glassfish:jakarta.json:1.1.6`
 ## 3.5.0 (September 30, 2022)
 
 * [JAVA sailor doesn't support java version 17](https://github.com/elasticio/elasticio/issues/6364) 

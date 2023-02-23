@@ -1,10 +1,10 @@
 package io.elastic.api;
 
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import javax.json.JsonWriter;
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
+import jakarta.json.JsonObjectBuilder;
+import jakarta.json.JsonWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.util.UUID;
