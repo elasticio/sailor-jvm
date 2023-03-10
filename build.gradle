@@ -63,7 +63,7 @@ dependencies {
     api 'ch.qos.logback:logback-classic:1.2.11'
     api 'ch.qos.logback.contrib:logback-json-classic:0.1.5'
     api 'ch.qos.logback.contrib:logback-jackson:0.1.5'
-    api 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
+    api 'com.fasterxml.jackson.core:jackson-databind:2.14.6'
 }
 
 jar {
