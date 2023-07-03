@@ -1,3 +1,6 @@
+## 4.0.1 (July 14, 2023) 
+  * Replaced jakarta.json with org.eclipse.parsson
+
 ## 4.0.0 (February 14 ♥, 2022) 
   * [Migrate from javax.json to jakarta.json](https://github.com/elasticio/elasticio/issues/6744)
     * Backward incompatible changes. Replaced `javax.json` with `org.glassfish:jakarta.json:2.0.1`
