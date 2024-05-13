@@ -319,6 +319,7 @@ public class HttpUtils {
 
         @Override
         public void authorize(HttpUriRequest request) {
+            logger.info("setting up basic auth");
 
             try {
                 final Header header = new BasicScheme()
