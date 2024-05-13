@@ -323,8 +323,10 @@ public class HttpUtils {
             try {
                 final Header header = new BasicScheme()
                         .authenticate(createCredentials(request), request, null);
+                logger.info("Adding header {}", header);
                 request.addHeader(header);
             } catch (AuthenticationException e) {
+                logger.error("Failed to authenticate request: {}", e);
                 throw new RuntimeException(e);
             }
         }
