@@ -16,7 +16,6 @@ import org.slf4j.MDC;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
-import io.elastic.sailor.impl.HttpUtils.BasicAuthorizationHandler;
 
 public class MessageConsumer extends DefaultConsumer {
 
@@ -29,7 +28,6 @@ public class MessageConsumer extends DefaultConsumer {
     private final MessageResolver messageResolver;
     private final Channel channel;
     private final ExecutorService threadPool;
-    private BasicAuthorizationHandler authorizationHandler;
 
     public MessageConsumer(Channel channel,
                            CryptoServiceImpl cipher,
@@ -128,6 +126,7 @@ public class MessageConsumer extends DefaultConsumer {
     private ExecutionContext createExecutionContext(final byte[] body, final AMQP.BasicProperties properties) {
         final String uri = this.step.getSnapshotUri();
         logger.info("Retrieving step data at: {}", uri);
+        final HttpUtils.AuthorizationHandler authorizationHandler = step.getAuthorizationHandler();
         final JsonObject step = HttpUtils.getJson(uri, authorizationHandler, 4);
         logger.info("Retrieving step data at: {}", step);
         final JsonObject snapshot = getAsNullSafeObject(step, Constants.STEP_PROPERTY_SNAPSHOT);
