@@ -28,7 +28,8 @@ public class MessageProcessorImpl implements MessageProcessor {
         final Message incomingMessage = executionContext.getMessage();
         final Step step = executionContext.getStep();
         final JsonObject cfg = step.getCfg();
-        final JsonObject snapshot = step.getSnapshot();
+
+        final JsonObject snapshot = executionContext.getSnapshot();
 
         // make data callback
         final CountingCallback dataCallback = emitterCallbackFactory.createDataCallback(executionContext);

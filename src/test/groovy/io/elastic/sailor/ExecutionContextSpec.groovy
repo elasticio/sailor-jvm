@@ -2,6 +2,7 @@ package io.elastic.sailor
 
 import io.elastic.api.JSON
 import io.elastic.api.Message
+import jakarta.json.JsonObject
 import spock.lang.Specification
 
 import jakarta.json.Json
@@ -22,7 +23,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -51,7 +52,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -83,7 +84,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -117,7 +118,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 msg,
                 props,
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
         when:
         def headers = ctx.buildDefaultHeaders()
@@ -149,7 +150,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 msg,
                 props,
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
         def uuid = UUID.randomUUID()
 
         when:
@@ -190,7 +191,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -216,7 +217,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -255,7 +256,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -314,7 +315,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 new Message.Builder().passthrough(passthroughSoFar).build(),
                 Utils.buildAmqpProperties(originalHeaders),
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
         when:
         def result = ctx.createPublisheableMessage(emittedMsg)
@@ -362,7 +363,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -411,7 +412,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)
@@ -481,7 +482,7 @@ class ExecutionContextSpec extends Specification {
                 new byte[0],
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),
-                new ContainerContext());
+                new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
         when:
         def result = ctx.createPublisheableMessage(emittedMessage)

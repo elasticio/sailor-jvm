@@ -12,7 +12,7 @@ public class TestUtils {
                 .add("function", functionName)
                 .add("snapshot", Json.createObjectBuilder().add("timestamp", "19700101").build())
                 .build();
-        return new Step(step, putIncomingMessageIntoPassThrough);
+        return new Step(step, "", putIncomingMessageIntoPassThrough);
     }
 
     public static Step createStep() {

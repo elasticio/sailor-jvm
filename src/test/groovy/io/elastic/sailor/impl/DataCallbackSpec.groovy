@@ -2,6 +2,7 @@ package io.elastic.sailor.impl
 
 import io.elastic.api.Message
 import io.elastic.sailor.*
+import jakarta.json.JsonObject
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -15,7 +16,7 @@ class DataCallbackSpec extends Specification {
     CryptoServiceImpl crypto = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 
     ExecutionContext ctx = new ExecutionContext(
-            TestUtils.createStep(), new byte[0], new Message.Builder().build(), Utils.buildAmqpProperties([:]), new ContainerContext())
+            TestUtils.createStep(), new byte[0], new Message.Builder().build(), Utils.buildAmqpProperties([:]), new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT)
 
     def callback = new DataCallback(ctx, messagePublisher, crypto, messageResolver, "aRoutingKey", false, MessageEncoding.BASE64)
 

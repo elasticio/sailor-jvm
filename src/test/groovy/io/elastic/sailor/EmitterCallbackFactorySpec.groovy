@@ -4,6 +4,7 @@ import com.google.inject.Guice
 import com.google.inject.Injector
 import io.elastic.api.Message
 import io.elastic.sailor.impl.*
+import jakarta.json.JsonObject
 import spock.lang.Shared
 
 class EmitterCallbackFactorySpec extends ApiAwareSpecification {
@@ -13,7 +14,7 @@ class EmitterCallbackFactorySpec extends ApiAwareSpecification {
     EmitterCallbackFactory factory;
 
     ExecutionContext ctx = new ExecutionContext(
-            TestUtils.createStep(), new byte[0], new Message.Builder().build(), Utils.buildAmqpProperties([:]), new ContainerContext());
+            TestUtils.createStep(), new byte[0], new Message.Builder().build(), Utils.buildAmqpProperties([:]), new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT);
 
     def setupSpec() {
         Injector injector = Guice.createInjector(new SailorModule(), new SailorTestModule(), new AmqpAwareModule());

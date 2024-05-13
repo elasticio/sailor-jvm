@@ -9,11 +9,14 @@ import io.elastic.api.Function;
 import io.elastic.api.Message;
 import io.elastic.sailor.*;
 
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
+import io.elastic.sailor.impl.HttpUtils.BasicAuthorizationHandler;
 
 public class MessageConsumer extends DefaultConsumer {
 
@@ -26,6 +29,7 @@ public class MessageConsumer extends DefaultConsumer {
     private final MessageResolver messageResolver;
     private final Channel channel;
     private final ExecutorService threadPool;
+    private BasicAuthorizationHandler authorizationHandler;
 
     public MessageConsumer(Channel channel,
                            CryptoServiceImpl cipher,
@@ -122,12 +126,26 @@ public class MessageConsumer extends DefaultConsumer {
     }
 
     private ExecutionContext createExecutionContext(final byte[] body, final AMQP.BasicProperties properties) {
-
+        final String uri = this.step.getSnapshotUri();
+        logger.info("Retrieving step data at: {}", uri);
+        final JsonObject step = HttpUtils.getJson(uri, authorizationHandler, 4);
+        final JsonObject snapshot = getAsNullSafeObject(step, Constants.STEP_PROPERTY_SNAPSHOT);
         final Message message = messageResolver.materialize(body, properties);
-
-        return new ExecutionContext(this.step, body, message, properties, this.containerContext);
+        return new ExecutionContext(this.step, body, message, properties, this.containerContext, snapshot);
     }
 
+
+    private JsonObject getAsNullSafeObject(
+            final JsonObject data, final String name) {
+
+        final JsonObject value = data.getJsonObject(name);
+
+        if (value != null) {
+            return value;
+        } else {
+            return Json.createObjectBuilder().build();
+        }
+    }
 
     private void ackOrReject(ExecutionStats stats, long deliveryTag) throws IOException {
         logger.info("Execution stats: {}", stats);
