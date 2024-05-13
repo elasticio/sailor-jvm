@@ -196,13 +196,9 @@ public class HttpUtils {
         logger.info("Sending {} request to {}", request.getMethod(), request.getURI().getPath());
         try {
             authorizationHandler.authorize(request);
-            logger.info("Got 1");
             final CloseableHttpResponse response = httpClient.execute(request);
-            logger.info("Got 2", response);
             final StatusLine statusLine = response.getStatusLine();
-            logger.info("Got 3", statusLine);
             final int statusCode = statusLine.getStatusCode();
-            logger.info("Got {} response", statusCode);
             if (statusCode >= 400) {
                 throw new UnexpectedStatusCodeException(statusCode);
             }
@@ -220,7 +216,6 @@ public class HttpUtils {
             return result;
 
         } catch (Exception e) {
-            logger.error("Failed to send request: {}", e);
             throw new RuntimeException(e);
         } finally {
             try {
@@ -319,15 +314,12 @@ public class HttpUtils {
 
         @Override
         public void authorize(HttpUriRequest request) {
-            logger.info("setting up basic auth");
 
             try {
                 final Header header = new BasicScheme()
                         .authenticate(createCredentials(request), request, null);
-                logger.info("Adding header {}", header);
                 request.addHeader(header);
             } catch (AuthenticationException e) {
-                logger.error("Failed to authenticate request: {}", e);
                 throw new RuntimeException(e);
             }
         }

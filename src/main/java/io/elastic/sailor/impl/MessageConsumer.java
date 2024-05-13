@@ -125,10 +125,8 @@ public class MessageConsumer extends DefaultConsumer {
 
     private ExecutionContext createExecutionContext(final byte[] body, final AMQP.BasicProperties properties) {
         final String uri = this.step.getSnapshotUri();
-        logger.info("Retrieving step data at: {}", uri);
         final HttpUtils.AuthorizationHandler authorizationHandler = step.getAuthorizationHandler();
         final JsonObject step = HttpUtils.getJson(uri, authorizationHandler, 4);
-        logger.info("Retrieving step data at: {}", step);
         final JsonObject snapshot = getAsNullSafeObject(step, Constants.STEP_PROPERTY_SNAPSHOT);
         final Message message = messageResolver.materialize(body, properties);
         return new ExecutionContext(this.step, body, message, properties, this.containerContext, snapshot);
