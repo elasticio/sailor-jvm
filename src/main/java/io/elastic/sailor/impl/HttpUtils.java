@@ -217,6 +217,7 @@ public class HttpUtils {
             return result;
 
         } catch (Exception e) {
+            logger.error("Failed to send request: {}", e);
             throw new RuntimeException(e);
         } finally {
             try {
