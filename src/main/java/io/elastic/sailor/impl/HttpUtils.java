@@ -196,8 +196,11 @@ public class HttpUtils {
         logger.info("Sending {} request to {}", request.getMethod(), request.getURI().getPath());
         try {
             authorizationHandler.authorize(request);
+            logger.info("Got 1");
             final CloseableHttpResponse response = httpClient.execute(request);
+            logger.info("Got 2", response);
             final StatusLine statusLine = response.getStatusLine();
+            logger.info("Got 3", statusLine);
             final int statusCode = statusLine.getStatusCode();
             logger.info("Got {} response", statusCode);
             if (statusCode >= 400) {
