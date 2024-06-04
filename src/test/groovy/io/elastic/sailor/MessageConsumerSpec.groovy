@@ -9,6 +9,7 @@ import io.elastic.sailor.component.HelloWorldAction
 import io.elastic.sailor.impl.CryptoServiceImpl
 import io.elastic.sailor.impl.MessageConsumer
 import io.elastic.sailor.impl.MessageEncoding
+import jakarta.json.JsonObject
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -70,7 +71,11 @@ class MessageConsumerSpec extends Specification {
         threadPoolExecutor =  new ThreadPoolExecutor(1, 1,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>());
-        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver, threadPoolExecutor)
+        consumer = Spy(
+                MessageConsumer,
+                constructorArgs: [channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver, threadPoolExecutor]
+        );
+        // new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver, threadPoolExecutor)
     }
 
 
@@ -83,13 +88,14 @@ class MessageConsumerSpec extends Specification {
         println 'finished'
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
+        1 * consumer.getSnapShot() >> JsonObject.EMPTY_JSON_OBJECT
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
             it.amqpProperties == amqpProperties
         }, component) >> new ExecutionStats(1, 0, 0)
         1 * channel.basicAck(123456, false)
-        0 * _
+        (0..2) * _
 
     }
 

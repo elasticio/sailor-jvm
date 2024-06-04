@@ -123,11 +123,15 @@ public class MessageConsumer extends DefaultConsumer {
         }
     }
 
-    private ExecutionContext createExecutionContext(final byte[] body, final AMQP.BasicProperties properties) {
+    public JsonObject getSnapShot() {
         final String uri = this.step.getSnapshotUri();
         final HttpUtils.AuthorizationHandler authorizationHandler = step.getAuthorizationHandler();
         final JsonObject step = HttpUtils.getJson(uri, authorizationHandler, 4);
-        final JsonObject snapshot = getAsNullSafeObject(step, Constants.STEP_PROPERTY_SNAPSHOT);
+        return getAsNullSafeObject(step, Constants.STEP_PROPERTY_SNAPSHOT);
+    }
+
+    private ExecutionContext createExecutionContext(final byte[] body, final AMQP.BasicProperties properties) {
+        final JsonObject snapshot = getSnapShot();
         final Message message = messageResolver.materialize(body, properties);
         return new ExecutionContext(this.step, body, message, properties, this.containerContext, snapshot);
     }

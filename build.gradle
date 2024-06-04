@@ -47,6 +47,7 @@ repositories {
 
 dependencies {
     testRuntimeOnly 'org.codehaus.groovy:groovy-all:3.0.13'
+    testImplementation 'cglib:cglib-nodep:3.3.0'
     testImplementation 'org.spockframework:spock-junit4:2.2-groovy-3.0'
     testImplementation 'org.spockframework:spock-core:2.2-groovy-3.0'
     testImplementation 'com.github.rest-driver:rest-client-driver:2.0.0'
@@ -77,6 +78,7 @@ jar {
     }
 }
 test {
+    jvmArgs '--add-opens', 'java.base/java.lang=ALL-UNNAMED'
    useJUnitPlatform()
 }
 
