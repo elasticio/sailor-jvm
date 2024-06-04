@@ -108,13 +108,14 @@ class MessageConsumerSpec extends Specification {
         threadPoolExecutor.awaitTermination(5000, TimeUnit.SECONDS);
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
+        1 * consumer.getSnapShot() >> JsonObject.EMPTY_JSON_OBJECT
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
             it.amqpProperties == amqpProperties
         }, component) >> new ExecutionStats(0, 1, 0)
         1 * channel.basicReject(123456, false)
-        0 * _
+        (0..2) * _
 
     }
 
@@ -127,6 +128,7 @@ class MessageConsumerSpec extends Specification {
 
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
+        1 * consumer.getSnapShot() >> JsonObject.EMPTY_JSON_OBJECT
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
