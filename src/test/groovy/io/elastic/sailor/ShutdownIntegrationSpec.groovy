@@ -125,7 +125,7 @@ class ShutdownIntegrationSpec extends Specification {
 
         publishChannel.queuePurge(stepCfg.getString(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
 
-        server = new Server(8182);
+        server = new Server(8183);
 
         server.setHandler(new AbstractHandler() {
             @Override

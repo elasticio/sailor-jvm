@@ -2,6 +2,7 @@ package io.elastic.sailor
 
 import io.elastic.api.JSON
 import io.elastic.api.Message
+import io.elastic.sailor.impl.HttpUtils
 import jakarta.json.JsonObject
 import spock.lang.Specification
 
@@ -252,7 +253,7 @@ class ExecutionContextSpec extends Specification {
                 .build()
 
         ExecutionContext ctx = new ExecutionContext(
-                new Step(step),
+                new Step(step, "", new HttpUtils.BasicAuthorizationHandler("homer.simpson@example.org", "secret")),
                 new byte[0],
                 new Message.Builder().build(),
                 Utils.buildAmqpProperties(originalHeaders),
@@ -311,7 +312,7 @@ class ExecutionContextSpec extends Specification {
                 .build()
 
         ExecutionContext ctx = new ExecutionContext(
-                new Step(step),
+                new Step(step, "", new HttpUtils.BasicAuthorizationHandler("homer.simpson@example.org", "secret")),
                 new byte[0],
                 new Message.Builder().passthrough(passthroughSoFar).build(),
                 Utils.buildAmqpProperties(originalHeaders),
@@ -359,7 +360,7 @@ class ExecutionContextSpec extends Specification {
                 .build()
 
         ExecutionContext ctx = new ExecutionContext(
-                new Step(step, true),
+                new Step(step, "", new HttpUtils.BasicAuthorizationHandler("homer.simpson@example.org", "secret") ,true),
                 new byte[0],
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),
@@ -408,7 +409,7 @@ class ExecutionContextSpec extends Specification {
                 .build()
 
         ExecutionContext ctx = new ExecutionContext(
-                new Step(step, true),
+                new Step(step, "", new HttpUtils.BasicAuthorizationHandler("homer.simpson@example.org", "secret"), true),
                 new byte[0],
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),
@@ -478,7 +479,7 @@ class ExecutionContextSpec extends Specification {
                 .build()
 
         ExecutionContext ctx = new ExecutionContext(
-                new Step(step, true),
+                new Step(step, "", new HttpUtils.BasicAuthorizationHandler("homer.simpson@example.org", "secret"), true),
                 new byte[0],
                 incomingMessage,
                 Utils.buildAmqpProperties(originalHeaders),

@@ -3,6 +3,7 @@ package io.elastic.sailor.impl
 import io.elastic.api.JSON
 import io.elastic.sailor.ApiClient
 import io.elastic.sailor.Step
+import jakarta.json.JsonObject
 import spock.lang.Specification
 
 import jakarta.json.Json
@@ -18,7 +19,7 @@ class UpdateKeysCallbackSpec extends Specification {
             "\"config\":{\"_account\":\"5559edd38968ec0736000003\"}," +
             "\"snapshot\":{\"timestamp\":\"19700101\"}}")
 
-    def callback = new UpdateKeysCallback(new Step(step), apiClient)
+    def callback = new UpdateKeysCallback(new Step(step, "", new HttpUtils.BasicAuthorizationHandler("homer.simpson@example.org", "secret")), apiClient)
 
     def "should updateAccount successfully"() {
 
