@@ -17,6 +17,7 @@ import jakarta.json.Json
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import org.mockito.Mockito
 
 class MessageConsumerSpec extends Specification {
 
@@ -71,16 +72,15 @@ class MessageConsumerSpec extends Specification {
         threadPoolExecutor =  new ThreadPoolExecutor(1, 1,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>());
-        consumer = Spy(
-                MessageConsumer,
-                constructorArgs: [channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver, threadPoolExecutor]
-        );
-        // new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver, threadPoolExecutor)
+        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver, threadPoolExecutor)
+        consumer = Mockito.spy(consumer)
+        Mockito.doReturn(JsonObject.EMPTY_JSON_OBJECT).when(consumer).getSnapShot()
     }
 
 
     def "should decrypt and process message successfully"() {
-
+        given:
+        Mockito.when(consumer.getSnapShot()).thenReturn(JsonObject.EMPTY_JSON_OBJECT)
         when:
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage);
         threadPoolExecutor.shutdown();
@@ -88,14 +88,13 @@ class MessageConsumerSpec extends Specification {
         println 'finished'
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
-        1 * consumer.getSnapShot() >> JsonObject.EMPTY_JSON_OBJECT
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
             it.amqpProperties == amqpProperties
         }, component) >> new ExecutionStats(1, 0, 0)
         1 * channel.basicAck(123456, false)
-        (0..2) * _
+        0 * _
 
     }
 
@@ -108,14 +107,13 @@ class MessageConsumerSpec extends Specification {
         threadPoolExecutor.awaitTermination(5000, TimeUnit.SECONDS);
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
-        1 * consumer.getSnapShot() >> JsonObject.EMPTY_JSON_OBJECT
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
             it.amqpProperties == amqpProperties
         }, component) >> new ExecutionStats(0, 1, 0)
         1 * channel.basicReject(123456, false)
-        (0..2) * _
+        0 * _
 
     }
 
@@ -128,7 +126,6 @@ class MessageConsumerSpec extends Specification {
 
         then:
         1 * messageResolver.materialize(encryptedMessage, amqpProperties) >> msg
-        1 * consumer.getSnapShot() >> JsonObject.EMPTY_JSON_OBJECT
         1 * processor.processMessage({
             assert JSON.stringify(it.getMessage().getBody()) == '{"content":"Hello world!"}'
             assert it.step != null
