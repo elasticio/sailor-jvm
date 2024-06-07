@@ -150,7 +150,7 @@ class FlowControlIntegrationSpec extends Specification {
 
         publishChannel.queuePurge(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
 
-        server = new Server(8183);
+        server = new Server(8182);
         server.setHandler(new AbstractHandler() {
             @Override
             public void handle(String target, Request baseRequest,
