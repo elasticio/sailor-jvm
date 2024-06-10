@@ -16,11 +16,19 @@ public final class Step {
     private final boolean putIncomingMessageIntoPassThrough;
     private final HttpUtils.AuthorizationHandler authorizationHandler;
 
-    public Step(final JsonObject data, String snapshotUri, HttpUtils.AuthorizationHandler authorizationHandler) {
+    public Step(
+            final JsonObject data,
+            String snapshotUri,
+            HttpUtils.AuthorizationHandler authorizationHandler
+    ) {
         this(data, snapshotUri, authorizationHandler, false);
     }
 
-    public Step(final JsonObject data, String snapshotUri, HttpUtils.AuthorizationHandler authorizationHandler, final boolean putIncomingMessageIntoPassThrough) {
+    public Step(
+            final JsonObject data, String snapshotUri,
+            HttpUtils.AuthorizationHandler authorizationHandler,
+            final boolean putIncomingMessageIntoPassThrough
+    ) {
         this.id = getAsRequiredString(data, Constants.STEP_PROPERTY_ID);
         this.compId = getAsRequiredString(data, Constants.STEP_PROPERTY_COMP_ID);
         this.function = getAsRequiredString(data, Constants.STEP_PROPERTY_FUNCTION);

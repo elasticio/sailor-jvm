@@ -40,7 +40,6 @@ class ApiClientImplSpec extends Specification {
         step.compId == "comp_1"
         step.function == "my_function"
         step.cfg.toString() == "{}"
-        // step.snapshot.toString() == "{}"
     }
 
     def "should updateAccount successfully"() {

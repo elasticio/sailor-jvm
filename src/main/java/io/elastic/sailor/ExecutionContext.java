@@ -28,7 +28,9 @@ public class ExecutionContext {
             byte[] rawMessage,
             final Message message,
             final AMQP.BasicProperties amqpProperties,
-            final ContainerContext containerContext, JsonObject snapshot) {
+            final ContainerContext containerContext,
+            JsonObject snapshot
+    ) {
         this.step = step;
         this.rawMessage = rawMessage;
         this.message = message;
