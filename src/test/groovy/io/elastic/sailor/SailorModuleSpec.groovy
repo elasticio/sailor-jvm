@@ -24,6 +24,5 @@ class SailorModuleSpec extends ApiAwareSpecification {
         step.compId == 'testcomponent'
         step.function == 'test'
         step.cfg.toString() == '{"apiKey":"secret"}'
-        step.snapshot.toString() == '{"timestamp":"19700101"}'
     }
 }

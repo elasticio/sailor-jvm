@@ -45,7 +45,7 @@ public class ApiClientImpl implements ApiClient {
 
         final JsonObject step = HttpUtils.getJson(uri, authorizationHandler, this.retryCount);
 
-        return new Step(step, putIncomingMessageIntoPassThrough);
+        return new Step(step, uri, authorizationHandler, putIncomingMessageIntoPassThrough);
     }
 
     @Override

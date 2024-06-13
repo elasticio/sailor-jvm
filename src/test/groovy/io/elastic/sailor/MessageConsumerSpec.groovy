@@ -9,6 +9,7 @@ import io.elastic.sailor.component.HelloWorldAction
 import io.elastic.sailor.impl.CryptoServiceImpl
 import io.elastic.sailor.impl.MessageConsumer
 import io.elastic.sailor.impl.MessageEncoding
+import jakarta.json.JsonObject
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -16,6 +17,7 @@ import jakarta.json.Json
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import org.mockito.Mockito
 
 class MessageConsumerSpec extends Specification {
 
@@ -71,11 +73,14 @@ class MessageConsumerSpec extends Specification {
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>());
         consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver, threadPoolExecutor)
+        consumer = Mockito.spy(consumer)
+        Mockito.doReturn(JsonObject.EMPTY_JSON_OBJECT).when(consumer).getSnapShot()
     }
 
 
     def "should decrypt and process message successfully"() {
-
+        given:
+        Mockito.when(consumer.getSnapShot()).thenReturn(JsonObject.EMPTY_JSON_OBJECT)
         when:
         consumer.handleDelivery(consumerTag, envelope, amqpProperties, encryptedMessage);
         threadPoolExecutor.shutdown();

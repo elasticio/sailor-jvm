@@ -3,6 +3,7 @@ package io.elastic.sailor.impl
 import io.elastic.api.HttpReply
 import io.elastic.api.Message
 import io.elastic.sailor.*
+import jakarta.json.JsonObject
 import spock.lang.Shared
 import spock.lang.Specification
 
@@ -14,7 +15,7 @@ class HttpReplyCallbackSpec extends Specification {
     def headers = Utils.buildAmqpProperties(["reply_to": "reply_queue_123"])
 
     def ctx = new ExecutionContext(
-            TestUtils.createStep(), new byte[0], new Message.Builder().build(), headers, new ContainerContext())
+            TestUtils.createStep(), new byte[0], new Message.Builder().build(), headers, new ContainerContext(), JsonObject.EMPTY_JSON_OBJECT)
 
     def callback = new HttpReplyCallback(ctx, publisher, cipher)
 

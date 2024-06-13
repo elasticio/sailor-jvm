@@ -199,7 +199,6 @@ public class HttpUtils {
             final CloseableHttpResponse response = httpClient.execute(request);
             final StatusLine statusLine = response.getStatusLine();
             final int statusCode = statusLine.getStatusCode();
-            logger.info("Got {} response", statusCode);
             if (statusCode >= 400) {
                 throw new UnexpectedStatusCodeException(statusCode);
             }

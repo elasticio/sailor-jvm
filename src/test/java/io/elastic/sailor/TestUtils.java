@@ -1,5 +1,6 @@
 package io.elastic.sailor;
 
+import io.elastic.sailor.impl.HttpUtils;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 
@@ -12,7 +13,7 @@ public class TestUtils {
                 .add("function", functionName)
                 .add("snapshot", Json.createObjectBuilder().add("timestamp", "19700101").build())
                 .build();
-        return new Step(step, putIncomingMessageIntoPassThrough);
+        return new Step(step, "", new HttpUtils.BasicAuthorizationHandler("test", "test") , putIncomingMessageIntoPassThrough);
     }
 
     public static Step createStep() {

@@ -9,6 +9,8 @@ import io.elastic.api.Function;
 import io.elastic.api.Message;
 import io.elastic.sailor.*;
 
+import jakarta.json.Json;
+import jakarta.json.JsonObject;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
@@ -121,13 +123,31 @@ public class MessageConsumer extends DefaultConsumer {
         }
     }
 
-    private ExecutionContext createExecutionContext(final byte[] body, final AMQP.BasicProperties properties) {
-
-        final Message message = messageResolver.materialize(body, properties);
-
-        return new ExecutionContext(this.step, body, message, properties, this.containerContext);
+    public JsonObject getSnapShot() {
+        final String uri = this.step.getSnapshotUri();
+        final HttpUtils.AuthorizationHandler authorizationHandler = step.getAuthorizationHandler();
+        final JsonObject step = HttpUtils.getJson(uri, authorizationHandler, 4);
+        return getAsNullSafeObject(step, Constants.STEP_PROPERTY_SNAPSHOT);
     }
 
+    private ExecutionContext createExecutionContext(final byte[] body, final AMQP.BasicProperties properties) {
+        final JsonObject snapshot = getSnapShot();
+        final Message message = messageResolver.materialize(body, properties);
+        return new ExecutionContext(this.step, body, message, properties, this.containerContext, snapshot);
+    }
+
+
+    private JsonObject getAsNullSafeObject(
+            final JsonObject data, final String name) {
+
+        final JsonObject value = data.getJsonObject(name);
+
+        if (value != null) {
+            return value;
+        } else {
+            return Json.createObjectBuilder().build();
+        }
+    }
 
     private void ackOrReject(ExecutionStats stats, long deliveryTag) throws IOException {
         logger.info("Execution stats: {}", stats);

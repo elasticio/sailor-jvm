@@ -17,18 +17,18 @@ plugins {
     id 'org.owasp.dependencycheck' version '8.0.2'
 }
 group = 'io.elastic'
-version = '4.0.1'
+version = '4.0.2-SNAPSHOT'
 sourceCompatibility = '1.8'
 
-dependencyCheck {
-    format = 'ALL'
-    // Dependency Check script will fail in case there are 8.0+ vulnerabilities.
-    // It should be configured to 7 (high and critical), but so far is not possible as 'jakarta.json-api' library
-    // does not have any updates that solve the problem
-    failBuildOnCVSS = 8
-    suppressionFile = './dependencycheck-base-suppression.xml'
-}
-check.dependsOn dependencyCheckAnalyze
+ dependencyCheck {
+     format = 'ALL'
+     // Dependency Check script will fail in case there are 8.0+ vulnerabilities.
+     // It should be configured to 7 (high and critical), but so far is not possible as 'jakarta.json-api' library
+     // does not have any updates that solve the problem
+     failBuildOnCVSS = 8
+     suppressionFile = './dependencycheck-base-suppression.xml'
+ }
+ check.dependsOn dependencyCheckAnalyze
 
 def isCiEnv = 'true'.equals(System.getenv('CI'))
 def isCiTag = System.getenv('CIRCLE_TAG') != null;
@@ -47,6 +47,8 @@ repositories {
 
 dependencies {
     testRuntimeOnly 'org.codehaus.groovy:groovy-all:3.0.13'
+    testImplementation 'cglib:cglib-nodep:3.3.0'
+    testImplementation 'org.mockito:mockito-core:3.11.2'
     testImplementation 'org.spockframework:spock-junit4:2.2-groovy-3.0'
     testImplementation 'org.spockframework:spock-core:2.2-groovy-3.0'
     testImplementation 'com.github.rest-driver:rest-client-driver:2.0.0'
@@ -77,7 +79,7 @@ jar {
     }
 }
 test {
-    useJUnitPlatform()
+   useJUnitPlatform()
 }
 
 java {

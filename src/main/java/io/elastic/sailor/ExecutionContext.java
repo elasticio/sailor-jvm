@@ -21,18 +21,22 @@ public class ExecutionContext {
     private final Message message;
     private final AMQP.BasicProperties amqpProperties;
     private final ContainerContext containerContext;
+    private final JsonObject snapshot;
 
     public ExecutionContext(
             final Step step,
             byte[] rawMessage,
             final Message message,
             final AMQP.BasicProperties amqpProperties,
-            final ContainerContext containerContext) {
+            final ContainerContext containerContext,
+            JsonObject snapshot
+    ) {
         this.step = step;
         this.rawMessage = rawMessage;
         this.message = message;
         this.amqpProperties = amqpProperties;
         this.containerContext = containerContext;
+        this.snapshot = snapshot;
     }
 
     public Step getStep() {
@@ -104,6 +108,7 @@ public class ExecutionContext {
     public Message getMessage() {
         return message;
     }
+    public JsonObject getSnapshot() { return snapshot; }
 
     public Map<String, Object> getHeaders() {
         return amqpProperties.getHeaders();

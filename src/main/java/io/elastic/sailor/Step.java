@@ -1,5 +1,6 @@
 package io.elastic.sailor;
 
+import io.elastic.sailor.impl.HttpUtils;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonString;
@@ -10,22 +11,32 @@ public final class Step {
     private final String compId;
     private final String function;
     private final JsonObject cfg;
-    private final JsonObject snapshot;
+    private final String snapshotUri;
     private final boolean passThroughRequired;
     private final boolean putIncomingMessageIntoPassThrough;
+    private final HttpUtils.AuthorizationHandler authorizationHandler;
 
-    public Step(final JsonObject data) {
-        this(data, false);
+    public Step(
+            final JsonObject data,
+            String snapshotUri,
+            HttpUtils.AuthorizationHandler authorizationHandler
+    ) {
+        this(data, snapshotUri, authorizationHandler, false);
     }
 
-    public Step(final JsonObject data, final boolean putIncomingMessageIntoPassThrough) {
+    public Step(
+            final JsonObject data, String snapshotUri,
+            HttpUtils.AuthorizationHandler authorizationHandler,
+            final boolean putIncomingMessageIntoPassThrough
+    ) {
         this.id = getAsRequiredString(data, Constants.STEP_PROPERTY_ID);
         this.compId = getAsRequiredString(data, Constants.STEP_PROPERTY_COMP_ID);
         this.function = getAsRequiredString(data, Constants.STEP_PROPERTY_FUNCTION);
         this.cfg = getAsNullSafeObject(data, Constants.STEP_PROPERTY_CFG);
-        this.snapshot = getAsNullSafeObject(data, Constants.STEP_PROPERTY_SNAPSHOT);
+        this.snapshotUri = snapshotUri;
         this.passThroughRequired = data.getBoolean(Constants.STEP_PROPERTY_PASSTHROUGH, false);
         this.putIncomingMessageIntoPassThrough = putIncomingMessageIntoPassThrough;
+        this.authorizationHandler = authorizationHandler;
     }
 
     public String getId() {
@@ -44,8 +55,12 @@ public final class Step {
         return this.cfg;
     }
 
-    public JsonObject getSnapshot() {
-        return this.snapshot;
+    public String getSnapshotUri() {
+        return this.snapshotUri;
+    }
+
+    public HttpUtils.AuthorizationHandler getAuthorizationHandler() {
+        return this.authorizationHandler;
     }
 
     public boolean isPassThroughRequired() {
