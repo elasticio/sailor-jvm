@@ -1,3 +1,6 @@
+## 4.0.2 (April 15, 2024) 
+  * Fix issue [92](https://github.com/elasticio/sailor-jvm/issues/92) to allow arrays to be emitted in the preceding steps
+
 ## 4.0.1 (July 14, 2023) 
   * Replaced jakarta.json with org.eclipse.parsson
 
