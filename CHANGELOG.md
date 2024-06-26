@@ -1,3 +1,6 @@
+## 4.0.2 (June 26, 2024) 
+  * Fixed a [bug](https://github.com/elasticio/sailor-jvm/issues/94) when snapshots are not read correctly when there is more than one execution within a single container
+
 ## 4.0.1 (July 14, 2023) 
   * Replaced jakarta.json with org.eclipse.parsson
 
