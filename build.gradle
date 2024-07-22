@@ -17,7 +17,7 @@ plugins {
     id 'org.owasp.dependencycheck' version '8.0.2'
 }
 group = 'io.elastic'
-version = '4.0.2'
+version = '4.0.3-SNAPSHOT'
 sourceCompatibility = '1.8'
 
  dependencyCheck {
@@ -46,26 +46,26 @@ repositories {
 }
 
 dependencies {
-    testRuntimeOnly 'org.codehaus.groovy:groovy-all:3.0.13'
+    testRuntimeOnly 'org.codehaus.groovy:groovy-all:3.0.22'
     testImplementation 'cglib:cglib-nodep:3.3.0'
-    testImplementation 'org.mockito:mockito-core:3.11.2'
+    testImplementation 'org.mockito:mockito-core:3.12.4'
     testImplementation 'org.spockframework:spock-junit4:2.2-groovy-3.0'
     testImplementation 'org.spockframework:spock-core:2.2-groovy-3.0'
-    testImplementation 'com.github.rest-driver:rest-client-driver:2.0.0'
-    testImplementation 'org.eclipse.jetty:jetty-server:9.4.1.v20170120'
-    testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:2.33.2'
+    testImplementation 'com.github.rest-driver:rest-client-driver:2.0.1'
+    testImplementation 'org.eclipse.jetty:jetty-server:9.4.55.v20240627'
+    testImplementation 'com.github.tomakehurst:wiremock-jre8-standalone:2.35.2'
 
-    api 'org.eclipse.parsson:parsson:1.1.2'
-    api 'com.rabbitmq:amqp-client:5.9.0'
-    api 'commons-codec:commons-codec:1.15'
-    api 'commons-io:commons-io:2.11.0'
+    api 'org.eclipse.parsson:parsson:1.1.6'
+    api 'com.rabbitmq:amqp-client:5.21.0'
+    api 'commons-codec:commons-codec:1.17.1'
+    api 'commons-io:commons-io:2.16.1'
     api 'org.apache.httpcomponents:httpclient:4.5.14'
     api 'com.google.inject:guice:5.1.0'
     api 'com.google.inject.extensions:guice-assistedinject:5.1.0'
-    api 'ch.qos.logback:logback-classic:1.2.11'
+    api 'ch.qos.logback:logback-classic:1.5.6'
     api 'ch.qos.logback.contrib:logback-json-classic:0.1.5'
     api 'ch.qos.logback.contrib:logback-jackson:0.1.5'
-    api 'com.fasterxml.jackson.core:jackson-databind:2.14.2'
+    api 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
 }
 
 jar {
