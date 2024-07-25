@@ -15,6 +15,7 @@ plugins {
     id 'maven-publish'
     id 'signing'
     id 'org.owasp.dependencycheck' version '8.0.2'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 group = 'io.elastic'
 version = '4.0.3-SNAPSHOT'
@@ -147,6 +148,14 @@ publishing {
             }
         }
     }
+
+    // A check to disable publishing if it's a snapshot version
+    if (!isReleaseBuild) {
+        println 'This is a SNAPSHOT version. Publishing to the Maven Snapshot will be skipped.'
+        tasks.withType(PublishToMavenRepository) { task ->
+            task.enabled = false
+        }
+    }
 }
 
 signing {
@@ -174,7 +183,7 @@ task postPublishCopyFilesFromMavelLocal(type: Copy) {
     dependsOn publishToMavenLocal
     def homeDir = System.getProperty("user.home")
     def sourceDir = "${homeDir}/.m2/repository/io/elastic/sailor-jvm/${project.version}"
-    from fileTree(dir: sourceDir, include: '**/*')
+    from fileTree(dir: sourceDir, include: '**/*', exclude: 'maven-metadata-local.xml')
     into "${projectDir}/build/sailorReleaseBundle"
 }
 
@@ -198,3 +207,9 @@ postPublishCreateBundleJarFromMavelLocal.mustRunAfter postPublishCopyFilesFromMa
 
 // Add the custom tasks to the lifecycle
 publishToMavenLocal.finalizedBy postPublishActions
+
+shadowJar {
+    archiveBaseName.set('sailor-jvm')
+    archiveVersion.set(project.version.toString())
+    archiveClassifier.set('')
+}
