@@ -1,4 +1,4 @@
-## 4.0.3 (July 25, 2024) 
+## 4.0.3 (July 31, 2024)
   * Bumped all the dependencies to its most recent minor versions
 
 ## 4.0.2 (June 26, 2024) 
