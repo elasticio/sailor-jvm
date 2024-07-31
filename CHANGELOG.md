@@ -1,3 +1,6 @@
+## 4.0.3 (July 31, 2024)
+  * Bumped all the dependencies to its most recent minor versions
+
 ## 4.0.2 (June 26, 2024) 
   * Fixed a [bug](https://github.com/elasticio/sailor-jvm/issues/94) when snapshots are not read correctly when there is more than one execution within a single container
 
