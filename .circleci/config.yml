@@ -7,6 +7,8 @@ jobs:
   audit:
     working_directory: ~/sailor-jvm
     executor: docker
+    docker:
+      - image: amazoncorretto:17-alpine-jdk
     steps:
       - checkout
       - run:
