@@ -1,12 +1,12 @@
 version: 2.1
 executors:
-  docker-executor:
+  docker:
     docker:
       - image: cimg/base:stable
 jobs:
   audit:
     working_directory: ~/sailor-jvm
-    executor: docker-executor
+    executor: docker
     steps:
       - checkout
       - run:
