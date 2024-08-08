@@ -38,10 +38,9 @@ jobs:
     steps:
       - checkout
       - run: |
-          TERM=${TERM:-dumb} ./gradlew clean build shadowJar
+          TERM=${TERM:-dumb} ./gradlew shadowJar
       - store_artifacts:
-          path: build/libs/*.jar
-          destination: jars
+          path: ~/sailor-jvm/build/libs/sailor-jvm-*-SNAPSHOT.jar
   test_and_build_release:
     executor: docker
     docker:
@@ -50,10 +49,9 @@ jobs:
     steps:
       - checkout
       - run: |
-          TERM=${TERM:-dumb} ./gradlew clean publishToMavenLocal
+          TERM=${TERM:-dumb} ./gradlew publishToMavenLocal
       - store_artifacts:
-          path: build/libs/*.jar
-          destination: jars
+          path: ~/sailor-jvm/build/libs/*.jar
 workflows:
   nightly:
     triggers:
