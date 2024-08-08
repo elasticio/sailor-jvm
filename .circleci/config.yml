@@ -40,7 +40,7 @@ jobs:
       - run: |
           TERM=${TERM:-dumb} ./gradlew shadowJar
       - store_artifacts:
-          path: ~/sailor-jvm/build/libs/sailor-jvm-*-SNAPSHOT.jar
+          path: ~/sailor-jvm/build/libs
   test_and_build_release:
     executor: docker
     docker:
@@ -51,7 +51,7 @@ jobs:
       - run: |
           TERM=${TERM:-dumb} ./gradlew publishToMavenLocal
       - store_artifacts:
-          path: ~/sailor-jvm/build/libs/*.jar
+          path: ~/sailor-jvm/build/libs/
 workflows:
   nightly:
     triggers:
