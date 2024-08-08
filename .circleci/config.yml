@@ -24,44 +24,34 @@ jobs:
     steps:
       - checkout
       - run:
-        name: Run Tests
-        command: TERM=${TERM:-dumb} ./gradlew clean test
+          name: Run Tests
+          command: TERM=${TERM:-dumb} ./gradlew clean test
       - store_test_results:
           path: build/reports
-  test_and_publish_snapshot:
+  test_and_build_snapshot:
     executor: docker
     docker:
       - image: amazoncorretto:17-alpine-jdk
     working_directory: ~/sailor-jvm
     steps:
       - checkout
-      - run:
-          name: Build Fat JAR SNAPSHOT
-          command: TERM=${TERM:-dumb} ./gradlew clean build shadowJar
+      - run: |
+          TERM=${TERM:-dumb} ./gradlew clean build shadowJar
       - store_artifacts:
           path: build/libs/*.jar
           destination: jars
-    filters:
-      branches:
-        ignore: master
-  test_and_publish_release:
+  test_and_build_release:
     executor: docker
     docker:
       - image: amazoncorretto:17-alpine-jdk
     working_directory: ~/sailor-jvm
     steps:
       - checkout
-      - run:
-          name: Publish to Maven Local
-          command: TERM=${TERM:-dumb} ./gradlew clean publishToMavenLocal
+      - run: |
+          TERM=${TERM:-dumb} ./gradlew clean publishToMavenLocal
       - store_artifacts:
           path: build/libs/*.jar
           destination: jars
-    filters:
-      branches:
-        only: master
-      tags:
-        only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
 workflows:
   nightly:
     triggers:
@@ -74,16 +64,21 @@ workflows:
     jobs:
       - audit:
           name: "Audit dependencies"
-  test_and_publish_snapshot:
+  build_snapshot:
     jobs:
       - audit
       - test:
           matrix:
             parameters:
               jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
+      - test_and_build_snapshot:
           requires:
             - audit
-  test_and_publish_release:
+            - test
+          filters:
+            branches:
+              ignore: master
+  build_release:
     jobs:
       - audit:
           filters:
@@ -95,10 +90,17 @@ workflows:
           matrix:
             parameters:
               jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
-          requires:
-            - audit
           filters:
             branches:
               ignore: /.*/
+            tags:
+              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
+      - test_and_build_release:
+          requires:
+            - audit
+            - test
+          filters:
+            branches:
+              only: master
             tags:
               only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
