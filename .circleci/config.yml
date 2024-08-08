@@ -72,14 +72,11 @@ workflows:
           matrix:
             parameters:
               jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
-      - publish:
-          name: "Publish SNAPSHOT version to Maven"
           requires:
-            - test
-            - "Audit dependencies"
-          filters:
-            branches:
-              ignore: master
+            - audit
+    filters:
+      branches:
+        ignore: master
   test_and_publish_release:
     jobs:
       - audit:
@@ -99,13 +96,10 @@ workflows:
             parameters:
               jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
 
-      - publish:
-          name: "Publish release version to Maven"
-          filters:
-            branches:
-              only: master
-            tags:
-              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
           requires:
-            - test
-            - "Audit dependencies"
+            - audit
+    filters:
+      branches:
+        only: master
+      tags:
+        only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
