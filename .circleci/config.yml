@@ -1,14 +1,12 @@
 version: 2.1
 executors:
-  docker:
+  docker-executor:
     docker:
       - image: cimg/base:stable
 jobs:
   audit:
     working_directory: ~/sailor-jvm
-    executor: docker
-    docker:
-      - image: amazoncorretto:17-alpine-jdk
+    executor: docker-executor
     steps:
       - checkout
       - run:
@@ -80,23 +78,22 @@ workflows:
   test_and_publish_release:
     jobs:
       - audit:
-#          name: "Audit dependencies"
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
       - test:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
           matrix:
             parameters:
               jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
           requires:
             - audit
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
     filters:
       branches:
         only: master
