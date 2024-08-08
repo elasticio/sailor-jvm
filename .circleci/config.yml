@@ -66,8 +66,8 @@ workflows:
           name: "Audit dependencies"
   test_and_publish_snapshot:
     jobs:
-      - audit:
-          name: "Audit dependencies"
+      - audit
+#          name: "Audit dependencies"
       - test:
           matrix:
             parameters:
@@ -80,7 +80,7 @@ workflows:
   test_and_publish_release:
     jobs:
       - audit:
-          name: "Audit dependencies"
+#          name: "Audit dependencies"
           filters:
             branches:
               ignore: /.*/
@@ -95,7 +95,6 @@ workflows:
           matrix:
             parameters:
               jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
-
           requires:
             - audit
     filters:
