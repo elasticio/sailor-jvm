@@ -23,7 +23,9 @@ jobs:
       - image: rabbitmq:3.8.3
     steps:
       - checkout
-      - run: TERM=${TERM:-dumb} ./gradlew clean test
+      - run:
+        name: Run Tests
+        command: TERM=${TERM:-dumb} ./gradlew clean test
       - store_test_results:
           path: build/reports
   test_and_publish_snapshot:
@@ -33,11 +35,15 @@ jobs:
     working_directory: ~/sailor-jvm
     steps:
       - checkout
-      - run: |
-          TERM=${TERM:-dumb} ./gradlew clean build shadowJar
+      - run:
+          name: Build Fat JAR SNAPSHOT
+          command: TERM=${TERM:-dumb} ./gradlew clean build shadowJar
       - store_artifacts:
           path: build/libs/*.jar
           destination: jars
+    filters:
+      branches:
+        ignore: master
   test_and_publish_release:
     executor: docker
     docker:
@@ -45,11 +51,17 @@ jobs:
     working_directory: ~/sailor-jvm
     steps:
       - checkout
-      - run: |
-          TERM=${TERM:-dumb} ./gradlew clean publishToMavenLocal
+      - run:
+          name: Publish to Maven Local
+          command: TERM=${TERM:-dumb} ./gradlew clean publishToMavenLocal
       - store_artifacts:
           path: build/libs/*.jar
           destination: jars
+    filters:
+      branches:
+        only: master
+      tags:
+        only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
 workflows:
   nightly:
     triggers:
@@ -65,16 +77,12 @@ workflows:
   test_and_publish_snapshot:
     jobs:
       - audit
-#          name: "Audit dependencies"
       - test:
           matrix:
             parameters:
               jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
           requires:
             - audit
-    filters:
-      branches:
-        ignore: master
   test_and_publish_release:
     jobs:
       - audit:
@@ -94,8 +102,3 @@ workflows:
               ignore: /.*/
             tags:
               only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
-    filters:
-      branches:
-        only: master
-      tags:
-        only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
