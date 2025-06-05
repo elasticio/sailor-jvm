@@ -4,7 +4,12 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.ObjectStorage;
-import org.apache.http.entity.ByteArrayEntity;
+
+import java.io.ByteArrayInputStream;
+
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.core5.http.ContentType;
+import org.apache.hc.core5.http.io.entity.InputStreamEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,6 +22,11 @@ public class ObjectStorageImpl implements ObjectStorage {
     private CryptoServiceImpl cryptoService;
     private String objectStorageUri;
     private String objectStorageToken;
+    private final CloseableHttpClient httpClient;
+
+    public ObjectStorageImpl() {
+        this.httpClient = HttpUtils.createHttpClient(5);
+    }
 
     @Override
     public JsonObject getJsonObject(final String id) {
@@ -35,9 +45,11 @@ public class ObjectStorageImpl implements ObjectStorage {
 
         final String endpoint = String.format("%s/objects/%s", this.objectStorageUri, id);
 
-        final byte[] bytes = HttpUtils.get(endpoint,
-                new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken),
-                5);
+        final byte[] bytes = HttpUtils.get(
+            endpoint,
+            this.httpClient,
+            new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken)
+        );
         return cryptoService.decryptMessageContent(bytes, MessageEncoding.UTF8);
     }
 
@@ -64,11 +76,12 @@ public class ObjectStorageImpl implements ObjectStorage {
 
         final byte[] content = cryptoService.encrypt(object, MessageEncoding.UTF8);
 
-
-        final JsonObject result = HttpUtils.post(endpoint,
-                new ByteArrayEntity(content),
-                new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken),
-                5);
+        final JsonObject result = HttpUtils.post(
+            endpoint,
+            this.httpClient,
+            new InputStreamEntity(new ByteArrayInputStream(content), ContentType.APPLICATION_JSON),
+            new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken)
+        );
 
         return result;
     }
@@ -80,10 +93,10 @@ public class ObjectStorageImpl implements ObjectStorage {
 
     @Inject(optional = true)
     public void setObjectStorageUri(final @Named(Constants.ENV_VAR_OBJECT_STORAGE_URI) String objectStorageUri) {
-        this.objectStorageUri = objectStorageUri;
+        this.objectStorageUri = objectStorageUri != null ? objectStorageUri.trim() : null;
 
         if (this.objectStorageUri != null && this.objectStorageUri.endsWith("/")) {
-            this.objectStorageUri.substring(0, this.objectStorageUri.length() - 1);
+            this.objectStorageUri = this.objectStorageUri.substring(0, this.objectStorageUri.length() - 1);
         }
     }
 
