@@ -61,7 +61,7 @@ workflows:
       - test:
           matrix:
             parameters:
-              jdk-version: ["amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
+              jdk-version: [ "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
       - publish:
           name: "Publish SNAPSHOT version to Maven"
           requires:
@@ -87,7 +87,7 @@ workflows:
               only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
           matrix:
             parameters:
-              jdk-version: ["amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
+              jdk-version: [ "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
 
       - publish:
           name: "Publish release version to Maven"
