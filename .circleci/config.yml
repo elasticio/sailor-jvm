@@ -70,7 +70,7 @@ workflows:
       - test:
           matrix:
             parameters:
-              jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
+              jdk-version: [ "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
       - test_and_build_snapshot:
           requires:
             - audit
@@ -89,7 +89,7 @@ workflows:
       - test:
           matrix:
             parameters:
-              jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
+              jdk-version: [ "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
           filters:
             branches:
               ignore: /.*/
