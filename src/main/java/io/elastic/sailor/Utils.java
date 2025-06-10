@@ -3,7 +3,6 @@ package io.elastic.sailor;
 import com.rabbitmq.client.AMQP;
 import io.elastic.api.JSON;
 import io.elastic.api.Message;
-import io.elastic.api.Message.Builder;
 import io.elastic.sailor.impl.MessageEncoding;
 
 import jakarta.json.Json;
