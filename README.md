@@ -15,12 +15,12 @@ To build the project run in terminal
  - `ELASTICIO_CONSUMER_THREAD_POOL_SIZE` - if not specified (by default) it equals Prefetch Count value. Indicates the size of the thread pool for AMQP consumers.
 
 ## Development lifecycle
-Prerequisites: 
+Prerequisites:
 Imagine that current sailor version is `3.5.1` and you gonna release new major version `4.0.0`
-1. Create branch to implement feature. 
-2. During implementation specify `-SNAPHOT` suffix for the version in the `build.gradle`. The version should have next value - `4.0.0-SHAPSHOT`. 
-3. If you want to test new sailor version, just push changes to your feature branch. If you push any changes to the Sailor GitHub repository with X.X.X-SNAPSHOT, circle.ci will automatically upload the SNAPSHOT version to Sonatype repository. 
-After CI job will be done you can use `4.0.0-SHAPSHOT` version in the components. 
+1. Create branch to implement feature.
+2. During implementation specify `-SNAPSHOT` suffix for the version in the `build.gradle`. The version should have next value - `4.0.0-SHAPSHOT`.
+3. If you want to test new sailor version, just push changes to your feature branch. If you push any changes to the Sailor GitHub repository with X.X.X-SNAPSHOT, circle.ci will automatically upload the SNAPSHOT version to Sonatype repository.
+After CI job will be done you can use `4.0.0-SHAPSHOT` version in the components.
 4. After code changes will be reviewed and tested by qa, remove `-SNAPHOT` suffix, and merge Pull Request to **master** branch. The version should have next value - `4.0.0`.
 5. To publish stable release version create GitHub release with tag **4.0.0**. This will trigger CI pipeline to publish release version to the Production maven repository.
 

@@ -11,6 +11,8 @@ import io.elastic.sailor.*;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
+
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
@@ -28,6 +30,7 @@ public class MessageConsumer extends DefaultConsumer {
     private final MessageResolver messageResolver;
     private final Channel channel;
     private final ExecutorService threadPool;
+    private final CloseableHttpClient httpClient;
 
     public MessageConsumer(Channel channel,
                            CryptoServiceImpl cipher,
@@ -46,6 +49,7 @@ public class MessageConsumer extends DefaultConsumer {
         this.containerContext = containerContext;
         this.messageResolver = messageResolver;
         this.threadPool = threadPool;
+        this.httpClient = HttpUtils.createHttpClient(4);
     }
 
     @Override
@@ -126,7 +130,7 @@ public class MessageConsumer extends DefaultConsumer {
     public JsonObject getSnapShot() {
         final String uri = this.step.getSnapshotUri();
         final HttpUtils.AuthorizationHandler authorizationHandler = step.getAuthorizationHandler();
-        final JsonObject step = HttpUtils.getJson(uri, authorizationHandler, 4);
+        final JsonObject step = HttpUtils.getJson(uri, this.httpClient, authorizationHandler);
         return getAsNullSafeObject(step, Constants.STEP_PROPERTY_SNAPSHOT);
     }
 

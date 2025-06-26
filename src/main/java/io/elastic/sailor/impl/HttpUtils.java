@@ -1,61 +1,55 @@
 package io.elastic.sailor.impl;
 
-import io.elastic.api.JSON;
-import io.elastic.sailor.UnexpectedStatusCodeException;
-import org.apache.commons.io.IOUtils;
-import org.apache.http.*;
-
-import org.apache.http.auth.AuthenticationException;
-import org.apache.http.auth.UsernamePasswordCredentials;
-import org.apache.http.client.methods.*;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.auth.BasicScheme;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.protocol.HTTP;
-import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import jakarta.json.JsonObject;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.io.UnsupportedEncodingException;
-import java.net.MalformedURLException;
 import java.net.SocketException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URLDecoder;
+import java.util.ArrayList;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.hc.client5.http.HttpRequestRetryStrategy;
+import org.apache.hc.client5.http.auth.UsernamePasswordCredentials;
+import org.apache.hc.client5.http.classic.methods.*;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.client5.http.utils.Base64;
+import org.apache.hc.core5.http.HttpEntity;
+import org.apache.hc.core5.http.HttpHeaders;
+import org.apache.hc.core5.http.HttpRequest;
+import org.apache.hc.core5.http.HttpResponse;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.io.entity.StringEntity;
+import org.apache.hc.core5.http.protocol.HttpContext;
+import org.apache.hc.core5.util.TimeValue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import io.elastic.api.JSON;
+import io.elastic.sailor.UnexpectedStatusCodeException;
+import jakarta.json.JsonObject;
 
 public class HttpUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class.getName());
 
-    public static String postJson(String url, JsonObject body, AuthorizationHandler authorizationHandler) throws IOException {
-        return postJson(url, body, authorizationHandler, 0);
-    }
+    private static final ArrayList<CloseableHttpClient> httpClients = new ArrayList<CloseableHttpClient>();
 
-    public static JsonObject getJson(String url, final AuthorizationHandler authorizationHandler) {
-        return getJson(url, authorizationHandler, 0);
-    }
-
-    public static JsonObject putJson(final String url,
-                                     final JsonObject body,
-                                     final AuthorizationHandler authorizationHandler) {
-        return putJson(url, body, authorizationHandler, 0);
-    }
-
-    public static String postJson(final String url,
-                                  final JsonObject body,
-                                  final AuthorizationHandler authorizationHandler,
-                                  final int retryCount) {
-
-
-        final HttpPost httpPost = new HttpPost(url);
-        httpPost.addHeader(HTTP.CONTENT_TYPE, "application/json");
+    public static String postJson(
+        final String url,
+        final CloseableHttpClient httpClient,
+        final JsonObject body,
+        final AuthorizationHandler authorizationHandler
+    ) {
+        final HttpPost httpPost = new HttpPost(sanitizeUrl(url));
+        httpPost.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
         httpPost.setEntity(createStringEntity(body));
 
         final byte[] bytes = sendHttpRequest(
-                httpPost, authorizationHandler, retryCount, new ByteArrayHttpEntityCallback());
+                httpPost, httpClient, authorizationHandler, new ByteArrayHttpEntityCallback());
 
         if (bytes == null) {
             throw new RuntimeException("Null response received");
@@ -66,17 +60,17 @@ public class HttpUtils {
         return new String(bytes);
     }
 
-    public static JsonObject post(final String url,
-                              final HttpEntity body,
-                              final AuthorizationHandler authorizationHandler,
-                              final int retryCount) {
-
-
-        final HttpPost httpPost = new HttpPost(url);
+    public static JsonObject post(
+        final String url,
+        final CloseableHttpClient httpClient,
+        final HttpEntity body,
+        final AuthorizationHandler authorizationHandler
+    ) {
+        final HttpPost httpPost = new HttpPost(sanitizeUrl(url));
         httpPost.setEntity(body);
 
         final JsonObject result = sendHttpRequest(
-                httpPost, authorizationHandler, retryCount, new JsonObjectParseCallback());
+                httpPost, httpClient, authorizationHandler, new JsonObjectParseCallback());
 
         if (result == null) {
             throw new RuntimeException("Null response received");
@@ -87,15 +81,17 @@ public class HttpUtils {
         return result;
     }
 
-    public static JsonObject getJson(final String url,
-                                     final AuthorizationHandler authorizationHandler,
-                                     int retryCount) {
+    public static JsonObject getJson(
+        final String url,
+        final CloseableHttpClient httpClient,
+        final AuthorizationHandler authorizationHandler
+    ) {
 
-        final HttpGet httpGet = new HttpGet(url);
-        httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
+        final HttpGet httpGet = new HttpGet(sanitizeUrl(url));
+        httpGet.addHeader(HttpHeaders.USER_AGENT, "eio-sailor-java");
 
         final JsonObject content = sendHttpRequest(
-                httpGet, authorizationHandler, retryCount, new JsonObjectParseCallback());
+                httpGet, httpClient, authorizationHandler, new JsonObjectParseCallback());
 
         if (content == null) {
             throw new RuntimeException("Null response received");
@@ -104,15 +100,17 @@ public class HttpUtils {
         return content;
     }
 
-    public static byte[] get(final String url,
-                                 final AuthorizationHandler authorizationHandler,
-                                 int retryCount) {
+    public static byte[] get(
+        final String url,
+        final CloseableHttpClient httpClient,
+        final AuthorizationHandler authorizationHandler
+    ) {
 
-        final HttpGet httpGet = new HttpGet(url);
-        httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
+        final HttpGet httpGet = new HttpGet(sanitizeUrl(url));
+        httpGet.addHeader(HttpHeaders.USER_AGENT, "eio-sailor-java");
 
         final byte[] content = sendHttpRequest(
-                httpGet, authorizationHandler, retryCount, new ByteArrayHttpEntityCallback());
+                httpGet, httpClient, authorizationHandler, new ByteArrayHttpEntityCallback());
 
         if (content == null) {
             throw new RuntimeException("Null response received");
@@ -122,17 +120,18 @@ public class HttpUtils {
     }
 
 
-    public static JsonObject putJson(final String url,
-                                     final JsonObject body,
-                                     final AuthorizationHandler authorizationHandler,
-                                     final int retryCount) {
-
-        final HttpPut httpPut = new HttpPut(url);
-        httpPut.addHeader(HTTP.CONTENT_TYPE, "application/json");
+    public static JsonObject putJson(
+        final String url,
+        final CloseableHttpClient httpClient,
+        final JsonObject body,
+        final AuthorizationHandler authorizationHandler
+    ) {
+        final HttpPut httpPut = new HttpPut(sanitizeUrl(url));
+        httpPut.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
         httpPut.setEntity(createStringEntity(body));
 
         final JsonObject content = sendHttpRequest(
-                httpPut, authorizationHandler, retryCount, new JsonObjectParseCallback());
+                httpPut, httpClient, authorizationHandler, new JsonObjectParseCallback());
 
         if (content == null) {
             throw new RuntimeException("Null response received");
@@ -144,14 +143,15 @@ public class HttpUtils {
     }
 
 
-    public static void delete(final String url,
-                              final AuthorizationHandler authorizationHandler,
-                              final int retryCount) {
+    public static void delete(
+        final String url,
+        final CloseableHttpClient httpClient,
+        final AuthorizationHandler authorizationHandler
+    ) {
+        final HttpDelete httpDelete = new HttpDelete(sanitizeUrl(url));
+        httpDelete.addHeader(HttpHeaders.CONTENT_TYPE, "application/json");
 
-        final HttpDelete httpDelete = new HttpDelete(url);
-        httpDelete.addHeader(HTTP.CONTENT_TYPE, "application/json");
-
-        sendHttpRequest(httpDelete, authorizationHandler, retryCount, null);
+        sendHttpRequest(httpDelete, httpClient, authorizationHandler, null);
 
         logger.info("Successfully sent delete");
 
@@ -159,25 +159,15 @@ public class HttpUtils {
     }
 
     public static StringEntity createStringEntity(final JsonObject body) {
-        return createStringEntity(JSON.stringify(body));
+        return new StringEntity(JSON.stringify(body));
     }
 
-    public static StringEntity createStringEntity(final String content) {
-        try {
-            return new StringEntity(content);
-        } catch (UnsupportedEncodingException e) {
-            throw new RuntimeException(e);
-        }
-    }
-
-    private static  <T> T sendHttpRequest(final HttpUriRequest request,
-                                        final AuthorizationHandler authorizationHandler,
-                                        final int retryCount,
-                                        final HttpEntityCallback<T> callback) {
-
-        CloseableHttpClient httpClient = HttpClients.custom()
-                .setRetryHandler((exception, executionCount, context) -> {
-                    if (executionCount >= retryCount) {
+    public static CloseableHttpClient createHttpClient(final int retryCount) {
+        final CloseableHttpClient httpClient = HttpClients.custom()
+            .setRetryStrategy(new HttpRequestRetryStrategy() {
+                @Override
+                public boolean retryRequest(HttpRequest request, IOException exception, int execCount, HttpContext context) {
+                    if (execCount >= retryCount) {
                         // Do not retry if over max retry count
                         return false;
                     }
@@ -188,41 +178,83 @@ public class HttpUtils {
                     if (exception instanceof SocketException) {
                         return true;
                     }
-
                     return false;
-                })
-                .build();
+                }
+                @Override
+                public boolean retryRequest(HttpResponse response, int execCount, HttpContext context) {
+                    final int statusCode = response.getCode();
+                    final boolean shouldRetry = statusCode >= 500 && execCount <= retryCount;
+                    if (shouldRetry) {
+                        logger.warn(response.toString());
+                        logger.warn("Error {} during request, retrying ({}/{})", statusCode, execCount, retryCount);
+                    }
+                    return shouldRetry;
+                }
+                private static final long MAX_BACKOFF = 15000; // 15 seconds
+                private TimeValue getRetryInterval(int execCount) {
+                    final double delay = Math.pow(2, execCount) * 1000;
+                    final double randomSum = delay * 0.2 * Math.random(); // 0-20% of the delay
+                    return TimeValue.ofMilliseconds((long) Math.min(delay + randomSum, MAX_BACKOFF));
+                }
+                @Override
+                public TimeValue getRetryInterval(HttpRequest request, IOException exception, int execCount, HttpContext context) {
+                    return getRetryInterval(execCount);
+                }
+                @Override
+                public TimeValue getRetryInterval(HttpResponse response, int execCount, HttpContext context) {
+                    return getRetryInterval(execCount);
+                }
+            })
+            .build();
+        httpClients.add(httpClient);
+        return httpClient;
+    }
 
-        logger.info("Sending {} request to {}", request.getMethod(), request.getURI().getPath());
+    public static void closeHttpClients() {
+        for (CloseableHttpClient client : httpClients) {
+            try {
+                client.close();
+            } catch (IOException e) {
+                logger.warn("Failed to close HTTP client: {}", e.getMessage());
+            }
+        }
+        httpClients.clear();
+    }
+
+    private static  <T> T sendHttpRequest(
+        final HttpUriRequest request,
+        final CloseableHttpClient httpClient,
+        final AuthorizationHandler authorizationHandler,
+        final HttpEntityCallback<T> callback
+    ) {
         try {
-            authorizationHandler.authorize(request);
-            final CloseableHttpResponse response = httpClient.execute(request);
-            final StatusLine statusLine = response.getStatusLine();
-            final int statusCode = statusLine.getStatusCode();
-            if (statusCode >= 400) {
-                throw new UnexpectedStatusCodeException(statusCode);
-            }
+            logger.info("Sending {} request to {}", request.getMethod(), request.getUri().getPath());
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+        authorizationHandler.authorize(request);
 
-            final HttpEntity responseEntity = response.getEntity();
+        try {
+            return httpClient.execute(request, response -> {
+                final int statusCode = response.getCode();
+                if (statusCode >= 400) {
+                    throw new UnexpectedStatusCodeException(statusCode);
+                }
 
-            if (responseEntity == null || callback == null) {
-                return null;
-            }
+                final HttpEntity responseEntity = response.getEntity();
 
-            final T result = callback.handle(responseEntity);
+                if (responseEntity == null || callback == null) {
+                    return null;
+                }
 
-            EntityUtils.consume(responseEntity);
+                final T result = callback.handle(responseEntity);
 
-            return result;
+                EntityUtils.consume(responseEntity);
 
+                return result;
+            });
         } catch (Exception e) {
             throw new RuntimeException(e);
-        } finally {
-            try {
-                httpClient.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 
@@ -253,14 +285,12 @@ public class HttpUtils {
         }
     }
 
-
-    private static UsernamePasswordCredentials retrieveCredentialsFromUrl(final URL url) {
-        final String userInfo = url.getUserInfo();
+    private static UsernamePasswordCredentials retrieveCredentialsFromUri(final URI uri) {
+        final String userInfo = uri.getUserInfo();
 
         if (userInfo == null) {
-            throw new IllegalArgumentException("User info is missing in the given url: " + url);
+            throw new IllegalArgumentException("User info is missing in the given url: " + uri);
         }
-
 
         String decodedUserInfo = urlDecode(userInfo);
 
@@ -270,7 +300,7 @@ public class HttpUtils {
             throw new IllegalArgumentException("Either username or password is missing");
         }
 
-        return new UsernamePasswordCredentials(userAndPassword[0], userAndPassword[1]);
+        return new UsernamePasswordCredentials(userAndPassword[0], userAndPassword[1].toCharArray());
     }
 
     private static String urlDecode(final String input) {
@@ -286,13 +316,33 @@ public class HttpUtils {
         String result;
         try {
             result = EntityUtils.toString(entity);
-        } catch (IOException e) {
+        } catch (IOException | ParseException e) {
             throw new RuntimeException(e);
         }
 
         consume(entity);
 
         return result;
+    }
+
+    private static URI sanitizeUrl(final String url) {
+        URI originalUri;
+        URI sanitizedUri;
+		try {
+            originalUri = new URI(url);
+			sanitizedUri = new URI(
+			    originalUri.getScheme(),
+			    null, // remove user info
+			    originalUri.getHost(),
+			    originalUri.getPort(),
+			    originalUri.getPath(),
+			    originalUri.getQuery(),
+			    originalUri.getFragment()
+			);
+		} catch (URISyntaxException e) {
+            throw new RuntimeException("Invalid url " + url);
+		}
+        return sanitizedUri;
     }
 
     public static void consume(final HttpEntity entity) {
@@ -314,14 +364,10 @@ public class HttpUtils {
 
         @Override
         public void authorize(HttpUriRequest request) {
-
-            try {
-                final Header header = new BasicScheme()
-                        .authenticate(createCredentials(request), request, null);
-                request.addHeader(header);
-            } catch (AuthenticationException e) {
-                throw new RuntimeException(e);
-            }
+            UsernamePasswordCredentials creds = createCredentials(request);
+            String auth = creds.getUserName() + ":" + String.valueOf(creds.getUserPassword());
+            String encodedAuth = Base64.encodeBase64String(auth.getBytes());
+            request.addHeader(HttpHeaders.AUTHORIZATION, "Basic " + encodedAuth);
         }
     }
 
@@ -329,7 +375,14 @@ public class HttpUtils {
         private UsernamePasswordCredentials credentials;
 
         public BasicAuthorizationHandler(final String username, final String password) {
-            this.credentials = new UsernamePasswordCredentials(username, password);
+            this.credentials = new UsernamePasswordCredentials(username, password.toCharArray());
+        }
+        public BasicAuthorizationHandler(final String url) {
+            try {
+                this.credentials = retrieveCredentialsFromUri(new URI(url));
+            } catch (URISyntaxException e) {
+                throw new IllegalArgumentException("Invalid URL provided: " + url, e);
+            }
         }
 
         @Override
@@ -339,23 +392,6 @@ public class HttpUtils {
 
         public String getUsername() {
             return credentials.getUserName();
-        }
-    }
-
-    public static class BasicURLAuthorizationHandler extends AbstractBasicAuthorizationHandler {
-
-        @Override
-        UsernamePasswordCredentials createCredentials(final HttpUriRequest request) {
-            final URL url = getRequestURL(request);
-            return retrieveCredentialsFromUrl(url);
-        }
-
-        private URL getRequestURL(final HttpUriRequest request) {
-            try {
-                return request.getURI().toURL();
-            } catch (MalformedURLException e) {
-                throw new RuntimeException(e);
-            }
         }
     }
 

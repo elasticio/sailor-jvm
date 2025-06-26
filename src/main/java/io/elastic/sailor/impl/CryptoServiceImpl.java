@@ -68,6 +68,7 @@ public final class CryptoServiceImpl {
     }
 
     public byte[] encrypt(final String message, final MessageEncoding encoding) {
+        logger.info("Encrypting message: {}", message);
         try {
             Cipher cipher = Cipher.getInstance(ALGORITHM);
             cipher.init(Cipher.ENCRYPT_MODE, encryptionKey, encryptionIV);

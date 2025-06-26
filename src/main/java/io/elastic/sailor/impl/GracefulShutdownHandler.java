@@ -41,6 +41,11 @@ public class GracefulShutdownHandler {
     }
 
     protected void prepareGracefulShutdown() {
+        logger.info("Preparing graceful shutdown");
+
+        HttpUtils.closeHttpClients();
+        logger.info("Closed all HTTP clients");
+
         if (this.amqp == null) {
             return;
         }
