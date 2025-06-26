@@ -19,7 +19,7 @@ plugins {
 }
 group = 'io.elastic'
 version = '5.0.0-SNAPSHOT'
-sourceCompatibility = '1.8'
+sourceCompatibility = '11'
 
  dependencyCheck {
      format = 'ALL'
@@ -212,4 +212,10 @@ shadowJar {
     archiveBaseName.set('sailor-jvm')
     archiveVersion.set(project.version.toString())
     archiveClassifier.set('')
+}
+
+task printVersion {
+   doLast {
+       println "Sailor JVM version: ${project.version}"
+   }
 }
