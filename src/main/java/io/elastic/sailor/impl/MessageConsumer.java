@@ -21,6 +21,8 @@ import java.util.concurrent.ExecutorService;
 public class MessageConsumer extends DefaultConsumer {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
+    private static final int HTTP_CLIENT_RETRIES = 4;
+
     private final CryptoServiceImpl cipher;
     private final MessageProcessor processor;
     private final Function function;
@@ -48,7 +50,7 @@ public class MessageConsumer extends DefaultConsumer {
         this.containerContext = containerContext;
         this.messageResolver = messageResolver;
         this.threadPool = threadPool;
-        this.httpClient = HttpUtils.createHttpClient(4);
+        this.httpClient = HttpUtils.createHttpClient(HTTP_CLIENT_RETRIES);
     }
 
     @Override

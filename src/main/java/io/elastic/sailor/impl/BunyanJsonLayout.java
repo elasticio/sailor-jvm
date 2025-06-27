@@ -61,6 +61,8 @@ public class BunyanJsonLayout extends JsonLayout {
             map.put(PARENT_MESSAGE_ID, parentMessageId);
         }
 
+        // Version of the NPM package.
+        // Since this is Java - I've decided to put it at 0
         map.put(VERSION, "0");
         map.put(LEVEL, getBunyanLevel(event));
         map.put(NAME, "sailor-jvm");
