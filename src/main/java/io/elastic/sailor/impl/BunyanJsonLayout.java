@@ -7,6 +7,7 @@ import io.elastic.sailor.Constants;
 import io.elastic.sailor.ContainerContext;
 import org.slf4j.MDC;
 
+import java.lang.management.ManagementFactory;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
@@ -15,13 +16,18 @@ import java.util.Map;
 
 public class BunyanJsonLayout extends JsonLayout {
 
-    public static final String LEVEL = "level";
     public static final String LEVEL_STRING = "level_str";
-    public static final String TIME = "time";
-    public static final String HOSTNAME = "hostname";
     public static final String THREAD_ID = "threadId";
     public static final String MESSAGE_ID = "messageId";
     public static final String PARENT_MESSAGE_ID = "parentMessageId";
+
+    // Required fields for Bunyan format
+    public static final String VERSION = "v";
+    public static final String LEVEL = "level";
+    public static final String NAME = "name";
+    public static final String HOSTNAME = "hostname";
+    public static final String PID = "pid";
+    public static final String TIME = "time";
     public static final String MESSAGE = "msg";
 
     private static int BUNYAN_LEVEL_TRACE = 10;
@@ -55,9 +61,12 @@ public class BunyanJsonLayout extends JsonLayout {
             map.put(PARENT_MESSAGE_ID, parentMessageId);
         }
 
+        map.put(VERSION, "0");
         map.put(LEVEL, getBunyanLevel(event));
-        map.put(LEVEL_STRING, event.getLevel().levelStr);
+        map.put(NAME, "sailor-jvm");
+        map.put(PID, getProcessId());
         map.put(BunyanJsonLayout.TIME, time);
+        map.put(LEVEL_STRING, event.getLevel().levelStr);
         map.remove(JsonLayout.TIMESTAMP_ATTR_NAME);
 
         final Object message = map.get(JsonLayout.FORMATTED_MESSAGE_ATTR_NAME);
@@ -67,8 +76,15 @@ public class BunyanJsonLayout extends JsonLayout {
         try {
             map.put(BunyanJsonLayout.HOSTNAME, InetAddress.getLocalHost().getHostName());
         } catch (UnknownHostException e) {
-            // ignore
+            // Set a default value so bunyan can still validate the log entry
+            map.put(BunyanJsonLayout.HOSTNAME, "unknown-host");
         }
+    }
+
+    private String getProcessId() {
+        String vmName = ManagementFactory.getRuntimeMXBean().getName();
+        int p = vmName.indexOf("@");
+        return vmName.substring(0, p);
     }
 
     private void putFromContainerContext(final Map<String, Object> map) {

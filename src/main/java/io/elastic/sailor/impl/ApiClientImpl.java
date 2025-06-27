@@ -7,6 +7,7 @@ import io.elastic.sailor.ApiClient;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.Step;
 import io.elastic.sailor.impl.HttpUtils.BasicAuthorizationHandler;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +21,7 @@ public class ApiClientImpl implements ApiClient {
 
     private final BasicAuthorizationHandler authorizationHandler;
     private final String apiBaseUri;
-    private final int retryCount;
+    private final CloseableHttpClient httpClient;
     private boolean putIncomingMessageIntoPassThrough;
 
     @Inject
@@ -32,7 +33,7 @@ public class ApiClientImpl implements ApiClient {
 
         this.authorizationHandler = new BasicAuthorizationHandler(apiUser, apiKey);
         this.apiBaseUri = String.format("%s", apiUri);
-        this.retryCount = retryCount;
+        this.httpClient = HttpUtils.createHttpClient(retryCount);
         this.putIncomingMessageIntoPassThrough = putIncomingMessageIntoPassThrough;
     }
 
@@ -43,7 +44,7 @@ public class ApiClientImpl implements ApiClient {
 
         logger.info("Retrieving step data at: {}", path);
 
-        final JsonObject step = HttpUtils.getJson(uri, authorizationHandler, this.retryCount);
+        final JsonObject step = HttpUtils.getJson(uri, this.httpClient, authorizationHandler);
 
         return new Step(step, uri, authorizationHandler, putIncomingMessageIntoPassThrough);
     }
@@ -55,7 +56,7 @@ public class ApiClientImpl implements ApiClient {
 
         logger.info("Updating account for user {} at: {}", this.authorizationHandler.getUsername(), path);
 
-        return HttpUtils.putJson(uri, body, authorizationHandler, this.retryCount);
+        return HttpUtils.putJson(uri, this.httpClient, body, authorizationHandler);
 
     }
 
@@ -63,14 +64,14 @@ public class ApiClientImpl implements ApiClient {
     public void storeStartupState(final String flowId, final JsonObject body) {
         final String uri = getStartupStateUrl(flowId);
 
-        HttpUtils.postJson(uri, body, authorizationHandler, this.retryCount);
+        HttpUtils.postJson(uri, this.httpClient, body, authorizationHandler);
     }
 
     @Override
     public JsonObject retrieveStartupState(final String flowId) {
         final String uri = getStartupStateUrl(flowId);
 
-        final JsonObject state = HttpUtils.getJson(uri, authorizationHandler, this.retryCount);
+        final JsonObject state = HttpUtils.getJson(uri, this.httpClient, authorizationHandler);
 
         if (state == null) {
             return Json.createObjectBuilder().build();
@@ -83,7 +84,7 @@ public class ApiClientImpl implements ApiClient {
     public void deleteStartupState(final String flowId) {
         final String uri = getStartupStateUrl(flowId);
 
-        HttpUtils.delete(uri, authorizationHandler, this.retryCount);
+        HttpUtils.delete(uri, this.httpClient, authorizationHandler);
     }
 
     private String getStartupStateUrl(final String flowId) {
