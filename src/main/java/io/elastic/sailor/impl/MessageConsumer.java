@@ -11,6 +11,7 @@ import io.elastic.sailor.*;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
@@ -20,6 +21,8 @@ import java.util.concurrent.ExecutorService;
 public class MessageConsumer extends DefaultConsumer {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
+    private static final int HTTP_CLIENT_RETRIES = 4;
+
     private final CryptoServiceImpl cipher;
     private final MessageProcessor processor;
     private final Function function;
@@ -28,6 +31,7 @@ public class MessageConsumer extends DefaultConsumer {
     private final MessageResolver messageResolver;
     private final Channel channel;
     private final ExecutorService threadPool;
+    private final CloseableHttpClient httpClient;
 
     public MessageConsumer(Channel channel,
                            CryptoServiceImpl cipher,
@@ -46,6 +50,7 @@ public class MessageConsumer extends DefaultConsumer {
         this.containerContext = containerContext;
         this.messageResolver = messageResolver;
         this.threadPool = threadPool;
+        this.httpClient = HttpUtils.createHttpClient(HTTP_CLIENT_RETRIES);
     }
 
     @Override
@@ -76,7 +81,9 @@ public class MessageConsumer extends DefaultConsumer {
 
                 ExecutionStats stats = null;
                 try {
+                    logger.info("Going to process the message");
                     stats = processor.processMessage(executionContext, this.function);
+                    logger.info("Processed the message, {}", stats);
                 } catch (Exception e) {
                     logger.error("Failed to process message: {}", Utils.getStackTrace(e));
                 } finally {
@@ -126,7 +133,7 @@ public class MessageConsumer extends DefaultConsumer {
     public JsonObject getSnapShot() {
         final String uri = this.step.getSnapshotUri();
         final HttpUtils.AuthorizationHandler authorizationHandler = step.getAuthorizationHandler();
-        final JsonObject step = HttpUtils.getJson(uri, authorizationHandler, 4);
+        final JsonObject step = HttpUtils.getJson(uri, this.httpClient, authorizationHandler);
         return getAsNullSafeObject(step, Constants.STEP_PROPERTY_SNAPSHOT);
     }
 

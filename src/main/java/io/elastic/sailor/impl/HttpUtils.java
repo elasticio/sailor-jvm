@@ -7,12 +7,14 @@ import org.apache.http.*;
 
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.ServiceUnavailableRetryStrategy;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.protocol.HTTP;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,29 +27,18 @@ import java.net.MalformedURLException;
 import java.net.SocketException;
 import java.net.URL;
 import java.net.URLDecoder;
+import java.util.ArrayList;
 
 public class HttpUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class.getName());
 
-    public static String postJson(String url, JsonObject body, AuthorizationHandler authorizationHandler) throws IOException {
-        return postJson(url, body, authorizationHandler, 0);
-    }
-
-    public static JsonObject getJson(String url, final AuthorizationHandler authorizationHandler) {
-        return getJson(url, authorizationHandler, 0);
-    }
-
-    public static JsonObject putJson(final String url,
-                                     final JsonObject body,
-                                     final AuthorizationHandler authorizationHandler) {
-        return putJson(url, body, authorizationHandler, 0);
-    }
+    private static final ArrayList<CloseableHttpClient> httpClients = new ArrayList<CloseableHttpClient>();
 
     public static String postJson(final String url,
+                                  final CloseableHttpClient httpClient,
                                   final JsonObject body,
-                                  final AuthorizationHandler authorizationHandler,
-                                  final int retryCount) {
+                                  final AuthorizationHandler authorizationHandler) {
 
 
         final HttpPost httpPost = new HttpPost(url);
@@ -55,7 +46,7 @@ public class HttpUtils {
         httpPost.setEntity(createStringEntity(body));
 
         final byte[] bytes = sendHttpRequest(
-                httpPost, authorizationHandler, retryCount, new ByteArrayHttpEntityCallback());
+                httpPost, httpClient, authorizationHandler, new ByteArrayHttpEntityCallback());
 
         if (bytes == null) {
             throw new RuntimeException("Null response received");
@@ -67,16 +58,16 @@ public class HttpUtils {
     }
 
     public static JsonObject post(final String url,
-                              final HttpEntity body,
-                              final AuthorizationHandler authorizationHandler,
-                              final int retryCount) {
+                                  final CloseableHttpClient httpClient,
+                                  final HttpEntity body,
+                                  final AuthorizationHandler authorizationHandler) {
 
 
         final HttpPost httpPost = new HttpPost(url);
         httpPost.setEntity(body);
 
         final JsonObject result = sendHttpRequest(
-                httpPost, authorizationHandler, retryCount, new JsonObjectParseCallback());
+                httpPost, httpClient, authorizationHandler, new JsonObjectParseCallback());
 
         if (result == null) {
             throw new RuntimeException("Null response received");
@@ -88,14 +79,14 @@ public class HttpUtils {
     }
 
     public static JsonObject getJson(final String url,
-                                     final AuthorizationHandler authorizationHandler,
-                                     int retryCount) {
+                                     final CloseableHttpClient httpClient,
+                                     final AuthorizationHandler authorizationHandler) {
 
         final HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
 
         final JsonObject content = sendHttpRequest(
-                httpGet, authorizationHandler, retryCount, new JsonObjectParseCallback());
+                httpGet, httpClient, authorizationHandler, new JsonObjectParseCallback());
 
         if (content == null) {
             throw new RuntimeException("Null response received");
@@ -105,14 +96,14 @@ public class HttpUtils {
     }
 
     public static byte[] get(final String url,
-                                 final AuthorizationHandler authorizationHandler,
-                                 int retryCount) {
+                             final CloseableHttpClient httpClient,
+                             final AuthorizationHandler authorizationHandler) {
 
         final HttpGet httpGet = new HttpGet(url);
         httpGet.addHeader(HTTP.USER_AGENT, "eio-sailor-java");
 
         final byte[] content = sendHttpRequest(
-                httpGet, authorizationHandler, retryCount, new ByteArrayHttpEntityCallback());
+                httpGet, httpClient, authorizationHandler, new ByteArrayHttpEntityCallback());
 
         if (content == null) {
             throw new RuntimeException("Null response received");
@@ -123,16 +114,16 @@ public class HttpUtils {
 
 
     public static JsonObject putJson(final String url,
+                                     final CloseableHttpClient httpClient,
                                      final JsonObject body,
-                                     final AuthorizationHandler authorizationHandler,
-                                     final int retryCount) {
+                                     final AuthorizationHandler authorizationHandler) {
 
         final HttpPut httpPut = new HttpPut(url);
         httpPut.addHeader(HTTP.CONTENT_TYPE, "application/json");
         httpPut.setEntity(createStringEntity(body));
 
         final JsonObject content = sendHttpRequest(
-                httpPut, authorizationHandler, retryCount, new JsonObjectParseCallback());
+                httpPut, httpClient, authorizationHandler, new JsonObjectParseCallback());
 
         if (content == null) {
             throw new RuntimeException("Null response received");
@@ -145,13 +136,13 @@ public class HttpUtils {
 
 
     public static void delete(final String url,
-                              final AuthorizationHandler authorizationHandler,
-                              final int retryCount) {
+                              final CloseableHttpClient httpClient,
+                              final AuthorizationHandler authorizationHandler) {
 
         final HttpDelete httpDelete = new HttpDelete(url);
         httpDelete.addHeader(HTTP.CONTENT_TYPE, "application/json");
 
-        sendHttpRequest(httpDelete, authorizationHandler, retryCount, null);
+        sendHttpRequest(httpDelete, httpClient, authorizationHandler, null);
 
         logger.info("Successfully sent delete");
 
@@ -170,12 +161,8 @@ public class HttpUtils {
         }
     }
 
-    private static  <T> T sendHttpRequest(final HttpUriRequest request,
-                                        final AuthorizationHandler authorizationHandler,
-                                        final int retryCount,
-                                        final HttpEntityCallback<T> callback) {
-
-        CloseableHttpClient httpClient = HttpClients.custom()
+    public static CloseableHttpClient createHttpClient(final int retryCount) {
+        final CloseableHttpClient httpClient = HttpClients.custom()
                 .setRetryHandler((exception, executionCount, context) -> {
                     if (executionCount >= retryCount) {
                         // Do not retry if over max retry count
@@ -188,10 +175,44 @@ public class HttpUtils {
                     if (exception instanceof SocketException) {
                         return true;
                     }
-
                     return false;
                 })
+                .setServiceUnavailableRetryStrategy(new ServiceUnavailableRetryStrategy() {
+                    @Override
+                    public boolean retryRequest(HttpResponse httpResponse, int i, HttpContext httpContext) {
+                        final int statusCode = httpResponse.getStatusLine().getStatusCode();
+                        final boolean shouldRetry = statusCode >= 500 && i <= retryCount;
+                        if (shouldRetry) {
+                            logger.warn(httpResponse.toString());
+                            logger.warn("Error {} during request, retrying ({}/{})", statusCode, i, retryCount);
+                        }
+                        return shouldRetry;
+                    }
+                    @Override
+                    public long getRetryInterval() {
+                        return 3000;
+                    }
+                })
                 .build();
+        httpClients.add(httpClient);
+        return httpClient;
+    }
+
+    public static void closeHttpClients() {
+        for (CloseableHttpClient client : httpClients) {
+            try {
+                client.close();
+            } catch (IOException e) {
+                logger.warn("Failed to close HTTP client: {}", e.getMessage());
+            }
+        }
+        httpClients.clear();
+    }
+
+    private static  <T> T sendHttpRequest(final HttpUriRequest request,
+                                          final CloseableHttpClient httpClient,
+                                          final AuthorizationHandler authorizationHandler,
+                                          final HttpEntityCallback<T> callback) {
 
         logger.info("Sending {} request to {}", request.getMethod(), request.getURI().getPath());
         try {
@@ -216,13 +237,8 @@ public class HttpUtils {
             return result;
 
         } catch (Exception e) {
+            logger.error("Error occurred during request", e);
             throw new RuntimeException(e);
-        } finally {
-            try {
-                httpClient.close();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
         }
     }
 

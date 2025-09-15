@@ -66,8 +66,10 @@ public class MessageProcessorImpl implements MessageProcessor {
                 .build();
 
         try {
+            logger.info("Going to execute function 123");
             function.execute(params);
-        } catch (RuntimeException e) {
+            logger.info("Executed function");
+        } catch (Exception e) {
             logger.error("Component execution failed", e);
             eventEmitter.emitException(e);
         }

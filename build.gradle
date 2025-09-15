@@ -18,7 +18,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 group = 'io.elastic'
-version = '4.0.3'
+version = '4.0.4-SNAPSHOT'
 sourceCompatibility = '1.8'
 
  dependencyCheck {

@@ -14,7 +14,6 @@ jobs:
       - run:
           name: Audit Dependencies
           command: ./gradlew dependencyCheckAnalyze
-
   test:
     parameters:
       jdk-version:
@@ -26,10 +25,12 @@ jobs:
       - image: rabbitmq:3.8.3
     steps:
       - checkout
-      - run: TERM=${TERM:-dumb} ./gradlew clean test
+      - run:
+          name: Run Tests
+          command: TERM=${TERM:-dumb} ./gradlew clean test
       - store_test_results:
           path: build/reports
-  publish:
+  test_and_build_snapshot:
     executor: docker
     docker:
       - image: amazoncorretto:17-alpine-jdk
@@ -37,11 +38,20 @@ jobs:
     steps:
       - checkout
       - run: |
-          TERM=${TERM:-dumb} ./gradlew publish -PsonatypeUsername=$SONATYPE_USERNAME \
-          -PsonatypePassword=$SONATYPE_PASSWORD \
-          -PsigningPassword=${SIGNING_PSW} \
-          -PsigningKeyBase64=${SIGNING_KEY} \
-          -PkeyId=${SIGNING_KEY_ID}
+          TERM=${TERM:-dumb} ./gradlew shadowJar
+      - store_artifacts:
+          path: ~/sailor-jvm/build/libs
+  test_and_build_release:
+    executor: docker
+    docker:
+      - image: amazoncorretto:17-alpine-jdk
+    working_directory: ~/sailor-jvm
+    steps:
+      - checkout
+      - run: |
+          TERM=${TERM:-dumb} ./gradlew publishToMavenLocal
+      - store_artifacts:
+          path: ~/sailor-jvm/build/libs/
 workflows:
   nightly:
     triggers:
@@ -54,48 +64,43 @@ workflows:
     jobs:
       - audit:
           name: "Audit dependencies"
-  test_and_publish_snapshot:
+  build_snapshot:
     jobs:
-      - audit:
-          name: "Audit dependencies"
+      - audit
       - test:
           matrix:
             parameters:
-              jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
-      - publish:
-          name: "Publish SNAPSHOT version to Maven"
+              jdk-version: [  "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
+      - test_and_build_snapshot:
           requires:
+            - audit
             - test
-            - "Audit dependencies"
           filters:
-            tags:
-              ignore: /.*/
-  test_and_publish_release:
+            branches:
+              ignore: master
+  build_release:
     jobs:
       - audit:
-          name: "Audit dependencies"
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
       - test:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
           matrix:
             parameters:
-              jdk-version: [ "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
-
-      - publish:
-          name: "Publish release version to Maven"
+              jdk-version: [  "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
           filters:
             branches:
               ignore: /.*/
             tags:
               only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
+      - test_and_build_release:
           requires:
+            - audit
             - test
-            - "Audit dependencies"
+          filters:
+            branches:
+              only: master
+            tags:
+              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
