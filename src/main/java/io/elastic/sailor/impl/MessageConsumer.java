@@ -81,7 +81,9 @@ public class MessageConsumer extends DefaultConsumer {
 
                 ExecutionStats stats = null;
                 try {
+                    logger.info("Going to process the message");
                     stats = processor.processMessage(executionContext, this.function);
+                    logger.info("Processed the message, {}", stats);
                 } catch (Exception e) {
                     logger.error("Failed to process message: {}", Utils.getStackTrace(e));
                 } finally {
