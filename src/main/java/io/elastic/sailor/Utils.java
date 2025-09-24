@@ -44,10 +44,10 @@ public class Utils {
     }
 
     public static String getOptionalEnvVar(final String key) {
-        String value = System.getenv(key);
+        String value = System.getProperty(key);
 
         if (value == null) {
-            value = System.getProperty(key);
+            value = System.getenv(key);
         }
 
         return value;
