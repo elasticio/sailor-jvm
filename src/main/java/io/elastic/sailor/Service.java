@@ -16,7 +16,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 public class Service {
-    private static final Logger logger = LoggerFactory.getLogger(Service.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Service.class);
 
     private ComponentDescriptorResolver resolver;
     private String postResultUrl;
@@ -106,7 +106,7 @@ public class Service {
 
     private void processException(Exception e) {
 
-        e.printStackTrace();
+        logger.error("Service execution failed with an exception", e);
 
         StringWriter writer = new StringWriter();
         e.printStackTrace(new PrintWriter(writer));

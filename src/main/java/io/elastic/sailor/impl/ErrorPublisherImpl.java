@@ -15,8 +15,12 @@ import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class ErrorPublisherImpl implements ErrorPublisher {
 
+    private static final Logger logger = LoggerFactory.getLogger(ErrorPublisherImpl.class);
     public static final String ERROR_PROPERTY = "error";
     public static final String ERROR_INPUT_PROPERTY = "errorInput";
 
@@ -38,6 +42,10 @@ public class ErrorPublisherImpl implements ErrorPublisher {
 
     @Override
     public void publish(Throwable e, AMQP.BasicProperties options, byte[] message) {
+
+        final Object messageId = options.getHeaders().get(Constants.AMQP_HEADER_MESSAGE_ID);
+
+        logger.warn("Caught an error in messageId={}. Publishing it to the error queue.", messageId, e);
 
         final String stackTrace = Utils.getStackTrace(e);
 
