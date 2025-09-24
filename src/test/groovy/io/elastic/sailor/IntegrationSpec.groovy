@@ -12,6 +12,7 @@ import io.elastic.sailor.impl.AmqpServiceImpl
 import io.elastic.sailor.impl.CryptoServiceImpl
 import io.elastic.sailor.impl.MessageEncoding
 import io.elastic.sailor.impl.MessageFormat
+import io.elastic.sailor.impl.HttpUtils
 import io.elastic.sailor.impl.MessagePublisherImpl
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -111,7 +112,7 @@ class IntegrationSpec extends Specification {
                 System.getProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD),
                 System.getProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_IV))
 
-        amqp = new AmqpServiceImpl(cipher)
+        amqp = new AmqpServiceImpl(cipher, HttpUtils.createHttpClient(0))
 
         amqp.setAmqpUri(System.getProperty(Constants.ENV_VAR_AMQP_URI))
         amqp.setSubscribeExchangeName(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))

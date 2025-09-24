@@ -10,6 +10,7 @@ import io.elastic.api.ShutdownParameters;
 import io.elastic.api.StartupParameters;
 import io.elastic.sailor.impl.BunyanJsonLayout;
 import io.elastic.sailor.impl.GracefulShutdownHandler;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

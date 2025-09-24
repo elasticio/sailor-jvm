@@ -1,14 +1,16 @@
 package io.elastic.sailor.impl
 
 import io.elastic.sailor.AmqpService
+import org.apache.http.impl.client.CloseableHttpClient
 import spock.lang.Specification
 
 class GracefulShutdownHandlerSpec extends Specification {
     def amqp = Mock(AmqpService)
+    def httpClient = Mock(CloseableHttpClient)
 
     def "should increment and decrement properly" () {
         setup:
-        def handler = new GracefulShutdownHandler(amqp)
+        def handler = new GracefulShutdownHandler(amqp, httpClient)
 
         when:
         handler.prepareGracefulShutdown();
