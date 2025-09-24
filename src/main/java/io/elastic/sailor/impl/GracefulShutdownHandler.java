@@ -15,8 +15,11 @@ public class GracefulShutdownHandler {
     public AtomicInteger messagesProcessingCount = new AtomicInteger();
     private CountDownLatch exitSignal;
 
-    public GracefulShutdownHandler(final AmqpService amqp) {
+    private final CloseableHttpClient httpClient;
+
+    public GracefulShutdownHandler(final AmqpService amqp, final CloseableHttpClient httpClient) {
         this.amqp = amqp;
+        this.httpClient = httpClient;
 
         registerShutdownHook();
     }
@@ -42,8 +45,12 @@ public class GracefulShutdownHandler {
 
     protected void prepareGracefulShutdown() {
         logger.info("Preparing graceful shutdown");
-        HttpUtils.closeHttpClients();
-        logger.info("Closed all HTTP clients");
+        try {
+            this.httpClient.close();
+            logger.info("Closed HTTP client");
+        } catch (IOException e) {
+            logger.error("Failed to close HTTP client", e);
+        }
 
         if (this.amqp == null) {
             return;

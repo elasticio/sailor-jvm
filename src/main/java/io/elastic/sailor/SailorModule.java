@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.elastic.sailor.impl.*;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,6 +19,13 @@ public class SailorModule extends AbstractModule {
         bind(ApiClient.class).to(ApiClientImpl.class);
 
         bind(FunctionBuilder.class).to(FunctionBuilderImpl.class);
+    }
+
+    @Provides
+    @Singleton
+    CloseableHttpClient provideHttpClient(@Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount) {
+        logger.info("Creating new singleton HTTP client");
+        return HttpUtils.createHttpClient(retryCount);
     }
 
 

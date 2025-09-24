@@ -23,8 +23,9 @@ public class ObjectStorageImpl implements ObjectStorage {
     private String objectStorageToken;
     private final CloseableHttpClient httpClient;
 
-    public ObjectStorageImpl() {
-        this.httpClient = HttpUtils.createHttpClient(5);
+    @Inject
+    public ObjectStorageImpl(final CloseableHttpClient httpClient) {
+        this.httpClient = httpClient;
     }
 
     @Override

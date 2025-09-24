@@ -40,7 +40,8 @@ public class MessageConsumer extends DefaultConsumer {
                            Step step,
                            final ContainerContext containerContext,
                            final MessageResolver messageResolver,
-                           ExecutorService threadPool) {
+                           ExecutorService threadPool,
+                           final CloseableHttpClient httpClient) {
         super(channel);
         this.channel = channel;
         this.cipher = cipher;
@@ -50,7 +51,7 @@ public class MessageConsumer extends DefaultConsumer {
         this.containerContext = containerContext;
         this.messageResolver = messageResolver;
         this.threadPool = threadPool;
-        this.httpClient = HttpUtils.createHttpClient(HTTP_CLIENT_RETRIES);
+        this.httpClient = httpClient;
     }
 
     @Override

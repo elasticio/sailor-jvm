@@ -33,7 +33,7 @@ public class HttpUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpUtils.class.getName());
 
-    private static final ArrayList<CloseableHttpClient> httpClients = new ArrayList<CloseableHttpClient>();
+    
 
     public static String postJson(final String url,
                                   final CloseableHttpClient httpClient,
@@ -181,7 +181,7 @@ public class HttpUtils {
                     @Override
                     public boolean retryRequest(HttpResponse httpResponse, int i, HttpContext httpContext) {
                         final int statusCode = httpResponse.getStatusLine().getStatusCode();
-                        final boolean shouldRetry = statusCode >= 500 && i <= retryCount;
+                        final boolean shouldRetry = (statusCode == 408 || statusCode >= 500) && i <= retryCount;
                         if (shouldRetry) {
                             logger.warn(httpResponse.toString());
                             logger.warn("Error {} during request, retrying ({}/{})", statusCode, i, retryCount);
@@ -194,20 +194,11 @@ public class HttpUtils {
                     }
                 })
                 .build();
-        httpClients.add(httpClient);
+        
         return httpClient;
     }
 
-    public static void closeHttpClients() {
-        for (CloseableHttpClient client : httpClients) {
-            try {
-                client.close();
-            } catch (IOException e) {
-                logger.warn("Failed to close HTTP client: {}", e.getMessage());
-            }
-        }
-        httpClients.clear();
-    }
+    
 
     private static  <T> T sendHttpRequest(final HttpUriRequest request,
                                           final CloseableHttpClient httpClient,

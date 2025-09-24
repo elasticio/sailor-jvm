@@ -37,9 +37,12 @@ public class AmqpServiceImpl implements AmqpService {
     private ThreadPoolExecutor threadPoolExecutor;
     private Integer threadPoolSize;
 
+    private final CloseableHttpClient httpClient;
+
     @Inject
-    public AmqpServiceImpl(CryptoServiceImpl cipher) {
+    public AmqpServiceImpl(final CryptoServiceImpl cipher, final CloseableHttpClient httpClient) {
         this.cipher = cipher;
+        this.httpClient = httpClient;
     }
 
     @Inject
@@ -111,7 +114,7 @@ public class AmqpServiceImpl implements AmqpService {
 
     public void subscribeConsumer(final Function function) {
         final MessageConsumer consumer = new MessageConsumer(
-            subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext, this.messageResolver, this.threadPoolExecutor);
+            subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext, this.messageResolver, this.threadPoolExecutor, this.httpClient);
         try {
             consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
         } catch (IOException e) {

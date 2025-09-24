@@ -96,7 +96,9 @@ public class Sailor {
 
         errorPublisher = injector.getInstance(ErrorPublisher.class);
 
-        Sailor.gracefulShutdownHandler = new GracefulShutdownHandler(amqp);
+        final CloseableHttpClient httpClient = injector.getInstance(CloseableHttpClient.class);
+
+        Sailor.gracefulShutdownHandler = new GracefulShutdownHandler(amqp, httpClient);
 
         try {
             logger.info("Processing flow step: {}", this.step.getId());

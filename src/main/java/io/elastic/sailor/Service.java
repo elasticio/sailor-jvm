@@ -27,9 +27,9 @@ public class Service {
 
     @Inject
     public Service(
-            @Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount
+            final CloseableHttpClient httpClient
     ) {
-        this.httpClient = HttpUtils.createHttpClient(retryCount);
+        this.httpClient = httpClient;
     }
 
     protected ServiceExecutionParameters createServiceExecutionParameters() {

@@ -28,12 +28,12 @@ public class ApiClientImpl implements ApiClient {
     public ApiClientImpl(@Named(Constants.ENV_VAR_API_URI) final String apiUri,
                          @Named(Constants.ENV_VAR_API_USERNAME) final String apiUser,
                          @Named(Constants.ENV_VAR_API_KEY) final String apiKey,
-                         @Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount,
-                         @Named(Constants.ENV_VAR_NO_SELF_PASSTRHOUGH) boolean putIncomingMessageIntoPassThrough) {
+                         @Named(Constants.ENV_VAR_NO_SELF_PASSTRHOUGH) boolean putIncomingMessageIntoPassThrough,
+                         final CloseableHttpClient httpClient) {
 
         this.authorizationHandler = new BasicAuthorizationHandler(apiUser, apiKey);
         this.apiBaseUri = String.format("%s", apiUri);
-        this.httpClient = HttpUtils.createHttpClient(retryCount);
+        this.httpClient = httpClient;
         this.putIncomingMessageIntoPassThrough = putIncomingMessageIntoPassThrough;
     }
 
