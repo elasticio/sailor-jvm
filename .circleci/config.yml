@@ -53,14 +53,14 @@ jobs:
       - store_artifacts:
           path: ~/sailor-jvm/build/libs/
 workflows:
-  nightly:
-    triggers:
-      - schedule:
-          cron: "0 0 * * *"
-          filters:
-            branches:
-              only:
-                - master
+#  nightly:
+#    triggers:
+#      - schedule:
+#          cron: "0 0 * * *"
+#          filters:
+#            branches:
+#              only:
+#                - master
 #    jobs:
       # - audit:
       #     name: "Audit dependencies"
