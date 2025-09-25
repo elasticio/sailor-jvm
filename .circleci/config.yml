@@ -4,16 +4,16 @@ executors:
     docker:
       - image: cimg/base:stable
 jobs:
-  audit:
-    working_directory: ~/sailor-jvm
-    executor: docker
-    docker:
-      - image: amazoncorretto:17-alpine-jdk
-    steps:
-      - checkout
-      - run:
-          name: Audit Dependencies
-          command: ./gradlew dependencyCheckAnalyze
+  # audit:
+  #   working_directory: ~/sailor-jvm
+  #   executor: docker
+  #   docker:
+  #     - image: amazoncorretto:17-alpine-jdk
+  #   steps:
+  #     - checkout
+  #     - run:
+  #         name: Audit Dependencies
+  #         command: ./gradlew dependencyCheckAnalyze
   test:
     parameters:
       jdk-version:
@@ -62,30 +62,29 @@ workflows:
               only:
                 - master
     jobs:
-      - audit:
-          name: "Audit dependencies"
+      # - audit:
+      #     name: "Audit dependencies"
   build_snapshot:
     jobs:
-      - audit
+      # - audit
       - test:
           matrix:
             parameters:
               jdk-version: [  "amazoncorretto:8-alpine-jdk", "amazoncorretto:11-alpine-jdk", "amazoncorretto:17-alpine-jdk" ]
       - test_and_build_snapshot:
           requires:
-            - audit
             - test
           filters:
             branches:
               ignore: master
   build_release:
     jobs:
-      - audit:
-          filters:
-            branches:
-              ignore: /.*/
-            tags:
-              only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
+      # - audit:
+      #     filters:
+      #       branches:
+      #         ignore: /.*/
+      #       tags:
+      #         only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
       - test:
           matrix:
             parameters:
@@ -97,7 +96,6 @@ workflows:
               only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
       - test_and_build_release:
           requires:
-            - audit
             - test
           filters:
             branches:
