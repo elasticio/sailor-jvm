@@ -61,7 +61,7 @@ workflows:
             branches:
               only:
                 - master
-    jobs:
+#    jobs:
       # - audit:
       #     name: "Audit dependencies"
   build_snapshot:
