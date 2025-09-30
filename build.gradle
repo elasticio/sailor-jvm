@@ -29,7 +29,7 @@ sourceCompatibility = '1.8'
      failBuildOnCVSS = 8
      suppressionFile = './dependencycheck-base-suppression.xml'
  }
- // dependencyCheck.enabled = false
+ // check.dependsOn dependencyCheckAnalyze
 
 def isCiEnv = 'true'.equals(System.getenv('CI'))
 def isCiTag = System.getenv('CIRCLE_TAG') != null;
