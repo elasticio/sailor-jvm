@@ -24,7 +24,7 @@ public class SailorModule extends AbstractModule {
     @Provides
     @Singleton
     CloseableHttpClient provideHttpClient(@Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount) {
-        logger.info("Creating new singleton HTTP client");
+        logger.debug("Creating new singleton HTTP client");
         return HttpUtils.createHttpClient(retryCount);
     }
 

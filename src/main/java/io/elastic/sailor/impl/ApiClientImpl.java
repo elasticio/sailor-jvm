@@ -42,7 +42,7 @@ public class ApiClientImpl implements ApiClient {
         final String path = String.format("/v1/tasks/%s/steps/%s", taskId, stepId);
         final String uri = this.apiBaseUri + path;
 
-        logger.info("Retrieving step data at: {}", path);
+        logger.debug("Retrieving step data at: {}", path);
 
         final JsonObject step = HttpUtils.getJson(uri, this.httpClient, authorizationHandler);
 
@@ -54,7 +54,7 @@ public class ApiClientImpl implements ApiClient {
         final String path = String.format("/v1/accounts/%s", accountId);
         final String uri = this.apiBaseUri + path;
 
-        logger.info("Updating account for user {} at: {}", this.authorizationHandler.getUsername(), path);
+        logger.debug("Updating account for user {} at: {}", this.authorizationHandler.getUsername(), path);
 
         return HttpUtils.putJson(uri, this.httpClient, body, authorizationHandler);
 

@@ -18,7 +18,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 group = 'io.elastic'
-version = '4.0.4-SNAPSHOT'
+version = '4.0.4-SNAPSHOT.1'
 sourceCompatibility = '1.8'
 
  dependencyCheck {
@@ -33,7 +33,7 @@ sourceCompatibility = '1.8'
 
 def isCiEnv = 'true'.equals(System.getenv('CI'))
 def isCiTag = System.getenv('CIRCLE_TAG') != null;
-def isReleaseBuild = !version.endsWith('SNAPSHOT');
+def isReleaseBuild = !version.contains('SNAPSHOT');
 def snapshotRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
 def releaseRepositoryUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
 def repositoryUsername = project.hasProperty('sonatypeUsername') ? sonatypeUsername : ""
@@ -213,4 +213,10 @@ shadowJar {
     archiveBaseName.set('sailor-jvm')
     archiveVersion.set(project.version.toString())
     archiveClassifier.set('')
+}
+
+task printVersion {
+    doLast {
+        println "Sailor JVM version: ${project.version}"
+    }
 }

@@ -53,7 +53,7 @@ public class MessagePublisherImpl implements MessagePublisher {
     @Override
     public void publish(String routingKey, byte[] payload, AMQP.BasicProperties options) {
 
-        logger.info("Pushing to exchange={}, routingKey={}", this.publishExchangeName, routingKey);
+        logger.debug("Pushing to exchange={}, routingKey={}", this.publishExchangeName, routingKey);
 
         boolean retryPublish = true;
         int retryCount = 0;
@@ -88,7 +88,7 @@ public class MessagePublisherImpl implements MessagePublisher {
             } else {
                 retryPublish = false;
             }
-            logger.info("Successfully published data to {}", this.publishExchangeName);
+            logger.debug("Successfully published data to {}", this.publishExchangeName);
         }
     }
 
@@ -105,7 +105,7 @@ public class MessagePublisherImpl implements MessagePublisher {
     }
 
     private boolean waitForConfirms(Channel publishChannel) {
-        logger.info("Waiting for publish confirm");
+        logger.debug("Waiting for publish confirm");
         try {
             return publishChannel.waitForConfirms(WAIT_FOR_CONFIRM_DURATION);
         } catch (InterruptedException e) {
@@ -114,7 +114,7 @@ public class MessagePublisherImpl implements MessagePublisher {
         } catch (TimeoutException e) {
             throw new RuntimeException("Waiting for publisher confirmation timed out", e);
         } catch (IllegalStateException e) {
-            logger.info("Looks like publisher confirmation was asked on a non-Confirm channel. " +
+            logger.warn("Looks like publisher confirmation was asked on a non-Confirm channel. " +
                 "Please check if the publisher channel was created with publisher confirms enabled.");
             throw e;
         }
@@ -123,7 +123,7 @@ public class MessagePublisherImpl implements MessagePublisher {
     private void sleep(int currentPublishAttempt) {
         long sleep = calculateSleepDuration(currentPublishAttempt);
 
-        logger.info("Published message to {} was not confirmed. Trying again in {} millis.",
+        logger.warn("Published message to {} was not confirmed. Trying again in {} millis.",
             this.publishExchangeName, sleep);
         try {
             Thread.sleep(sleep);
@@ -158,7 +158,7 @@ public class MessagePublisherImpl implements MessagePublisher {
                 if (isPublishConfirmEnabled) {
                     publishChannel.confirmSelect();
                 }
-                logger.info("Opened publish channel");
+                logger.debug("Opened publish channel");
             }
             return publishChannel;
         } catch (IOException e) {

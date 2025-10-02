@@ -98,16 +98,16 @@ public class AmqpServiceImpl implements AmqpService {
 
     @Override
     public void disconnect() {
-        logger.info("About to disconnect from AMQP");
+        logger.debug("About to disconnect from AMQP");
         try {
             subscribeChannel.close();
         } catch (IOException | TimeoutException e) {
-            logger.info("Subscription channel is already closed: " + e);
+            logger.warn("Subscription channel is already closed: " + e);
         }
         try {
             amqp.close();
         } catch (IOException e) {
-            logger.info("AMQP connection is already closed: " + e);
+            logger.warn("AMQP connection is already closed: " + e);
         }
         threadPoolExecutor.shutdown();
         logger.info("Successfully disconnected from AMQP");
@@ -122,12 +122,12 @@ public class AmqpServiceImpl implements AmqpService {
             throw new RuntimeException(e);
         }
 
-        logger.info("Subscribed consumer {}. Waiting for messages to arrive ...", consumerTag);
+        logger.debug("Subscribed consumer {}. Waiting for messages to arrive ...", consumerTag);
     }
 
     public void cancelConsumer() {
         if (consumerTag != null) {
-            logger.info("Canceling consumer {}", consumerTag);
+            logger.debug("Canceling consumer {}", consumerTag);
             try {
                 subscribeChannel.basicCancel(consumerTag);
             } catch (IOException e) {
@@ -178,7 +178,7 @@ public class AmqpServiceImpl implements AmqpService {
             if (subscribeChannel == null) {
                 subscribeChannel = amqp.createChannel();
                 subscribeChannel.basicQos(this.prefetchCount);
-                logger.info("Opened subscribe channel");
+                logger.debug("Opened subscribe channel");
             }
             return this;
         } catch (IOException e) {

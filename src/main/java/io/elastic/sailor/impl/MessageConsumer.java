@@ -120,7 +120,7 @@ public class MessageConsumer extends DefaultConsumer {
         MDC.put(Constants.MDC_MESSAGE_ID, messageId.toString());
         MDC.put(Constants.MDC_PARENT_MESSAGE_ID, parentMessageId.toString());
 
-        logger.info("messageId={}, parentMessageId={}, threadId={}", messageId, parentMessageId, threadId);
+        logger.debug("messageId={}, parentMessageId={}, threadId={}", messageId, parentMessageId, threadId);
     }
 
     private static void removeFromMDC(final String key) {
@@ -158,16 +158,16 @@ public class MessageConsumer extends DefaultConsumer {
     }
 
     private void ackOrReject(ExecutionStats stats, long deliveryTag) throws IOException {
-        logger.info("Execution stats: {}", stats);
+        logger.debug("Execution stats: {}", stats);
 
         if (stats == null || stats.getErrorCount() > 0) {
-            logger.info("Reject received messages {}", deliveryTag);
+            logger.debug("Reject received messages {}", deliveryTag);
             this.getChannel().basicReject(deliveryTag, false);
 
             return;
         }
 
-        logger.info("Acknowledging received message with deliveryTag={}", deliveryTag);
+        logger.debug("Acknowledging received message with deliveryTag={}", deliveryTag);
         this.getChannel().basicAck(deliveryTag, false);
     }
 

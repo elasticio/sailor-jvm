@@ -31,7 +31,7 @@ public class GracefulShutdownHandler {
     public void increment() {
         final int count = this.messagesProcessingCount.incrementAndGet();
 
-        logger.info("Incremented the number of messages concurrently processed to {}", count);
+        logger.debug("Incremented the number of messages concurrently processed to {}", count);
     }
 
 
@@ -43,14 +43,14 @@ public class GracefulShutdownHandler {
                 prepareGracefulShutdown();
             }
         });
-        logger.info("Registered a graceful shutdown hook");
+        logger.debug("Registered a graceful shutdown hook");
     }
 
     protected void prepareGracefulShutdown() {
-        logger.info("Preparing graceful shutdown");
+        logger.debug("Preparing graceful shutdown");
         try {
             this.httpClient.close();
-            logger.info("Closed HTTP client");
+            logger.debug("Closed HTTP client");
         } catch (IOException e) {
             logger.error("Failed to close HTTP client", e);
         }
@@ -61,14 +61,14 @@ public class GracefulShutdownHandler {
 
         this.amqp.cancelConsumer();
 
-        logger.info("Canceled all message consumers.");
+        logger.debug("Canceled all message consumers.");
 
         this.exitSignal = new CountDownLatch(this.messagesProcessingCount.get());
 
         final long messagesCount = this.exitSignal.getCount();
 
         if (messagesCount > 0) {
-            logger.info("Now waiting for {} messages to be processed before exiting", messagesCount);
+            logger.debug("Now waiting for {} messages to be processed before exiting", messagesCount);
         }
 
         try {
@@ -78,17 +78,17 @@ public class GracefulShutdownHandler {
         }
 
 
-        logger.info("No messages are being processed anymore");
+        logger.debug("No messages are being processed anymore");
         amqp.disconnect();
     }
 
     public void decrement() {
         final int count = this.messagesProcessingCount.decrementAndGet();
-        logger.info("Decremented the number of messages concurrently processed to {}", count);
+        logger.debug("Decremented the number of messages concurrently processed to {}", count);
 
         if(this.exitSignal != null){
             this.exitSignal.countDown();
-            logger.info("Waiting for {} messages before exiting", exitSignal.getCount());
+            logger.debug("Waiting for {} messages before exiting", exitSignal.getCount());
         }
     }
 
