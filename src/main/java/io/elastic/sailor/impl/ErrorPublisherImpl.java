@@ -11,6 +11,8 @@ import io.elastic.sailor.Utils;
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
 import jakarta.json.JsonObjectBuilder;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,13 +47,11 @@ public class ErrorPublisherImpl implements ErrorPublisher {
 
         final Object messageId = options.getHeaders().get(Constants.AMQP_HEADER_MESSAGE_ID);
 
-        logger.warn("Caught an error in messageId={}. Publishing it to the error queue.", messageId, e);
-
-        final String stackTrace = Utils.getStackTrace(e);
+        logger.error("Caught an error in messageId={}. Publishing it to the error queue.", messageId, e);
 
         final JsonObjectBuilder builder = Json.createObjectBuilder()
                 .add("name", e.getClass().getName())
-                .add("stack", stackTrace);
+                .add("stack", getStackTrace(e));
 
         if (e.getMessage() != null) {
             builder.add("message", e.getMessage());
@@ -120,5 +120,11 @@ public class ErrorPublisherImpl implements ErrorPublisher {
         } catch (UnsupportedEncodingException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private String getStackTrace(Throwable e) {
+        final StringWriter writer = new StringWriter();
+        e.printStackTrace(new PrintWriter(writer));
+        return writer.toString();
     }
 }

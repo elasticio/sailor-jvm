@@ -140,7 +140,7 @@ public class AmqpServiceImpl implements AmqpService {
 
     public void ack(Long deliveryTag) {
         try {
-            logger.info(String.format("Message #%s ack", deliveryTag));
+            logger.trace(String.format("Message #%s ack", deliveryTag));
             subscribeChannel.basicAck(deliveryTag, false);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -149,7 +149,7 @@ public class AmqpServiceImpl implements AmqpService {
 
     public void reject(Long deliveryTag) {
         try {
-            logger.info(String.format("Message #%s reject", deliveryTag));
+            logger.trace(String.format("Message #%s reject", deliveryTag));
             subscribeChannel.basicReject(deliveryTag, false);
         } catch (Exception e) {
             throw new RuntimeException(e);

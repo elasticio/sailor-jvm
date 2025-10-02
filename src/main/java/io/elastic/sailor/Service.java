@@ -108,11 +108,9 @@ public class Service {
 
         logger.error("Service execution failed with an exception", e);
 
-        StringWriter writer = new StringWriter();
-        e.printStackTrace(new PrintWriter(writer));
-
+        final String errorMessage = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
         final JsonObject data = Json.createObjectBuilder()
-                .add("message", writer.toString())
+                .add("message", errorMessage)
                 .build();
 
         createResponseAndSend("error", data);

@@ -1,3 +1,0 @@
-This is Sailor JVM - the SDK that operates on top of the Elastic.io platform It allows integration components (connectors) to communicate with the platform. It encapsulates all the platform under-the-hood work like connection to Rabbit mq, Maester (internal storage service) etc.
-Sailor lives as a jar artifact on a renote repository (mvnrepository) and is imported in a component as a gradle dependency (compile 'io.elastic:sailor-jvm:X.X.X').
-This lets component developers not focus on low level interactions with the platform and use high level Sailor abstractions.

@@ -43,16 +43,16 @@ public class MessageResolverImpl implements MessageResolver {
         final boolean autoResolveObjectReferences = moduleObject.getBoolean("autoResolveObjectReferences", true);
 
         if (!autoResolveObjectReferences) {
-            logger.info("Function is configured not to retrieve message body from object storage.");
+            logger.debug("Function is configured not to retrieve message body from object storage.");
             return Utils.createMessage(payload);
         }
 
-        this.logger.info("About to retrieve message body from storage");
+        this.logger.debug("About to retrieve message body from storage");
 
         final JsonObjectBuilder resolved = resolveMessage(payload);
 
         if (resolved == null) {
-            logger.info("Message will be emitted as is");
+            logger.debug("Message will be emitted as is");
             return Utils.createMessage(payload);
         }
 
@@ -61,7 +61,7 @@ public class MessageResolverImpl implements MessageResolver {
         final JsonObjectBuilder passthroughBuilder = Json.createObjectBuilder();
 
         if (passthrough != null) {
-            this.logger.info("About to retrieve passthrough from storage");
+            this.logger.debug("About to retrieve passthrough from storage");
 
             for (String stepId : passthrough.keySet()) {
                 final JsonObjectBuilder resolvedStep = resolveMessage(passthrough.getJsonObject(stepId));
@@ -79,7 +79,7 @@ public class MessageResolverImpl implements MessageResolver {
 
     private Message createErrorMessage(final byte[] body, final AMQP.BasicProperties properties) {
         final JsonObject errorBody = JSON.parse(body);
-        logger.info("Error message:{}", new String(body));
+        logger.debug("Error message:{}", new String(body));
 
         final JsonObjectBuilder headers = Json.createObjectBuilder();
         final JsonObjectBuilder builder = Json.createObjectBuilder();
@@ -115,7 +115,7 @@ public class MessageResolverImpl implements MessageResolver {
 
     @Override
     public JsonObject externalize(final JsonObject message) {
-        logger.info("Externalizing message body");
+        logger.debug("Externalizing message body");
         final MessageHolder messageHolder = new MessageHolder(message);
 
         final List<MessageHolder> passthroughHolders = new ArrayList<>();
@@ -123,7 +123,7 @@ public class MessageResolverImpl implements MessageResolver {
 
         if (passthrough != null) {
             for (String stepId : passthrough.keySet()) {
-                logger.info("Externalizing passthrough step={}", stepId);
+                logger.debug("Externalizing passthrough step={}", stepId);
                 final JsonObject msg = passthrough.getJsonObject(stepId);
                 passthroughHolders.add(new MessageHolder(stepId, msg));
             }
@@ -135,10 +135,10 @@ public class MessageResolverImpl implements MessageResolver {
 
         int totalSize = messageHolder.bodyStr.getBytes().length + passthroughSize;
 
-        logger.info("Message total size (body+passthrough): {} bytes", totalSize);
+        logger.debug("Message total size (body+passthrough): {} bytes", totalSize);
 
         if (totalSize <= this.objectStorageSizeThreshold) {
-            logger.info("Message size is below the threshold of {} bytes. No externalization required."
+            logger.debug("Message size is below the threshold of {} bytes. No externalization required."
                     , this.objectStorageSizeThreshold);
             return message;
         }
@@ -147,7 +147,7 @@ public class MessageResolverImpl implements MessageResolver {
         final JsonObjectBuilder passthroughBuilder = Json.createObjectBuilder();
 
         for (MessageHolder next : passthroughHolders) {
-            logger.info("Externalizing passthrough step={}", next.stepId);
+            logger.debug("Externalizing passthrough step={}", next.stepId);
             final JsonObjectBuilder externalizedStep = externalizeObject(next);
             passthroughBuilder.add(next.stepId, externalizedStep);
         }
@@ -165,7 +165,7 @@ public class MessageResolverImpl implements MessageResolver {
 
         final JsonValue objectId = storedObject.get("objectId");
 
-        logger.info("Stored object with id={}", objectId);
+        logger.debug("Stored object with id={}", objectId);
 
         final JsonObject headers = holder.message.getJsonObject(Message.PROPERTY_HEADERS);
 
@@ -192,7 +192,7 @@ public class MessageResolverImpl implements MessageResolver {
         final JsonString objectId = headers.getJsonString(Constants.MESSAGE_HEADER_OBJECT_STORAGE_ID);
 
         if (objectId == null) {
-            logger.info("No id to retrieve the object from storage found");
+            logger.debug("No id to retrieve the object from storage found");
             return null;
         }
 

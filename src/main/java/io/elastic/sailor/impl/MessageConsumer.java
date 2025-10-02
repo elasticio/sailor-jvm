@@ -73,9 +73,9 @@ public class MessageConsumer extends DefaultConsumer {
                     try {
                         channel.basicReject(deliveryTag, false);
                     } catch (IOException ioException) {
-                        logger.error("Failed to basicReject message: {}", Utils.getStackTrace(e));
+                        logger.error("Failed to basicReject message", ioException);
                     }
-                    logger.error("Failed to parse or resolve message to process {}", Utils.getStackTrace(e));
+                    logger.error("Failed to parse or resolve message to process", e);
                     decrement();
                     return;
                 }
@@ -86,7 +86,7 @@ public class MessageConsumer extends DefaultConsumer {
                     stats = processor.processMessage(executionContext, this.function);
                     logger.info("Processed the message, {}", stats);
                 } catch (Exception e) {
-                    logger.error("Failed to process message: {}", Utils.getStackTrace(e));
+                    logger.error("Failed to process message", e);
                 } finally {
                     removeFromMDC(Constants.MDC_THREAD_ID);
                     removeFromMDC(Constants.MDC_MESSAGE_ID);
@@ -94,7 +94,7 @@ public class MessageConsumer extends DefaultConsumer {
                     try {
                         ackOrReject(stats, deliveryTag);
                     } catch (IOException e) {
-                        logger.error("Failed to ackOrReject message: {}", Utils.getStackTrace(e));
+                        logger.error("Failed to ackOrReject message", e);
                     }
                     decrement();
                 }
@@ -127,7 +127,7 @@ public class MessageConsumer extends DefaultConsumer {
         try {
             MDC.remove(key);
         } catch (Exception e) {
-            logger.warn("Failed to remove {} from MDC: {}", key, Utils.getStackTrace(e));
+            logger.warn("Failed to remove {} from MDC", key, e);
         }
     }
 

@@ -135,12 +135,12 @@ public class ExecutionContext {
         final JsonObjectBuilder passthroughBuilder = createPassthroughBuilder();
 
         if (this.step.isPutIncomingMessageIntoPassThrough()) {
-            logger.info("Pass-through mode detected: incoming message");
+            logger.debug("Pass-through mode detected: incoming message");
 
             final Object previousStepId = this.amqpProperties.getHeaders().get(Constants.AMQP_HEADER_STEP_ID);
 
             if (previousStepId != null) {
-                logger.info("Adding message of step '{}' into pass-through", previousStepId);
+                logger.debug("Adding message of step '{}' into pass-through", previousStepId);
 
                 final JsonObject incomingMessageWithoutPassThrough = Utils.pick(this.message.toJsonObject(),
                         Message.PROPERTY_ID,
@@ -152,7 +152,7 @@ public class ExecutionContext {
             }
         } else {
 
-            logger.info("Adding message of step '{}' into pass-through", this.step.getId());
+            logger.debug("Adding message of step '{}' into pass-through", this.step.getId());
             passthroughBuilder.add(this.step.getId(), messageAsJson);
         }
 

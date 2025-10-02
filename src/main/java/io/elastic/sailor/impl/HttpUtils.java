@@ -52,7 +52,7 @@ public class HttpUtils {
             throw new RuntimeException("Null response received");
         }
 
-        logger.info("Successfully posted json {} bytes length", body.toString().length());
+        logger.debug("Successfully posted json {} bytes length", body.toString().length());
 
         return new String(bytes);
     }
@@ -73,7 +73,7 @@ public class HttpUtils {
             throw new RuntimeException("Null response received");
         }
 
-        logger.info("Successfully posted content");
+        logger.debug("Successfully posted content");
 
         return result;
     }
@@ -129,7 +129,7 @@ public class HttpUtils {
             throw new RuntimeException("Null response received");
         }
 
-        logger.info("Successfully put json {} bytes length", body.toString().length());
+        logger.debug("Successfully put json {} bytes length", body.toString().length());
 
         return content;
     }
@@ -144,7 +144,7 @@ public class HttpUtils {
 
         sendHttpRequest(httpDelete, httpClient, authorizationHandler, null);
 
-        logger.info("Successfully sent delete");
+        logger.debug("Successfully sent delete");
 
         return;
     }
@@ -205,7 +205,7 @@ public class HttpUtils {
                                           final AuthorizationHandler authorizationHandler,
                                           final HttpEntityCallback<T> callback) {
 
-        logger.info("Sending {} request to {}", request.getMethod(), request.getURI().getPath());
+        logger.debug("Sending {} request to {}", request.getMethod(), request.getURI().getPath());
         try {
             authorizationHandler.authorize(request);
             final CloseableHttpResponse response = httpClient.execute(request);

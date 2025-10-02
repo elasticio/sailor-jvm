@@ -192,12 +192,6 @@ public class Utils {
         return result.build();
     }
 
-    public static String getStackTrace(Throwable e) {
-        final StringWriter writer = new StringWriter();
-        e.printStackTrace(new PrintWriter(writer));
-
-        return writer.toString();
-    }
 
     public static MessageEncoding getMessageEncoding(final AMQP.BasicProperties properties) {
 
