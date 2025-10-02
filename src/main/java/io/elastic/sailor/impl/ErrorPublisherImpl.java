@@ -51,7 +51,7 @@ public class ErrorPublisherImpl implements ErrorPublisher {
 
         final JsonObjectBuilder builder = Json.createObjectBuilder()
                 .add("name", e.getClass().getName())
-                .add("stack", getStackTrace(e));
+                .add("stack", Utils.getStackTrace(e));
 
         if (e.getMessage() != null) {
             builder.add("message", e.getMessage());
@@ -122,9 +122,4 @@ public class ErrorPublisherImpl implements ErrorPublisher {
         }
     }
 
-    private String getStackTrace(Throwable e) {
-        final StringWriter writer = new StringWriter();
-        e.printStackTrace(new PrintWriter(writer));
-        return writer.toString();
-    }
 }
