@@ -1,6 +1,8 @@
-## 4.0.4 (June 27, 2025)
-  * Use streams to post lightweight messages to maester
-  * Reuse http clients instead of creating a new one per each request
+## 4.0.4 (October 15, 2025)
+  * Use streams to post lightweight messages to Maester
+  * Reuse HTTP clients instead of creating a new one per each request
+  * Add retry mechanism for the 408 HTTP error
+  * Improved the logging. Made them less verbose and clean. 
 
 ## 4.0.3 (July 31, 2024)
   * Bumped all the dependencies to its most recent minor versions
