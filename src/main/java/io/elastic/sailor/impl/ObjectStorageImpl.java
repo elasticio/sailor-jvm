@@ -53,11 +53,11 @@ public class ObjectStorageImpl implements ObjectStorage {
 
     @Override
     public JsonObject postJsonObject(final JsonObject object) {
-        return post(object.toString());
+        return post(object.toString(), "JSON object");
     }
 
     @Override
-    public JsonObject post(String object) {
+    public JsonObject post(String object, String description) {
         if (this.objectStorageUri == null) {
             logger.info("Object storage service URI is not set");
             return null;
@@ -68,7 +68,7 @@ public class ObjectStorageImpl implements ObjectStorage {
             return null;
         }
 
-        this.logger.info("About to post an object into the storage");
+        this.logger.info("About to post an object into the storage: {}", description);
 
         final String endpoint = String.format("%s/objects/", this.objectStorageUri);
 

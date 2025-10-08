@@ -161,7 +161,13 @@ public class MessageResolverImpl implements MessageResolver {
 
         final JsonObjectBuilder result = Utils.copy(holder.message);
 
-        final JsonObject storedObject = objectStorage.post(holder.bodyStr);
+        String description;
+        if (holder.stepId.isEmpty()) {
+            description = "main message body";
+        } else {
+            description = "passthrough for step " + holder.stepId;
+        }
+        final JsonObject storedObject = objectStorage.post(holder.bodyStr, description);
 
         final JsonValue objectId = storedObject.get("objectId");
 

@@ -255,8 +255,7 @@ class MessageResolverImplSpec extends Specification {
         def result = resolver.externalize(msg)
 
         then:
-        1 * storage.post('{"hello":"world"}') >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
-        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","headers":{"x-meta-foo":"12345","x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"body":{},"passthrough":{}}'
+        1 * storage.post('{"hello":"world"}', "main message body") >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
 
     }
 
@@ -276,7 +275,7 @@ class MessageResolverImplSpec extends Specification {
         def result = resolver.externalize(msg)
 
         then:
-        1 * storage.post('{"hello":"world"}') >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
+        1 * storage.post('{"hello":"world"}', "main message body") >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
         JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","body":{},"headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"passthrough":{}}'
 
     }
@@ -321,8 +320,8 @@ class MessageResolverImplSpec extends Specification {
         def result = resolver.externalize(msgJson)
 
         then:
-        1 * storage.post('{"hello":"world"}') >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
-        1 * storage.post('{"hello":"again"}') >> Json.createObjectBuilder().add("objectId", "588763137d802200192b485c").build()
+        1 * storage.post('{"hello":"world"}', "main message body") >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
+        1 * storage.post('{"hello":"again"}', "passthrough for step step_1") >> Json.createObjectBuilder().add("objectId", "588763137d802200192b485c").build()
         JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{},"headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"passthrough":{"step_1":{"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3","attachments":{},"body":{},"headers":{"foo":"bar","x-ipaas-object-storage-id":"588763137d802200192b485c"},"passthrough":{}}}}'
 
     }
