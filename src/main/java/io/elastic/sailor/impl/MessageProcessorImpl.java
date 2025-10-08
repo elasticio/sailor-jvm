@@ -68,7 +68,7 @@ public class MessageProcessorImpl implements MessageProcessor {
         final Object messageId = executionContext.getHeaders().get(Constants.AMQP_HEADER_MESSAGE_ID);
 
         try {
-            logger.info("Starting processing of messageId={}", messageId);
+            logger.debug("Starting processing of messageId={}", messageId);
             function.execute(params);
             logger.info("Successfully finished processing of messageId={}", messageId);
         } catch (Exception e) {

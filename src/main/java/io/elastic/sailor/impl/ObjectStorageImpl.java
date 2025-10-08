@@ -41,7 +41,7 @@ public class ObjectStorageImpl implements ObjectStorage {
             return null;
         }
 
-        this.logger.info("About to retrieve object by id={}", id);
+        this.logger.debug("About to retrieve object by id={}", id);
 
         final String endpoint = String.format("%s/objects/%s", this.objectStorageUri, id);
 
@@ -68,7 +68,7 @@ public class ObjectStorageImpl implements ObjectStorage {
             return null;
         }
 
-        this.logger.info("About to post an object into the storage: {}", description);
+        this.logger.info("About to post an object into the storage: {}, size: {} bytes", description, object.length());
 
         final String endpoint = String.format("%s/objects/", this.objectStorageUri);
 
