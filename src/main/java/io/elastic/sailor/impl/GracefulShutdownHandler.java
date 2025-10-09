@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -48,6 +49,29 @@ public class GracefulShutdownHandler {
 
     protected void prepareGracefulShutdown() {
         logger.debug("Preparing graceful shutdown");
+
+        if (this.amqp == null) {
+            return;
+        }
+
+        // 1. Stop accepting new messages
+        this.amqp.cancelConsumer();
+        logger.debug("Canceled all message consumers.");
+
+        // 2. Wait for in-flight messages to complete
+        this.exitSignal = new CountDownLatch(this.messagesProcessingCount.get());
+        final long messagesCount = this.exitSignal.getCount();
+        if (messagesCount > 0) {
+            logger.debug("Now waiting for {} messages to be processed before exiting", messagesCount);
+        }
+        try {
+            this.exitSignal.await(30, TimeUnit.SECONDS);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        logger.debug("No messages are being processed anymore");
+
+        // 3. Now that all work is done, shut down shared resources
         try {
             this.httpClient.close();
             logger.debug("Closed HTTP client");
@@ -55,30 +79,6 @@ public class GracefulShutdownHandler {
             logger.error("Failed to close HTTP client", e);
         }
 
-        if (this.amqp == null) {
-            return;
-        }
-
-        this.amqp.cancelConsumer();
-
-        logger.debug("Canceled all message consumers.");
-
-        this.exitSignal = new CountDownLatch(this.messagesProcessingCount.get());
-
-        final long messagesCount = this.exitSignal.getCount();
-
-        if (messagesCount > 0) {
-            logger.debug("Now waiting for {} messages to be processed before exiting", messagesCount);
-        }
-
-        try {
-            this.exitSignal.await();
-        } catch (InterruptedException e) {
-            logger.error(e.getMessage());
-        }
-
-
-        logger.debug("No messages are being processed anymore");
         amqp.disconnect();
     }
 
