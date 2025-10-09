@@ -173,4 +173,8 @@ public class MessagePublisherImpl implements MessagePublisher {
             }
         }
     }
+
+    public List<Channel> getAllChannels() {
+        return allChannels;
+    }
 }

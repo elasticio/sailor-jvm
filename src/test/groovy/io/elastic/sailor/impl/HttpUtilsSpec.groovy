@@ -173,7 +173,7 @@ class HttpUtilsSpec extends Specification {
         wireMockServer.stop()
     }
 
-    def "should not retry 408 Request Timeout response from server"() {
+    def "should retry 408 Request Timeout response from server"() {
         def wireMockServer = new WireMockServer(12346);
 
         setup:
@@ -184,18 +184,22 @@ class HttpUtilsSpec extends Specification {
 
         stubFor(get(urlEqualTo("/timeout")).inScenario("timeout")
                 .whenScenarioStateIs(Scenario.STARTED)
+                .willReturn(aResponse().withStatus(408).withBody("Request Timeout"))
+                .willSetStateTo("next request"))
+        stubFor(get(urlEqualTo("/timeout")).inScenario("timeout")
+                .whenScenarioStateIs("next request")
                 .willReturn(
-                        aResponse().withStatus(408).withBody("Request Timeout")
+                        aResponse().withStatus(200).withBody('{"id":"1","email":"homer.simpson@example.org"}')
                 ))
 
         when:
-        HttpUtils.getJson(
+        def result = HttpUtils.getJson(
                 "http://localhost:12346/timeout",
                 httpClient,
                 new BasicAuthorizationHandler("admin", "secret"))
         then:
-        def e = thrown(RuntimeException)
-        e.message.contains("Got 408 response")
+        result.toString() == '{"id":"1","email":"homer.simpson@example.org"}'
+
         cleanup:
         httpClient.close()
         wireMockServer.stop()
@@ -313,5 +317,34 @@ class HttpUtilsSpec extends Specification {
 
         cleanup:
         httpClient.close()
+    }
+
+    def "should not send Expect-Continue header"() {
+        def wireMockServer = new WireMockServer(12346);
+
+        setup:
+        wireMockServer.start()
+        def httpClient = HttpUtils.createHttpClient(0)
+        def body = Json.createObjectBuilder().add("foo", "bar").build()
+
+        configureFor("localhost", 12346)
+
+        stubFor(post(urlEqualTo("/expect-continue-test"))
+                .willReturn(aResponse().withStatus(200)))
+
+        when:
+        HttpUtils.postJson(
+                "http://localhost:12346/expect-continue-test",
+                httpClient,
+                body,
+                basicAuthHandler)
+
+        then:
+        verify(postRequestedFor(urlEqualTo("/expect-continue-test"))
+                .withoutHeader("Expect"))
+        
+        cleanup:
+        httpClient.close()
+        wireMockServer.stop()
     }
 }

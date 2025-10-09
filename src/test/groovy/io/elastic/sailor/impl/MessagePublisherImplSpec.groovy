@@ -6,6 +6,10 @@ import io.elastic.sailor.AmqpService
 import io.elastic.sailor.Utils
 import spock.lang.Specification
 
+import java.util.concurrent.Executors
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 
 class MessagePublisherImplSpec extends Specification {
@@ -140,5 +144,46 @@ class MessagePublisherImplSpec extends Specification {
         publisher.calculateSleepDuration(7) == 35
         publisher.calculateSleepDuration(8) == 35
         publisher.calculateSleepDuration(100) == 35
+    }
+
+    def "should publish concurrently from multiple threads"() {
+        setup:
+        def message = "Hello world".getBytes()
+        int numThreads = 10
+        int messagesPerThread = 10
+        def totalMessages = numThreads * messagesPerThread
+        def executor = Executors.newFixedThreadPool(numThreads)
+        def latch = new CountDownLatch(totalMessages)
+        def exceptions = new CopyOnWriteArrayList<Exception>()
+
+        // Mock the channel behavior
+        amqp.getConnection() >> connection
+        connection.createChannel() >> Mock(Channel) {
+            confirmSelect() >> {}
+            basicPublish(_, _, _, _) >> {}
+            waitForConfirms(_) >> true
+        }
+
+
+        when:
+        numThreads.times {
+            executor.submit({
+                try {
+                    messagesPerThread.times {
+                        publisher.publish(routingKey, message, headers)
+                        latch.countDown()
+                    }
+                } catch (Exception e) {
+                    exceptions.add(e)
+                }
+            })
+        }
+
+        latch.await(10, TimeUnit.SECONDS)
+        executor.shutdown()
+
+        then:
+        exceptions.isEmpty()
+        publisher.getAllChannels().size() == numThreads
     }
 }
