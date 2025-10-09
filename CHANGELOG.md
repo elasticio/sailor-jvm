@@ -1,8 +1,17 @@
-## 4.0.4 (October 15, 2025)
-  * Use streams to post lightweight messages to Maester
-  * Reuse HTTP clients instead of creating a new one per each request
-  * Add retry mechanism for the 408 HTTP error
-  * Improved the logging. Made them less verbose and clean. 
+## 5.0.0 (October 16, 2025)
+  * **Concurrency & Stability Fixes:**
+    * Refactored message publisher to use thread-local AMQP channels, resolving timeouts during high-throughput parallel processing.
+    * Corrected a race condition in the graceful shutdown logic to prevent `Connection pool shut down` errors when stopping the component during an active HTTP request.
+  * **HTTP Client Improvements:**
+    * Implemented a singleton strategy for the HTTP client to reuse connections and improve performance.
+    * Stabilized large message (lightweight) streaming by setting the `Content-Length` and disabling the `Expect-Continue` handshake, preventing `Connection reset` errors.
+    * Added a retry mechanism for `408` (Request Timeout) and `5xx` server errors.
+  * **Logging Enhancements:**
+    * Resolved logging conflicts that caused erroneous messages, duplicate or empty log messages.
+    * Improved logging for large message uploads to include the message's context (e.g., "main message body", "passthrough") and its size.
+    * Moved several verbose logs from `INFO` to `DEBUG` level for a cleaner default log output.
+  * **Dependencies:**
+    * Upgraded core dependencies, including Guice from v5 to v7.
 
 ## 4.0.3 (July 31, 2024)
   * Bumped all the dependencies to its most recent minor versions
