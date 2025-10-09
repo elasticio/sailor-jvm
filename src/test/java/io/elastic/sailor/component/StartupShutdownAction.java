@@ -55,14 +55,14 @@ public class StartupShutdownAction implements Function {
         final String publishExchangeName = configuration.getString(Constants.ENV_VAR_PUBLISH_MESSAGES_TO);
         final String dataRoutingKey = configuration.getString(Constants.ENV_VAR_DATA_ROUTING_KEY);
 
+        final MessagePublisherImpl publisher = new MessagePublisherImpl(
+                publishExchangeName, Integer.MAX_VALUE, 0,0, true, true, amqp);
+
+        amqp.setMessagePublisher(publisher);
         amqp.setAmqpUri(configuration.getString(Constants.ENV_VAR_AMQP_URI));
         amqp.setPrefetchCount(1);
         amqp.setThreadPoolSize(1);
         amqp.connectAndSubscribe();
-
-
-        final MessagePublisherImpl publisher = new MessagePublisherImpl(
-                publishExchangeName, Integer.MAX_VALUE, 0,0, true, true, amqp);
 
         final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")

@@ -59,6 +59,9 @@ class ShutdownIntegrationSpec extends Specification {
     @Shared
     Channel publishChannel
 
+    @Shared
+    MessagePublisherImpl messagePublisher
+
     def setupSpec() {
 
         System.setProperty(Constants.ENV_VAR_API_URI, 'http://localhost:8182')
@@ -90,6 +93,12 @@ class ShutdownIntegrationSpec extends Specification {
 
         amqp = new AmqpServiceImpl(cipher, HttpUtils.createHttpClient(0))
 
+        messagePublisher = new MessagePublisherImpl(
+                System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
+                Integer.MAX_VALUE,
+                100, 5 * 60 * 1000, true, true, amqp)
+
+        amqp.setMessagePublisher(messagePublisher)
         amqp.setAmqpUri(stepCfg.getString(Constants.ENV_VAR_AMQP_URI))
         amqp.setSubscribeExchangeName(stepCfg.getString(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
         amqp.setPrefetchCount(1)
@@ -106,11 +115,6 @@ class ShutdownIntegrationSpec extends Specification {
                 stepCfg.getString(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
                 stepCfg.getString(Constants.ENV_VAR_DATA_ROUTING_KEY)
         )
-
-        def messagePublisher = new MessagePublisherImpl(
-                System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
-                Integer.MAX_VALUE,
-                100, 5 * 60 * 1000, true, true, amqp)
 
         publishChannel = messagePublisher.getPublishChannel()
 

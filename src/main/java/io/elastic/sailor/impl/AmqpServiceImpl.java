@@ -39,11 +39,17 @@ public class AmqpServiceImpl implements AmqpService {
     private Integer threadPoolSize;
 
     private final CloseableHttpClient httpClient;
+    private MessagePublisher messagePublisher;
 
     @Inject
     public AmqpServiceImpl(final CryptoServiceImpl cipher, final CloseableHttpClient httpClient) {
         this.cipher = cipher;
         this.httpClient = httpClient;
+    }
+
+    @Inject
+    public void setMessagePublisher(final MessagePublisher messagePublisher) {
+        this.messagePublisher = messagePublisher;
     }
 
     @Inject
@@ -99,6 +105,11 @@ public class AmqpServiceImpl implements AmqpService {
     @Override
     public void disconnect() {
         logger.debug("About to disconnect from AMQP");
+
+        if (this.messagePublisher != null) {
+            this.messagePublisher.disconnect();
+        }
+
         try {
             subscribeChannel.close();
         } catch (IOException | TimeoutException e) {

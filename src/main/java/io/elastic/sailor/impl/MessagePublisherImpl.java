@@ -5,18 +5,17 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.rabbitmq.client.AMQP;
 import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-
+import io.elastic.sailor.AmqpService;
+import io.elastic.sailor.Constants;
+import io.elastic.sailor.MessagePublisher;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.TimeoutException;
-
-import io.elastic.sailor.AmqpService;
-import io.elastic.sailor.Constants;
-import io.elastic.sailor.MessagePublisher;
 
 @Singleton
 public class MessagePublisherImpl implements MessagePublisher {
@@ -29,9 +28,11 @@ public class MessagePublisherImpl implements MessagePublisher {
     private int publishMaxRetries;
     private long publishRetryDelay;
     private long publishMaxRetryDelay;
-    private Channel publishChannel;
     private final boolean isPublishConfirmEnabled;
     private final boolean isPersistentMessagesEnabled;
+
+    private final ThreadLocal<Channel> threadLocalChannel = new ThreadLocal<>();
+    private final List<Channel> allChannels = new CopyOnWriteArrayList<>();
 
     @Inject
     public MessagePublisherImpl(@Named(Constants.ENV_VAR_PUBLISH_MESSAGES_TO) final String publishExchangeName,
@@ -144,25 +145,32 @@ public class MessagePublisherImpl implements MessagePublisher {
     }
 
     private Channel getPublishChannel() {
-        if (this.publishChannel == null) {
-            this.publishChannel = createPublishChannel();
-        }
-        return this.publishChannel;
-    }
-
-    private synchronized Channel createPublishChannel() {
         try {
-            if (publishChannel == null) {
-                final Connection connection = amqpService.getConnection();
-                publishChannel = connection.createChannel();
+            if (threadLocalChannel.get() == null) {
+                Channel channel = amqpService.getConnection().createChannel();
                 if (isPublishConfirmEnabled) {
-                    publishChannel.confirmSelect();
+                    channel.confirmSelect();
                 }
-                logger.debug("Opened publish channel");
+                threadLocalChannel.set(channel);
+                allChannels.add(channel);
+                logger.debug("Opened a new publish channel for thread {}", Thread.currentThread().getName());
             }
-            return publishChannel;
+            return threadLocalChannel.get();
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public void disconnect() {
+        logger.info("Closing {} publisher channels", allChannels.size());
+        for (Channel channel : allChannels) {
+            try {
+                if (channel.isOpen()) {
+                    channel.close();
+                }
+            } catch (IOException | TimeoutException e) {
+                logger.warn("Failed to close a publisher channel", e);
+            }
         }
     }
 }
