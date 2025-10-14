@@ -15,13 +15,10 @@ public class ServiceModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        install(new HttpClientModule());
     }
 
-    @Provides
-    @Singleton
-    CloseableHttpClient provideHttpClient(@Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount) {
-        return HttpUtils.createHttpClient(retryCount);
-    }
+
 
     @Provides
     @Named(Constants.NAME_CFG_JSON)

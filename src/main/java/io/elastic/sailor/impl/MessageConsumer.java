@@ -21,7 +21,6 @@ import java.util.concurrent.ExecutorService;
 public class MessageConsumer extends DefaultConsumer {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
-    private static final int HTTP_CLIENT_RETRIES = 4;
 
     private final CryptoServiceImpl cipher;
     private final MessageProcessor processor;

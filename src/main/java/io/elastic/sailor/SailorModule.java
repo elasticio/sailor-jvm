@@ -16,16 +16,11 @@ public class SailorModule extends AbstractModule {
     @Override
     protected void configure() {
 
+        install(new HttpClientModule());
+
         bind(ApiClient.class).to(ApiClientImpl.class);
 
         bind(FunctionBuilder.class).to(FunctionBuilderImpl.class);
-    }
-
-    @Provides
-    @Singleton
-    CloseableHttpClient provideHttpClient(@Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount) {
-        logger.debug("Creating new singleton HTTP client");
-        return HttpUtils.createHttpClient(retryCount);
     }
 
 

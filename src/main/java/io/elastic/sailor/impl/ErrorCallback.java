@@ -23,8 +23,8 @@ public class ErrorCallback extends CountingCallbackImpl {
 
     @Override
     public void receiveData(Object data) {
-        logger.info("Received error data");
+        logger.trace("Received error data");
         this.errorPublisher.publish((Throwable) data, executionContext.buildAmqpProperties(), executionContext.getRawMessage());
-        logger.info("Published error data");
+        logger.trace("Published error data");
     }
 }
