@@ -77,7 +77,7 @@ public class ObjectStorageImpl implements ObjectStorage {
 
         final JsonObject result = HttpUtils.post(endpoint,
                 this.httpClient,
-                new LoggingHttpEntityWrapper(new InputStreamEntity(new ByteArrayInputStream(content), content.length)),
+                new LoggingHttpEntityWrapper(new ByteArrayEntity(content)),
                 new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken));
 
         return result;
