@@ -4,16 +4,6 @@ executors:
     docker:
       - image: cimg/base:stable
 jobs:
-  # audit:
-  #   working_directory: ~/sailor-jvm
-  #   executor: docker
-  #   docker:
-  #     - image: amazoncorretto:17-alpine-jdk
-  #   steps:
-  #     - checkout
-  #     - run:
-  #         name: Audit Dependencies
-  #         command: ./gradlew dependencyCheckAnalyze
   test:
     parameters:
       jdk-version:
@@ -53,20 +43,8 @@ jobs:
       - store_artifacts:
           path: ~/sailor-jvm/build/libs/
 workflows:
-#  nightly:
-#    triggers:
-#      - schedule:
-#          cron: "0 0 * * *"
-#          filters:
-#            branches:
-#              only:
-#                - master
-#    jobs:
-      # - audit:
-      #     name: "Audit dependencies"
   build_snapshot:
     jobs:
-      # - audit
       - test:
           matrix:
             parameters:
@@ -79,12 +57,6 @@ workflows:
               ignore: master
   build_release:
     jobs:
-      # - audit:
-      #     filters:
-      #       branches:
-      #         ignore: /.*/
-      #       tags:
-      #         only: /^([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*))?(?:\+[0-9A-Za-z-]+)?$/
       - test:
           matrix:
             parameters:
