@@ -14,7 +14,7 @@ plugins {
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 group = 'io.elastic'
-version = '5.0.0-SNAPSHOT.2'
+version = '5.0.0'
 sourceCompatibility = '1.8'
 
 def isCiEnv = 'true'.equals(System.getenv('CI'))

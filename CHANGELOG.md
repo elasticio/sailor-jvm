@@ -1,4 +1,4 @@
-## 5.0.0 (October 16, 2025)
+## 5.0.0 (November 14, 2025)
   * **Concurrency & Stability Fixes:**
     * Added retry mechanism for publisher confirms on timeout to prevent message loss.
     * Refactored message publisher to use thread-local AMQP channels, resolving timeouts during high-throughput parallel processing.
