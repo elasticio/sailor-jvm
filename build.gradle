@@ -2,9 +2,6 @@ buildscript {
     repositories {
         mavenCentral()
     }
-    dependencies {
-        classpath 'org.owasp:dependency-check-gradle:7.2.1'
-    }
 }
 
 plugins {
@@ -14,22 +11,11 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id 'org.owasp.dependencycheck' version '8.0.2'
     id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 group = 'io.elastic'
 version = '5.0.0-SNAPSHOT.2'
 sourceCompatibility = '1.8'
-
- dependencyCheck {
-     format = 'ALL'
-     // Dependency Check script will fail in case there are 8.0+ vulnerabilities.
-     // It should be configured to 7 (high and critical), but so far is not possible as 'jakarta.json-api' library
-     // does not have any updates that solve the problem
-     failBuildOnCVSS = 8
-     suppressionFile = './dependencycheck-base-suppression.xml'
- }
- // check.dependsOn dependencyCheckAnalyze
 
 def isCiEnv = 'true'.equals(System.getenv('CI'))
 def isCiTag = System.getenv('CIRCLE_TAG') != null;
