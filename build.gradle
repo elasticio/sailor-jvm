@@ -11,7 +11,6 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 group = 'io.elastic'
 version = '5.0.0'
@@ -21,7 +20,7 @@ def isCiEnv = 'true'.equals(System.getenv('CI'))
 def isCiTag = System.getenv('CIRCLE_TAG') != null;
 def isReleaseBuild = !version.contains('SNAPSHOT');
 def snapshotRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
-def releaseRepositoryUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+def releaseRepositoryUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
 def repositoryUsername = project.hasProperty('sonatypeUsername') ? sonatypeUsername : ""
 def repositoryPassword = project.hasProperty('sonatypePassword') ? sonatypePassword : ""
 
@@ -164,41 +163,6 @@ afterEvaluate {
             task.enabled = false
         }
     }
-}
-
-task postPublishCopyFilesFromMavelLocal(type: Copy) {
-    dependsOn publishToMavenLocal
-    def homeDir = System.getProperty("user.home")
-    def sourceDir = "${homeDir}/.m2/repository/io/elastic/sailor-jvm/${project.version}"
-    from fileTree(dir: sourceDir, include: '**/*', exclude: 'maven-metadata-local.xml')
-    into "${projectDir}/build/sailorReleaseBundle"
-}
-
-task postPublishCreateBundleJarFromMavelLocal(type: Exec) {
-    dependsOn publishToMavenLocal
-    commandLine "bash", "-c", "cd ${projectDir}/build/sailorReleaseBundle && jar -cvf bundle.jar ./*"
-}
-
-task postPublishActions {
-    dependsOn publishToMavenLocal, postPublishCopyFilesFromMavelLocal, postPublishCreateBundleJarFromMavelLocal
-    doLast {
-        println '====================================================================================================='
-        println 'All done. You can go to ./build/sailorReleaseBundle and upload the bundle.jar file from there'
-        println '====================================================================================================='
-    }
-}
-
-// Define the task dependencies and ensure they run in order
-postPublishCopyFilesFromMavelLocal.mustRunAfter publishToMavenLocal
-postPublishCreateBundleJarFromMavelLocal.mustRunAfter postPublishCopyFilesFromMavelLocal
-
-// Add the custom tasks to the lifecycle
-publishToMavenLocal.finalizedBy postPublishActions
-
-shadowJar {
-    archiveBaseName.set('sailor-jvm')
-    archiveVersion.set(project.version.toString())
-    archiveClassifier.set('')
 }
 
 task printVersion {
