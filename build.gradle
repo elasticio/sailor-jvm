@@ -147,7 +147,7 @@ publishing {
 
 signing {
     println 'isReleaseBuild: ' + isReleaseBuild;
-    required { isReleaseBuild && gradle.taskGraph.hasTask("publish"); }
+    required { isReleaseBuild }
     if(isReleaseBuild && project.hasProperty('signingPassword') && project.hasProperty('signingKeyBase64')) {
         def signingPassword = findProperty("signingPassword")
         def signingKey = new String(findProperty("signingKeyBase64").decodeBase64())
@@ -173,12 +173,15 @@ task printVersion {
 }
 
 task createBundle(type: Zip) {
-    dependsOn jar, sourcesJar, javadocJar, generatePomFileForMavenJavaPublication
+    dependsOn jar, sourcesJar, javadocJar, generatePomFileForMavenJavaPublication, signMavenJavaPublication
 
-    from(jar.archiveFile)
-    from(sourcesJar.archiveFile)
-    from(javadocJar.archiveFile)
-    from(generatePomFileForMavenJavaPublication.destination)
+    into('') {
+        from(jar.archiveFile)
+        from(sourcesJar.archiveFile)
+        from(javadocJar.archiveFile)
+        from(generatePomFileForMavenJavaPublication.destination)
+        from(signMavenJavaPublication.signatureFiles)
+    }
 
     archiveFileName = "sailor-jvm-bundle-${project.version}.zip"
     destinationDirectory = file("${buildDir}/bundle")
