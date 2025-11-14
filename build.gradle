@@ -11,6 +11,7 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
 group = 'io.elastic'
 version = '5.0.0'
@@ -170,3 +171,17 @@ task printVersion {
         println "Sailor JVM version: ${project.version}"
     }
 }
+
+task createBundle(type: Zip) {
+    dependsOn jar, sourcesJar, javadocJar, generatePomFileForMavenJavaPublication
+
+    from(jar.archiveFile)
+    from(sourcesJar.archiveFile)
+    from(javadocJar.archiveFile)
+    from(generatePomFileForMavenJavaPublication.destination)
+
+    archiveFileName = "sailor-jvm-bundle-${project.version}.zip"
+    destinationDirectory = file("${buildDir}/bundle")
+}
+
+build.dependsOn createBundle
