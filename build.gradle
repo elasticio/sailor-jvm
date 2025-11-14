@@ -172,19 +172,22 @@ task printVersion {
     }
 }
 
-task createBundle(type: Zip) {
+task copyBundleFiles(type: Copy) {
     dependsOn jar, sourcesJar, javadocJar, generatePomFileForMavenJavaPublication, signMavenJavaPublication
 
-    into('') {
-        from(jar.archiveFile)
-        from(sourcesJar.archiveFile)
-        from(javadocJar.archiveFile)
-        from(generatePomFileForMavenJavaPublication.destination)
-        from(signMavenJavaPublication.signatureFiles)
-    }
+    from(jar.archiveFile)
+    from(sourcesJar.archiveFile)
+    from(javadocJar.archiveFile)
+    from(generatePomFileForMavenJavaPublication.destination)
+    from(signMavenJavaPublication.signatureFiles)
 
-    archiveFileName = "sailor-jvm-bundle-${project.version}.zip"
-    destinationDirectory = file("${buildDir}/bundle")
+    into "${buildDir}/bundle-contents"
+}
+
+task createBundle(type: Exec) {
+    dependsOn copyBundleFiles
+    workingDir "${buildDir}/bundle-contents"
+    commandLine "zip", "-r", "../bundle/sailor-jvm-bundle-${project.version}.zip", "."
 }
 
 build.dependsOn createBundle
