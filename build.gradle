@@ -11,15 +11,15 @@ plugins {
     id 'java-library'
     id 'maven-publish'
     id 'signing'
-    id 'com.github.johnrengelman.shadow' version '7.1.2'
 }
+
 group = 'io.elastic'
 version = '5.0.0'
 sourceCompatibility = '1.8'
 
 def isCiEnv = 'true'.equals(System.getenv('CI'))
-def isCiTag = System.getenv('CIRCLE_TAG') != null;
-def isReleaseBuild = !version.contains('SNAPSHOT');
+def isCiTag = System.getenv('CIRCLE_TAG') != null
+def isReleaseBuild = !version.contains('SNAPSHOT')
 def snapshotRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
 def releaseRepositoryUrl = "https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/"
 def repositoryUsername = project.hasProperty('sonatypeUsername') ? sonatypeUsername : ""
@@ -56,23 +56,13 @@ dependencies {
     api 'com.fasterxml.jackson.core:jackson-databind:2.17.2'
 }
 
-jar {
-    manifest {
-        attributes(
-                'Implementation-Vendor' : 'elastic.io Gmbh',
-                'Implementation-Title': 'elastic.io Sailor for JVM',
-                'Implementation-Version': archiveVersion,
-                'Multi-Release': true
-        )
-    }
-}
-test {
-   useJUnitPlatform()
-}
-
 java {
     withJavadocJar()
     withSourcesJar()
+}
+
+test {
+   useJUnitPlatform()
 }
 
 wrapper {
@@ -82,8 +72,8 @@ wrapper {
 publishing {
     publications {
         mavenJava(MavenPublication) {
-            artifactId = 'sailor-jvm'
             from components.java
+
             pom {
                 name = 'elasticio-sailor-jvm'
                 packaging = 'jar'
@@ -125,28 +115,15 @@ publishing {
             }
         }
     }
-
     repositories {
         maven {
-            url = isReleaseBuild ? releaseRepositoryUrl : snapshotRepositoryUrl
-            credentials {
-                username = repositoryUsername
-                password = repositoryPassword
-            }
-        }
-    }
-
-    // A check to disable publishing if it's a snapshot version
-    if (!isReleaseBuild) {
-        println 'This is a SNAPSHOT version. Publishing to the Maven Snapshot will be skipped.'
-        tasks.withType(PublishToMavenRepository) { task ->
-            task.enabled = false
+            name = 'tempRepository'
+            url = layout.buildDirectory.dir('temp-repo')
         }
     }
 }
 
 signing {
-    println 'isReleaseBuild: ' + isReleaseBuild;
     required { isReleaseBuild }
     if(isReleaseBuild && project.hasProperty('signingPassword') && project.hasProperty('signingKeyBase64')) {
         def signingPassword = findProperty("signingPassword")
@@ -156,38 +133,17 @@ signing {
     sign publishing.publications.mavenJava
 }
 
-afterEvaluate {
-    //  In case CI env - skip publishing of release version without created tag
-    tasks.withType(PublishToMavenRepository) { task ->
-        if (isReleaseBuild && isCiEnv && !isCiTag) {
-            println 'Can not publish release version without tag. Did not find CIRCLE_TAG env variable. Skipping publication'
-            task.enabled = false
-        }
-    }
+task createBundle(type: Zip) {
+    dependsOn publishMavenJavaPublicationToTempRepositoryRepository
+    from(layout.buildDirectory.dir('temp-repo'))
+    archiveFileName = "sailor-jvm-bundle-${project.version}.zip"
+    destinationDirectory = file("${buildDir}/bundle")
 }
+
+build.dependsOn createBundle
 
 task printVersion {
     doLast {
         println "Sailor JVM version: ${project.version}"
     }
 }
-
-task copyBundleFiles(type: Copy) {
-    dependsOn jar, sourcesJar, javadocJar, generatePomFileForMavenJavaPublication, signMavenJavaPublication
-
-    from(jar.archiveFile)
-    from(sourcesJar.archiveFile)
-    from(javadocJar.archiveFile)
-    from(generatePomFileForMavenJavaPublication.destination)
-    from(signMavenJavaPublication.signatureFiles)
-
-    into "${buildDir}/bundle-contents"
-}
-
-task createBundle(type: Exec) {
-    dependsOn copyBundleFiles
-    workingDir "${buildDir}/bundle-contents"
-    commandLine "zip", "-r", "../bundle/sailor-jvm-bundle-${project.version}.zip", "."
-}
-
-build.dependsOn createBundle
