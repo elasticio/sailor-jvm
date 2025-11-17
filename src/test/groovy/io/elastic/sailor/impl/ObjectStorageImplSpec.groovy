@@ -10,6 +10,8 @@ import jakarta.json.Json
 
 import static com.github.restdriver.clientdriver.RestClientDriver.*
 
+import org.apache.http.impl.client.CloseableHttpClient
+
 class ObjectStorageImplSpec extends Specification {
 
     @Rule
@@ -18,12 +20,18 @@ class ObjectStorageImplSpec extends Specification {
     def crypto = new CryptoServiceImpl("testCryptoPassword", "iv=any16_symbols")
 
     def storage
+    CloseableHttpClient httpClient
 
     def setup() {
-        storage = new ObjectStorageImpl()
+        httpClient = HttpUtils.createHttpClient(0)
+        storage = new ObjectStorageImpl(httpClient)
         storage.setCryptoService(crypto)
         storage.setObjectStorageUri("http://localhost:12345/")
         storage.setObjectStorageToken("secret_token")
+    }
+
+    def cleanup() {
+        httpClient.close()
     }
 
     def "should not resolve if object storage uri is not set"() {

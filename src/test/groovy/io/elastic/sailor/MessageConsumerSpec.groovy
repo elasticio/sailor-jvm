@@ -9,6 +9,7 @@ import io.elastic.sailor.component.HelloWorldAction
 import io.elastic.sailor.impl.CryptoServiceImpl
 import io.elastic.sailor.impl.MessageConsumer
 import io.elastic.sailor.impl.MessageEncoding
+import org.apache.http.impl.client.CloseableHttpClient
 import jakarta.json.JsonObject
 import spock.lang.Shared
 import spock.lang.Specification
@@ -30,6 +31,7 @@ class MessageConsumerSpec extends Specification {
 
     def consumer
     ThreadPoolExecutor threadPoolExecutor
+    CloseableHttpClient httpClient = Mock()
 
     @Shared
     def amqpProperties
@@ -72,7 +74,7 @@ class MessageConsumerSpec extends Specification {
         threadPoolExecutor =  new ThreadPoolExecutor(1, 1,
                 0L, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>());
-        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver, threadPoolExecutor)
+        consumer = new MessageConsumer(channel, cipher, processor, component, TestUtils.createStep(), new ContainerContext(), messageResolver, threadPoolExecutor, httpClient)
         consumer = Mockito.spy(consumer)
         Mockito.doReturn(JsonObject.EMPTY_JSON_OBJECT).when(consumer).getSnapShot()
     }

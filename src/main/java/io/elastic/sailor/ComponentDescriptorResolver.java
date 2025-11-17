@@ -28,7 +28,7 @@ public final class ComponentDescriptorResolver {
 
     private static JsonObject loadComponentJson() {
 
-        logger.info("Component descriptor from classpath: {}", FILENAME);
+        logger.debug("Component descriptor from classpath: {}", FILENAME);
 
         final InputStream stream = ComponentDescriptorResolver.class
                 .getResourceAsStream(FILENAME);

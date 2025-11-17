@@ -10,6 +10,7 @@ import io.elastic.api.ShutdownParameters;
 import io.elastic.api.StartupParameters;
 import io.elastic.sailor.impl.BunyanJsonLayout;
 import io.elastic.sailor.impl.GracefulShutdownHandler;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +33,7 @@ public class Sailor {
     public static GracefulShutdownHandler gracefulShutdownHandler;
 
     public static void main(String[] args) throws IOException {
-        logger.info("About to init Sailor");
+        logger.debug("About to init Sailor");
         createAndStartSailor(true);
     }
 
@@ -91,17 +92,19 @@ public class Sailor {
     public void start(final Injector injector) {
 
         amqp = injector.getInstance(AmqpService.class);
-        logger.info("Connecting to AMQP");
+        logger.debug("Connecting to AMQP");
         amqp.connectAndSubscribe();
 
         errorPublisher = injector.getInstance(ErrorPublisher.class);
 
-        Sailor.gracefulShutdownHandler = new GracefulShutdownHandler(amqp);
+        final CloseableHttpClient httpClient = injector.getInstance(CloseableHttpClient.class);
+
+        Sailor.gracefulShutdownHandler = new GracefulShutdownHandler(amqp, httpClient);
 
         try {
-            logger.info("Processing flow step: {}", this.step.getId());
-            logger.info("Component id to be executed: {}", this.step.getCompId());
-            logger.info("Function to be executed: {}", this.step.getFunction());
+            logger.debug("Processing flow step: {}", this.step.getId());
+            logger.debug("Component id to be executed: {}", this.step.getCompId());
+            logger.debug("Function to be executed: {}", this.step.getFunction());
 
             final JsonObject cfg = this.step.getCfg();
 
@@ -109,19 +112,19 @@ public class Sailor {
 
             startupModule(function, cfg);
 
-            logger.info("Initializing function for execution");
+            logger.debug("Initializing function for execution");
             final InitParameters initParameters = new InitParameters.Builder()
                     .configuration(cfg)
                     .build();
             function.init(initParameters);
 
-            logger.info("Subscribing to queues");
+            logger.debug("Subscribing to queues");
             amqp.subscribeConsumer(function);
         } catch (Exception e) {
             reportException(e);
         }
 
-        logger.info("Sailor started");
+        logger.info("Sailor fully started");
     }
 
     private void startupModule(final Function function, final JsonObject cfg) {

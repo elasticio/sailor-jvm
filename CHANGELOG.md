@@ -1,3 +1,20 @@
+## 5.0.0 (November 14, 2025)
+  * **Concurrency & Stability Fixes:**
+    * Added retry mechanism for publisher confirms on timeout to prevent message loss.
+    * Refactored message publisher to use thread-local AMQP channels, resolving timeouts during high-throughput parallel processing.
+    * Corrected a race condition in the graceful shutdown logic to prevent `Connection pool shut down` errors when stopping the component during an active HTTP request.
+  * **HTTP Client Improvements:**
+    * Ensured large message (lightweight) HTTP requests are repeatable for retries, preventing `NonRepeatableRequestException` on connection reset.
+    * Implemented a singleton strategy for the HTTP client to reuse connections and improve performance.
+    * Stabilized large message (lightweight) streaming by setting the `Content-Length` and disabling the `Expect-Continue` handshake, preventing `Connection reset` errors.
+    * Added a retry mechanism for `408` (Request Timeout) and `5xx` server errors.
+  * **Logging Enhancements:**
+    * Resolved logging conflicts that caused erroneous messages, duplicate or empty log messages.
+    * Improved logging for large message uploads to include the message's context (e.g., "main message body", "passthrough") and its size.
+    * Moved several verbose logs from `INFO` to `DEBUG` level for a cleaner default log output.
+  * **Dependencies:**
+    * Upgraded core dependencies, including Guice from v5 to v7.
+
 ## 4.0.3 (July 31, 2024)
   * Bumped all the dependencies to its most recent minor versions
 

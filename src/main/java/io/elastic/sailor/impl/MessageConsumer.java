@@ -11,6 +11,7 @@ import io.elastic.sailor.*;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
@@ -20,6 +21,7 @@ import java.util.concurrent.ExecutorService;
 public class MessageConsumer extends DefaultConsumer {
 
     private static final org.slf4j.Logger logger = LoggerFactory.getLogger(MessageConsumer.class);
+
     private final CryptoServiceImpl cipher;
     private final MessageProcessor processor;
     private final Function function;
@@ -28,6 +30,7 @@ public class MessageConsumer extends DefaultConsumer {
     private final MessageResolver messageResolver;
     private final Channel channel;
     private final ExecutorService threadPool;
+    private final CloseableHttpClient httpClient;
 
     public MessageConsumer(Channel channel,
                            CryptoServiceImpl cipher,
@@ -36,7 +39,8 @@ public class MessageConsumer extends DefaultConsumer {
                            Step step,
                            final ContainerContext containerContext,
                            final MessageResolver messageResolver,
-                           ExecutorService threadPool) {
+                           ExecutorService threadPool,
+                           final CloseableHttpClient httpClient) {
         super(channel);
         this.channel = channel;
         this.cipher = cipher;
@@ -46,6 +50,7 @@ public class MessageConsumer extends DefaultConsumer {
         this.containerContext = containerContext;
         this.messageResolver = messageResolver;
         this.threadPool = threadPool;
+        this.httpClient = httpClient;
     }
 
     @Override
@@ -67,18 +72,20 @@ public class MessageConsumer extends DefaultConsumer {
                     try {
                         channel.basicReject(deliveryTag, false);
                     } catch (IOException ioException) {
-                        logger.error("Failed to basicReject message: {}", Utils.getStackTrace(e));
+                        logger.error("Failed to basicReject message", ioException);
                     }
-                    logger.error("Failed to parse or resolve message to process {}", Utils.getStackTrace(e));
+                    logger.error("Failed to parse or resolve message to process", e);
                     decrement();
                     return;
                 }
 
                 ExecutionStats stats = null;
                 try {
+
                     stats = processor.processMessage(executionContext, this.function);
+                    logger.info("Processed the message, {}", stats);
                 } catch (Exception e) {
-                    logger.error("Failed to process message: {}", Utils.getStackTrace(e));
+                    logger.error("Failed to process message", e);
                 } finally {
                     removeFromMDC(Constants.MDC_THREAD_ID);
                     removeFromMDC(Constants.MDC_MESSAGE_ID);
@@ -86,7 +93,7 @@ public class MessageConsumer extends DefaultConsumer {
                     try {
                         ackOrReject(stats, deliveryTag);
                     } catch (IOException e) {
-                        logger.error("Failed to ackOrReject message: {}", Utils.getStackTrace(e));
+                        logger.error("Failed to ackOrReject message", e);
                     }
                     decrement();
                 }
@@ -112,21 +119,21 @@ public class MessageConsumer extends DefaultConsumer {
         MDC.put(Constants.MDC_MESSAGE_ID, messageId.toString());
         MDC.put(Constants.MDC_PARENT_MESSAGE_ID, parentMessageId.toString());
 
-        logger.info("messageId={}, parentMessageId={}, threadId={}", messageId, parentMessageId, threadId);
+        logger.debug("messageId={}, parentMessageId={}, threadId={}", messageId, parentMessageId, threadId);
     }
 
     private static void removeFromMDC(final String key) {
         try {
             MDC.remove(key);
         } catch (Exception e) {
-            logger.warn("Failed to remove {} from MDC: {}", key, Utils.getStackTrace(e));
+            logger.warn("Failed to remove {} from MDC", key, e);
         }
     }
 
     public JsonObject getSnapShot() {
         final String uri = this.step.getSnapshotUri();
         final HttpUtils.AuthorizationHandler authorizationHandler = step.getAuthorizationHandler();
-        final JsonObject step = HttpUtils.getJson(uri, authorizationHandler, 4);
+        final JsonObject step = HttpUtils.getJson(uri, this.httpClient, authorizationHandler);
         return getAsNullSafeObject(step, Constants.STEP_PROPERTY_SNAPSHOT);
     }
 
@@ -150,16 +157,16 @@ public class MessageConsumer extends DefaultConsumer {
     }
 
     private void ackOrReject(ExecutionStats stats, long deliveryTag) throws IOException {
-        logger.info("Execution stats: {}", stats);
+        logger.debug("Execution stats: {}", stats);
 
         if (stats == null || stats.getErrorCount() > 0) {
-            logger.info("Reject received messages {}", deliveryTag);
+            logger.debug("Reject received messages {}", deliveryTag);
             this.getChannel().basicReject(deliveryTag, false);
 
             return;
         }
 
-        logger.info("Acknowledging received message with deliveryTag={}", deliveryTag);
+        logger.debug("Acknowledging received message with deliveryTag={}", deliveryTag);
         this.getChannel().basicAck(deliveryTag, false);
     }
 

@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
 import io.elastic.sailor.impl.HttpUtils;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,14 +16,21 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 
 public class Service {
-    private static final Logger logger = LoggerFactory.getLogger(Service.class.getName());
+    private static final Logger logger = LoggerFactory.getLogger(Service.class);
 
     private ComponentDescriptorResolver resolver;
     private String postResultUrl;
     private JsonObject configuration;
     private String triggerOrAction;
     private String metaModelName;
-    private int retryCount;
+    private final CloseableHttpClient httpClient;
+
+    @Inject
+    public Service(
+            final CloseableHttpClient httpClient
+    ) {
+        this.httpClient = httpClient;
+    }
 
     protected ServiceExecutionParameters createServiceExecutionParameters() {
 
@@ -87,7 +95,7 @@ public class Service {
                 .add("data", data)
                 .build();
 
-        sendData(this.postResultUrl, payload, this.retryCount);
+        sendData(this.postResultUrl, payload);
     }
 
     public void executeMethod(final ServiceMethods method, final ServiceExecutionParameters params) {
@@ -98,23 +106,20 @@ public class Service {
 
     private void processException(Exception e) {
 
-        e.printStackTrace();
-
-        StringWriter writer = new StringWriter();
-        e.printStackTrace(new PrintWriter(writer));
+        logger.error("Service execution failed with an exception", e);
 
         final JsonObject data = Json.createObjectBuilder()
-                .add("message", writer.toString())
+                .add("message", Utils.getStackTrace(e))
                 .build();
 
         createResponseAndSend("error", data);
     }
 
-    private static void sendData(String url, JsonObject payload, int retryCnt) {
+    private void sendData(String url, JsonObject payload) {
 
         logger.info("Sending response");
 
-        HttpUtils.postJson(url, payload, new HttpUtils.BasicURLAuthorizationHandler(), retryCnt);
+        HttpUtils.postJson(url, this.httpClient, payload, new HttpUtils.BasicURLAuthorizationHandler());
 
         logger.info("Received response from server");
     }
@@ -142,9 +147,5 @@ public class Service {
     @Inject(optional = true)
     public void setMetaModelName(@Named(Constants.ENV_VAR_GET_MODEL_METHOD) final String metaModelName) {
         this.metaModelName = metaModelName;
-    }
-    @Inject
-    public void setRetryCount(@Named(Constants.ENV_VAR_API_REQUEST_RETRY_ATTEMPTS) final int retryCount) {
-        this.retryCount = retryCount;
     }
 }

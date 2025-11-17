@@ -106,7 +106,7 @@ public enum ServiceMethods {
     }
 
     private static <T> T newInstance(String className) {
-        logger.info("Instantiating class {}", className);
+        logger.debug("Instantiating class {}", className);
         try {
             final Class<?> clazz = Class.forName(className);
 

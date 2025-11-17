@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import io.elastic.sailor.impl.*;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,6 +15,8 @@ public class SailorModule extends AbstractModule {
 
     @Override
     protected void configure() {
+
+        install(new HttpClientModule());
 
         bind(ApiClient.class).to(ApiClientImpl.class);
 

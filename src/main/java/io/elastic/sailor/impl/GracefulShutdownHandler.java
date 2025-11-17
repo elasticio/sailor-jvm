@@ -1,8 +1,12 @@
 package io.elastic.sailor.impl;
 
 import io.elastic.sailor.AmqpService;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -15,8 +19,11 @@ public class GracefulShutdownHandler {
     public AtomicInteger messagesProcessingCount = new AtomicInteger();
     private CountDownLatch exitSignal;
 
-    public GracefulShutdownHandler(final AmqpService amqp) {
+    private final CloseableHttpClient httpClient;
+
+    public GracefulShutdownHandler(final AmqpService amqp, final CloseableHttpClient httpClient) {
         this.amqp = amqp;
+        this.httpClient = httpClient;
 
         registerShutdownHook();
     }
@@ -25,7 +32,7 @@ public class GracefulShutdownHandler {
     public void increment() {
         final int count = this.messagesProcessingCount.incrementAndGet();
 
-        logger.info("Incremented the number of messages concurrently processed to {}", count);
+        logger.debug("Incremented the number of messages concurrently processed to {}", count);
     }
 
 
@@ -37,44 +44,51 @@ public class GracefulShutdownHandler {
                 prepareGracefulShutdown();
             }
         });
-        logger.info("Registered a graceful shutdown hook");
+        logger.debug("Registered a graceful shutdown hook");
     }
 
     protected void prepareGracefulShutdown() {
+        logger.debug("Preparing graceful shutdown");
+
         if (this.amqp == null) {
             return;
         }
 
+        // 1. Stop accepting new messages
         this.amqp.cancelConsumer();
+        logger.debug("Canceled all message consumers.");
 
-        logger.info("Canceled all message consumers.");
-
+        // 2. Wait for in-flight messages to complete
         this.exitSignal = new CountDownLatch(this.messagesProcessingCount.get());
-
         final long messagesCount = this.exitSignal.getCount();
-
         if (messagesCount > 0) {
-            logger.info("Now waiting for {} messages to be processed before exiting", messagesCount);
+            logger.debug("Now waiting for {} messages to be processed before exiting", messagesCount);
         }
-
         try {
-            this.exitSignal.await();
+            this.exitSignal.await(30, TimeUnit.SECONDS);
         } catch (InterruptedException e) {
-            logger.error(e.getMessage());
+            Thread.currentThread().interrupt();
+        }
+        logger.debug("No messages are being processed anymore");
+
+        // 3. Now that all work is done, shut down shared resources
+        try {
+            this.httpClient.close();
+            logger.debug("Closed HTTP client");
+        } catch (IOException e) {
+            logger.error("Failed to close HTTP client", e);
         }
 
-
-        logger.info("No messages are being processed anymore");
         amqp.disconnect();
     }
 
     public void decrement() {
         final int count = this.messagesProcessingCount.decrementAndGet();
-        logger.info("Decremented the number of messages concurrently processed to {}", count);
+        logger.debug("Decremented the number of messages concurrently processed to {}", count);
 
         if(this.exitSignal != null){
             this.exitSignal.countDown();
-            logger.info("Waiting for {} messages before exiting", exitSignal.getCount());
+            logger.debug("Waiting for {} messages before exiting", exitSignal.getCount());
         }
     }
 

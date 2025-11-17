@@ -17,7 +17,18 @@ class ApiClientImplSpec extends Specification {
     @Rule
     public ClientDriverRule driver = new ClientDriverRule(7890);
 
-    def client = new ApiClientImpl("http://localhost:7890", "homer.simpson@example.org", "secret", 0, false)
+    def client
+    def httpClient
+
+    def setup() {
+        httpClient = HttpUtils.createHttpClient(0)
+        client = new ApiClientImpl("http://localhost:7890", "homer.simpson@example.org", "secret", false, httpClient)
+    }
+
+    def cleanup() {
+        httpClient.close()
+    }
+
     def stepJson = '{"id":"step_1", "comp_id":"comp_1", "function":"my_function", "cfg":{}, "snapshot":{}}'
 
     def "should retrieveTaskStep successfully"() {

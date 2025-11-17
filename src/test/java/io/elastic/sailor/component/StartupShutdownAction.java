@@ -5,7 +5,9 @@ import io.elastic.api.*;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.impl.AmqpServiceImpl;
 import io.elastic.sailor.impl.CryptoServiceImpl;
+import io.elastic.sailor.impl.HttpUtils;
 import io.elastic.sailor.impl.MessagePublisherImpl;
+import org.apache.http.impl.client.CloseableHttpClient;
 
 import jakarta.json.Json;
 import jakarta.json.JsonObject;
@@ -48,18 +50,19 @@ public class StartupShutdownAction implements Function {
                 configuration.getString(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD),
                 configuration.getString(Constants.ENV_VAR_MESSAGE_CRYPTO_IV));
 
-        final AmqpServiceImpl amqp = new AmqpServiceImpl(cipher);
+        final CloseableHttpClient httpClient = HttpUtils.createHttpClient(0);
+        final AmqpServiceImpl amqp = new AmqpServiceImpl(cipher, httpClient);
         final String publishExchangeName = configuration.getString(Constants.ENV_VAR_PUBLISH_MESSAGES_TO);
         final String dataRoutingKey = configuration.getString(Constants.ENV_VAR_DATA_ROUTING_KEY);
 
+        final MessagePublisherImpl publisher = new MessagePublisherImpl(
+                publishExchangeName, Integer.MAX_VALUE, 0,0, true, true, amqp);
+
+        amqp.setMessagePublisher(publisher);
         amqp.setAmqpUri(configuration.getString(Constants.ENV_VAR_AMQP_URI));
         amqp.setPrefetchCount(1);
         amqp.setThreadPoolSize(1);
         amqp.connectAndSubscribe();
-
-
-        final MessagePublisherImpl publisher = new MessagePublisherImpl(
-                publishExchangeName, Integer.MAX_VALUE, 0,0, true, true, amqp);
 
         final AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder()
                 .contentType("application/json")
@@ -76,5 +79,10 @@ public class StartupShutdownAction implements Function {
 
         publisher.publish(dataRoutingKey, JSON.stringify(payload).getBytes(), properties);
 
+        try {
+            httpClient.close();
+        } catch (java.io.IOException e) {
+            // ignore
+        }
     }
 }

@@ -32,7 +32,7 @@ public class FunctionBuilderImpl implements FunctionBuilder {
 
         final String className = componentDescriptorResolver.findModule(module);
 
-        logger.info("Function Java class to be instantiated: {}", className);
+        logger.debug("Function Java class to be instantiated: {}", className);
 
         try {
             return newComponent(className);
@@ -43,7 +43,7 @@ public class FunctionBuilderImpl implements FunctionBuilder {
 
 
     private Function newComponent(final String componentClassName) throws Exception {
-        logger.info("Instantiating component {}", componentClassName);
+        logger.debug("Instantiating component {}", componentClassName);
 
         final Class<?> clazz = Class.forName(componentClassName);
 

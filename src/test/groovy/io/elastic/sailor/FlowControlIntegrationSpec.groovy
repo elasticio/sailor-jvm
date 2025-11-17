@@ -9,6 +9,7 @@ import io.elastic.api.Message
 import io.elastic.sailor.impl.AmqpServiceImpl
 import io.elastic.sailor.impl.CryptoServiceImpl
 import io.elastic.sailor.impl.MessageEncoding
+import io.elastic.sailor.impl.HttpUtils
 import io.elastic.sailor.impl.MessagePublisherImpl
 import org.eclipse.jetty.server.Request
 import org.eclipse.jetty.server.Server
@@ -64,6 +65,9 @@ class FlowControlIntegrationSpec extends Specification {
     @Shared
     Channel publishChannel
 
+    @Shared
+    MessagePublisherImpl messagePublisher
+
     def setupSpec() {
 
         System.setProperty(Constants.ENV_VAR_API_URI, 'http://localhost:8182')
@@ -103,8 +107,14 @@ class FlowControlIntegrationSpec extends Specification {
                 System.getProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_PASSWORD),
                 System.getProperty(Constants.ENV_VAR_MESSAGE_CRYPTO_IV))
 
-        amqp = new AmqpServiceImpl(cipher)
+        amqp = new AmqpServiceImpl(cipher, HttpUtils.createHttpClient(0))
 
+        messagePublisher = new MessagePublisherImpl(
+                System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
+                Integer.MAX_VALUE,
+                100, 5 * 60 * 1000, true, true, amqp)
+
+        amqp.setMessagePublisher(messagePublisher)
         amqp.setAmqpUri(System.getProperty(Constants.ENV_VAR_AMQP_URI))
         amqp.setSubscribeExchangeName(System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON))
         amqp.setPrefetchCount(1)
@@ -121,11 +131,6 @@ class FlowControlIntegrationSpec extends Specification {
                 System.getProperty(Constants.ENV_VAR_LISTEN_MESSAGES_ON),
                 System.getProperty(Constants.ENV_VAR_DATA_ROUTING_KEY)
         )
-
-        def messagePublisher = new MessagePublisherImpl(
-                System.getProperty(Constants.ENV_VAR_PUBLISH_MESSAGES_TO),
-                Integer.MAX_VALUE,
-                100, 5 * 60 * 1000, true, true, amqp)
 
         publishChannel = messagePublisher.getPublishChannel()
 

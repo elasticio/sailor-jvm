@@ -8,5 +8,5 @@ public interface ObjectStorage {
 
     JsonObject postJsonObject(JsonObject object);
 
-    JsonObject post(String object);
+    JsonObject post(String object, String description);
 }

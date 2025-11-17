@@ -8,6 +8,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import io.elastic.api.Function;
 import io.elastic.sailor.*;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
@@ -37,9 +38,18 @@ public class AmqpServiceImpl implements AmqpService {
     private ThreadPoolExecutor threadPoolExecutor;
     private Integer threadPoolSize;
 
+    private final CloseableHttpClient httpClient;
+    private MessagePublisher messagePublisher;
+
     @Inject
-    public AmqpServiceImpl(CryptoServiceImpl cipher) {
+    public AmqpServiceImpl(final CryptoServiceImpl cipher, final CloseableHttpClient httpClient) {
         this.cipher = cipher;
+        this.httpClient = httpClient;
+    }
+
+    @Inject
+    public void setMessagePublisher(final MessagePublisher messagePublisher) {
+        this.messagePublisher = messagePublisher;
     }
 
     @Inject
@@ -94,16 +104,21 @@ public class AmqpServiceImpl implements AmqpService {
 
     @Override
     public void disconnect() {
-        logger.info("About to disconnect from AMQP");
+        logger.debug("About to disconnect from AMQP");
+
+        if (this.messagePublisher != null) {
+            this.messagePublisher.disconnect();
+        }
+
         try {
             subscribeChannel.close();
         } catch (IOException | TimeoutException e) {
-            logger.info("Subscription channel is already closed: " + e);
+            logger.warn("Subscription channel is already closed: " + e);
         }
         try {
             amqp.close();
         } catch (IOException e) {
-            logger.info("AMQP connection is already closed: " + e);
+            logger.warn("AMQP connection is already closed: " + e);
         }
         threadPoolExecutor.shutdown();
         logger.info("Successfully disconnected from AMQP");
@@ -111,19 +126,19 @@ public class AmqpServiceImpl implements AmqpService {
 
     public void subscribeConsumer(final Function function) {
         final MessageConsumer consumer = new MessageConsumer(
-            subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext, this.messageResolver, this.threadPoolExecutor);
+            subscribeChannel, cipher, this.messageProcessor, function, step, this.containerContext, this.messageResolver, this.threadPoolExecutor, this.httpClient);
         try {
             consumerTag = subscribeChannel.basicConsume(this.subscribeExchangeName, consumer);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        logger.info("Subscribed consumer {}. Waiting for messages to arrive ...", consumerTag);
+        logger.debug("Subscribed consumer {}. Waiting for messages to arrive ...", consumerTag);
     }
 
     public void cancelConsumer() {
         if (consumerTag != null) {
-            logger.info("Canceling consumer {}", consumerTag);
+            logger.debug("Canceling consumer {}", consumerTag);
             try {
                 subscribeChannel.basicCancel(consumerTag);
             } catch (IOException e) {
@@ -136,7 +151,7 @@ public class AmqpServiceImpl implements AmqpService {
 
     public void ack(Long deliveryTag) {
         try {
-            logger.info(String.format("Message #%s ack", deliveryTag));
+            logger.trace(String.format("Message #%s ack", deliveryTag));
             subscribeChannel.basicAck(deliveryTag, false);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -145,7 +160,7 @@ public class AmqpServiceImpl implements AmqpService {
 
     public void reject(Long deliveryTag) {
         try {
-            logger.info(String.format("Message #%s reject", deliveryTag));
+            logger.trace(String.format("Message #%s reject", deliveryTag));
             subscribeChannel.basicReject(deliveryTag, false);
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -174,7 +189,7 @@ public class AmqpServiceImpl implements AmqpService {
             if (subscribeChannel == null) {
                 subscribeChannel = amqp.createChannel();
                 subscribeChannel.basicQos(this.prefetchCount);
-                logger.info("Opened subscribe channel");
+                logger.debug("Opened subscribe channel");
             }
             return this;
         } catch (IOException e) {

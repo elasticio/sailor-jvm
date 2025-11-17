@@ -5,10 +5,14 @@ import com.google.inject.name.Named;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.ObjectStorage;
 import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.InputStreamEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.json.JsonObject;
+
+import java.io.ByteArrayInputStream;
 
 public class ObjectStorageImpl implements ObjectStorage {
 
@@ -17,6 +21,12 @@ public class ObjectStorageImpl implements ObjectStorage {
     private CryptoServiceImpl cryptoService;
     private String objectStorageUri;
     private String objectStorageToken;
+    private final CloseableHttpClient httpClient;
+
+    @Inject
+    public ObjectStorageImpl(final CloseableHttpClient httpClient) {
+        this.httpClient = httpClient;
+    }
 
     @Override
     public JsonObject getJsonObject(final String id) {
@@ -31,23 +41,23 @@ public class ObjectStorageImpl implements ObjectStorage {
             return null;
         }
 
-        this.logger.info("About to retrieve object by id={}", id);
+        this.logger.debug("About to retrieve object by id={}", id);
 
         final String endpoint = String.format("%s/objects/%s", this.objectStorageUri, id);
 
         final byte[] bytes = HttpUtils.get(endpoint,
-                new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken),
-                5);
+                this.httpClient,
+                new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken));
         return cryptoService.decryptMessageContent(bytes, MessageEncoding.UTF8);
     }
 
     @Override
     public JsonObject postJsonObject(final JsonObject object) {
-        return post(object.toString());
+        return post(object.toString(), "JSON object");
     }
 
     @Override
-    public JsonObject post(String object) {
+    public JsonObject post(String object, String description) {
         if (this.objectStorageUri == null) {
             logger.info("Object storage service URI is not set");
             return null;
@@ -58,7 +68,7 @@ public class ObjectStorageImpl implements ObjectStorage {
             return null;
         }
 
-        this.logger.info("About to post an object into the storage");
+        this.logger.info("About to post an object into the storage: {}, size: {} bytes", description, object.length());
 
         final String endpoint = String.format("%s/objects/", this.objectStorageUri);
 
@@ -66,9 +76,9 @@ public class ObjectStorageImpl implements ObjectStorage {
 
 
         final JsonObject result = HttpUtils.post(endpoint,
-                new ByteArrayEntity(content),
-                new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken),
-                5);
+                this.httpClient,
+                new LoggingHttpEntityWrapper(new ByteArrayEntity(content)),
+                new HttpUtils.BearerAuthorizationHandler(this.objectStorageToken));
 
         return result;
     }
@@ -80,10 +90,10 @@ public class ObjectStorageImpl implements ObjectStorage {
 
     @Inject(optional = true)
     public void setObjectStorageUri(final @Named(Constants.ENV_VAR_OBJECT_STORAGE_URI) String objectStorageUri) {
-        this.objectStorageUri = objectStorageUri;
+        this.objectStorageUri = objectStorageUri != null ? objectStorageUri.trim() : null;
 
         if (this.objectStorageUri != null && this.objectStorageUri.endsWith("/")) {
-            this.objectStorageUri.substring(0, this.objectStorageUri.length() - 1);
+            this.objectStorageUri = this.objectStorageUri.substring(0, this.objectStorageUri.length() - 1);
         }
     }
 
