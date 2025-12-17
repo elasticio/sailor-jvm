@@ -1,3 +1,6 @@
+## 5.0.1 (December 26, 2025)
+  * Fixed ClassCastException in MessageResolverImpl when message body was a JSON array, and gracefully handle missing or null message bodies.
+
 ## 5.0.0 (November 14, 2025)
   * **Concurrency & Stability Fixes:**
     * Added retry mechanism for publisher confirms on timeout to prevent message loss.

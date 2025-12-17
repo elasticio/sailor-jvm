@@ -276,7 +276,12 @@ public class MessageResolverImpl implements MessageResolver {
         public MessageHolder(final String stepId, final JsonObject message) {
             this.stepId = stepId;
             this.message = message;
-            this.bodyStr = message.getJsonObject(Message.PROPERTY_BODY).toString();
+            final JsonValue body = message.get(Message.PROPERTY_BODY);
+            if (body == null || body.getValueType() == JsonValue.ValueType.NULL) {
+                this.bodyStr = Json.createObjectBuilder().build().toString();
+            } else {
+                this.bodyStr = body.toString();
+            }
         }
 
     }
