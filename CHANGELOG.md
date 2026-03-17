@@ -1,4 +1,4 @@
-## 5.0.1 (December 26, 2025)
+## 5.0.1 (March 18, 2026)
   * Fixed ClassCastException in MessageResolverImpl when message body was a JSON array, and gracefully handle missing or null message bodies.
 
 ## 5.0.0 (November 14, 2025)
