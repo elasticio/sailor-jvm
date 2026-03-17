@@ -325,4 +325,25 @@ class MessageResolverImplSpec extends Specification {
         JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","attachments":{},"body":{},"headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"passthrough":{"step_1":{"id":"82317293-fcae-4d1f-9bc9-25aa8913f9f3","attachments":{},"body":{},"headers":{"foo":"bar","x-ipaas-object-storage-id":"588763137d802200192b485c"},"passthrough":{}}}}'
 
     }
+
+    def "should externalize successfully with array body"() {
+        setup:
+
+        def body = Json.createArrayBuilder()
+                .add(Json.createObjectBuilder().add("row", 1))
+                .add(Json.createObjectBuilder().add("row", 2))
+                .build()
+
+        def msg = Json.createObjectBuilder()
+                .add("id", "9d843898-2799-47bd-bede-123dd5d755ee")
+                .add("body", body)
+                .build()
+
+        when:
+        def result = resolver.externalize(msg)
+
+        then:
+        1 * storage.post('[{"row":1},{"row":2}]', "main message body") >> Json.createObjectBuilder().add("objectId", "58876284571c810019c78ef7").build()
+        JSON.stringify(result) == '{"id":"9d843898-2799-47bd-bede-123dd5d755ee","body":{},"headers":{"x-ipaas-object-storage-id":"58876284571c810019c78ef7"},"passthrough":{}}'
+    }
 }
