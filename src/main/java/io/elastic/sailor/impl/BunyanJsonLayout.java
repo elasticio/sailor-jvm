@@ -2,7 +2,9 @@ package io.elastic.sailor.impl;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.contrib.json.classic.JsonLayout;
+import ch.qos.logback.core.LayoutBase;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.elastic.sailor.Constants;
 import io.elastic.sailor.ContainerContext;
 import org.slf4j.MDC;
@@ -12,9 +14,10 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class BunyanJsonLayout extends JsonLayout {
+public class BunyanJsonLayout extends LayoutBase<ILoggingEvent> {
 
     public static final String LEVEL_STRING = "level_str";
     public static final String THREAD_ID = "threadId";
@@ -36,18 +39,30 @@ public class BunyanJsonLayout extends JsonLayout {
     private static int BUNYAN_LEVEL_WARN = 40;
     private static int BUNYAN_LEVEL_ERROR = 50;
 
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
     public static ContainerContext containerContext;
 
-    @Override
-    protected void addCustomDataToJsonMap(Map<String, Object> map, ILoggingEvent event) {
-        super.addCustomDataToJsonMap(map, event);
+    private boolean appendLineSeparator = true;
 
-        final String time = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date());
+    public void setAppendLineSeparator(boolean appendLineSeparator) {
+        this.appendLineSeparator = appendLineSeparator;
+    }
+
+    @Override
+    public String doLayout(ILoggingEvent event) {
+        Map<String, Object> map = new LinkedHashMap<>();
+
+        map.put(LEVEL, getBunyanLevel(event));
+        map.put("thread", event.getThreadName());
+        map.put("logger", event.getLoggerName());
+        map.put("context", event.getLoggerContextVO().getName());
+
+        putFromContainerContext(map);
+
         final String threadId = MDC.get(Constants.MDC_THREAD_ID);
         final String messageId = MDC.get(Constants.MDC_MESSAGE_ID);
         final String parentMessageId = MDC.get(Constants.MDC_PARENT_MESSAGE_ID);
-
-        putFromContainerContext(map);
 
         if (threadId != null) {
             map.put(THREAD_ID, threadId);
@@ -61,25 +76,25 @@ public class BunyanJsonLayout extends JsonLayout {
             map.put(PARENT_MESSAGE_ID, parentMessageId);
         }
 
-        // Version of the NPM package.
-        // Since this is Java - I've decided to put it at 0
         map.put(VERSION, "0");
-        map.put(LEVEL, getBunyanLevel(event));
         map.put(NAME, "sailor-jvm");
         map.put(PID, getProcessId());
-        map.put(BunyanJsonLayout.TIME, time);
+        map.put(TIME, new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").format(new Date()));
         map.put(LEVEL_STRING, event.getLevel().levelStr);
-        map.remove(JsonLayout.TIMESTAMP_ATTR_NAME);
-
-        final Object message = map.get(JsonLayout.FORMATTED_MESSAGE_ATTR_NAME);
-        map.put(MESSAGE, message);
-        map.remove(JsonLayout.FORMATTED_MESSAGE_ATTR_NAME);
+        map.put(MESSAGE, event.getFormattedMessage());
 
         try {
-            map.put(BunyanJsonLayout.HOSTNAME, InetAddress.getLocalHost().getHostName());
+            map.put(HOSTNAME, InetAddress.getLocalHost().getHostName());
         } catch (UnknownHostException e) {
-            // Set a default value so bunyan can still validate the log entry
-            map.put(BunyanJsonLayout.HOSTNAME, "unknown-host");
+            map.put(HOSTNAME, "unknown-host");
+        }
+
+        try {
+            String json = objectMapper.writeValueAsString(map);
+            return appendLineSeparator ? json + "\n" : json;
+        } catch (JsonProcessingException e) {
+            addError("Failed to serialize log event to JSON", e);
+            return event.getFormattedMessage() + "\n";
         }
     }
 
