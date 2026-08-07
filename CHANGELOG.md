@@ -1,4 +1,7 @@
-## 5.0.2 (July 16, 2026)
+## 5.0.2 (August 07, 2026)
+  * **HTTP Client Timeout Fix:**
+    * Added default connect (10s), socket read (60s), and connection request (10s) timeouts to Sailor's internal HTTP client (`HttpUtils.createHttpClient`).
+    * Resolves infinite thread blocking during large message (Object Storage / Maester) uploads when network sockets stall.
   * **Dependencies:**
     * Upgraded Guava from 33.2.1-jre to 33.6.0-jre.
     * Upgraded Logback from 1.2.13 to 1.3.14.

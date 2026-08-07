@@ -8,6 +8,7 @@ import org.apache.http.*;
 import org.apache.http.auth.AuthenticationException;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.ServiceUnavailableRetryStrategy;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.*;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.auth.BasicScheme;
@@ -163,12 +164,23 @@ public class HttpUtils {
     }
 
     public static CloseableHttpClient createHttpClient(final int retryCount) {
+        return createHttpClient(retryCount, 10000, 60000);
+    }
+
+    public static CloseableHttpClient createHttpClient(final int retryCount, final int connectTimeout, final int socketTimeout) {
         final PoolingHttpClientConnectionManager cm = new PoolingHttpClientConnectionManager();
         cm.setMaxTotal(100);
         cm.setDefaultMaxPerRoute(100);
 
+        final RequestConfig defaultRequestConfig = RequestConfig.custom()
+                .setConnectTimeout(connectTimeout)
+                .setSocketTimeout(socketTimeout)
+                .setConnectionRequestTimeout(connectTimeout)
+                .build();
+
         return HttpClients.custom()
                 .setConnectionManager(cm)
+                .setDefaultRequestConfig(defaultRequestConfig)
                 .setRetryHandler((exception, executionCount, context) -> {
                     if (executionCount >= retryCount) {
                         // Do not retry if over max retry count
