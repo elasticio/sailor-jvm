@@ -347,4 +347,34 @@ class HttpUtilsSpec extends Specification {
         httpClient.close()
         wireMockServer.stop()
     }
+
+    def "should timeout when socket read takes longer than configured socketTimeout"() {
+        def wireMockServer = new WireMockServer(12346);
+
+        setup:
+        wireMockServer.start()
+        def httpClient = HttpUtils.createHttpClient(0, 100, 300)
+
+        configureFor("localhost", 12346)
+
+        stubFor(get(urlEqualTo("/socket-timeout"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withFixedDelay(1000)
+                        .withBody('{"status":"ok"}')))
+
+        when:
+        HttpUtils.getJson(
+                "http://localhost:12346/socket-timeout",
+                httpClient,
+                basicAuthHandler)
+
+        then:
+        def e = thrown(RuntimeException)
+        e.cause instanceof java.net.SocketTimeoutException
+
+        cleanup:
+        httpClient.close()
+        wireMockServer.stop()
+    }
 }

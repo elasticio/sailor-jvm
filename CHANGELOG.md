@@ -1,3 +1,15 @@
+## 5.0.2 (October 02, 2026)
+  * **HTTP Client Timeout Fix:**
+    * Added default connect (10s), socket read (60s), and connection request (10s) timeouts to Sailor's internal HTTP client (`HttpUtils.createHttpClient`).
+    * Resolves infinite thread blocking during large message (Object Storage / Maester) uploads when network sockets stall.
+  * **Dependencies:**
+    * Upgraded Guava from 33.2.1-jre to 33.6.0-jre.
+    * Upgraded Logback from 1.2.13 to 1.3.14.
+    * Pinned commons-logging to 1.4.0 to mitigate transitive log4j 1.x CVEs from httpclient.
+    * Removed logback-contrib dependencies (`logback-json-classic`, `logback-jackson`).
+  * **Logging:**
+    * Reimplemented `BunyanJsonLayout` as a standalone `LayoutBase` using Jackson directly, replacing the removed logback-contrib `JsonLayout`.
+
 ## 5.0.1 (March 18, 2026)
   * Fixed ClassCastException in MessageResolverImpl when message body was a JSON array, and gracefully handle missing or null message bodies.
 
