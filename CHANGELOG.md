@@ -1,4 +1,4 @@
-## 5.0.2 (August 07, 2026)
+## 5.0.2 (October 02, 2026)
   * **HTTP Client Timeout Fix:**
     * Added default connect (10s), socket read (60s), and connection request (10s) timeouts to Sailor's internal HTTP client (`HttpUtils.createHttpClient`).
     * Resolves infinite thread blocking during large message (Object Storage / Maester) uploads when network sockets stall.

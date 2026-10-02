@@ -15,7 +15,7 @@ plugins {
 }
 
 group = 'io.elastic'
-version = '5.0.2-SNAPSHOT'
+version = '5.0.2'
 sourceCompatibility = '1.8'
 
 def isCiEnv = 'true'.equals(System.getenv('CI'))
